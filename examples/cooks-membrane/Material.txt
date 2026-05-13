@@ -1,0 +1,2 @@
+youngs_modulus 200
+poisson_ratio 0.3

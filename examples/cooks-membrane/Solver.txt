@@ -1,0 +1,78 @@
+# ============================================================
+# Solver / nonlinear / timing settings
+# ============================================================
+
+# ------------------------------------------------------------
+# Quadrature
+# ------------------------------------------------------------
+# GAUSS_ORDER auto  : choose the default quadrature from the element type.
+# GAUSS_ORDER <int> : use explicit 1D/tensor Gauss order where supported.
+GAUSS_ORDER auto
+
+# ------------------------------------------------------------
+# Linear solver backend
+# ------------------------------------------------------------
+# solver_backend: umfpack, petsc, pardiso
+# linear_solver : direct, preonly, gmres, fgmres, bicgstab, cg
+# preconditioner: lu, ilu, jacobi, hypre, gamg, fieldsplit, none
+solver_backend umfpack
+linear_solver direct
+preconditioner lu
+linear_tol 1e-12
+linear_max_iter 1
+linear_verbose off
+
+# ------------------------------------------------------------
+# Time stepping
+# ------------------------------------------------------------
+dt 0.25
+total_time 1.0
+
+adaptive_dt on
+dt_min 1.0e-8
+dt_max 0.25
+dt_growth 1.25
+dt_shrink 0.5
+
+# ------------------------------------------------------------
+# Newton solver
+# ------------------------------------------------------------
+max_iter 20
+tol 1e-8
+newton_alpha_first 1.0
+newton_alpha 1.0
+divergence_factor 10.0
+
+
+# ------------------------------------------------------------
+# Basic output cadence
+# ------------------------------------------------------------
+# output_every controls accepted-step VTK output interval.
+# The final VTK path itself is controlled in Postprocessing.txt.
+output_every 1
+output_prefix ./output/vtk/solution
+
+
+
+# Legacy residual monitor:
+#   0: normal/full console path compatible with newton_log
+#   2: progress-bar mode
+#  -1: legacy detailed residual mode retained for debugging
+residual_monitor 0
+residual_print_all off
+residual_print_limit 30
+
+# ------------------------------------------------------------
+# Timing diagnostics
+# ------------------------------------------------------------
+# timing_diagnostics off disables timing measurement, timing console output,
+# and timing.csv writing.
+#
+# timing_per_step controls accepted-step console timing output.
+# timing_csv writes output/csv/timing.csv.
+# timing_summary prints the final accumulated timing summary.
+timing_diagnostics on
+timing_per_step on
+timing_csv off
+timing_summary on
+

@@ -1,0 +1,151 @@
+# ============================================================
+# Solver / nonlinear / timing settings
+# ============================================================
+
+# ------------------------------------------------------------
+# Quadrature
+# ------------------------------------------------------------
+# GAUSS_ORDER auto  : choose the default quadrature from the element type.
+# GAUSS_ORDER <int> : use explicit 1D/tensor Gauss order where supported.
+GAUSS_ORDER auto
+
+# ------------------------------------------------------------
+# Linear solver backend
+# ------------------------------------------------------------
+# solver_backend: umfpack, petsc, pardiso
+# linear_solver : direct, preonly, gmres, fgmres, bicgstab, cg
+# preconditioner: lu, ilu, jacobi, hypre, gamg, fieldsplit, none
+solver_backend pardiso
+linear_solver fgmres
+preconditioner fieldsplit
+# Used when preconditioner is ilu and FieldSplit is not enabled.
+#ilu_levels 1
+linear_tol 1e-8
+linear_max_iter 300
+gmres_restart 1000
+linear_verbose on
+
+# ------------------------------------------------------------
+# Time stepping
+# ------------------------------------------------------------
+dt 0.02
+total_time 2.0
+theta 1.0
+
+adaptive_dt on
+dt_min 1.0e-8
+dt_max 0.02
+dt_growth 1.25
+dt_shrink 0.5
+
+# ------------------------------------------------------------
+# Newton solver
+# ------------------------------------------------------------
+max_iter 20
+tol 1e-8
+newton_alpha_first 1.0
+newton_alpha 1.0
+divergence_factor 10.0
+
+# ------------------------------------------------------------
+# Stabilization
+# ------------------------------------------------------------
+# Stabilization on/off or 1/0.
+# For displacement-only solid models this can stay off unless the active
+# constitutive model explicitly uses stabilization terms.
+Stabilization on
+stabilization_element_order 2
+stabilization_time_order 2
+stabilization_Ck 60
+
+# ------------------------------------------------------------
+# Basic output cadence
+# ------------------------------------------------------------
+# output_every controls accepted-step VTK output interval.
+# The final VTK path itself is controlled in Postprocessing.txt.
+output_every 1
+output_prefix ./output/vtk/solution
+
+# ------------------------------------------------------------
+# Pressure pin
+# ------------------------------------------------------------
+# pressure_pin_node -1 means automatic pressure pin if pressure is active.
+pressure_pin_node -1
+pressure_pin_value 0.0
+
+# ------------------------------------------------------------
+# Log diagnostics
+# ------------------------------------------------------------
+# newton_log on:
+#   Time attempt ...
+#   Newton iter k: residual = ...
+#   accepted/rejected messages
+#
+# field_diagnostics on:
+#   additionally prints residual/update norms per actual DofLayout field.
+#   It never prints absent fields, e.g. no velocity/pressure for displacement-only.
+#
+# bc_diagnostics on:
+#   prints compatible duplicate BC diagnostics and shared fixed-dof summaries.
+#
+# history_diagnostics on:
+#   prints local history/plasticity diagnostic text when the weak form supplies it.
+newton_log on
+field_diagnostics off
+bc_diagnostics off
+bc_conflict_tol 1e-6
+history_diagnostics off
+
+# Legacy residual monitor:
+#   0: normal/full console path compatible with newton_log
+#   2: progress-bar mode
+#  -1: legacy detailed residual mode retained for debugging
+residual_monitor 0
+residual_print_all off
+residual_print_limit 30
+
+# ------------------------------------------------------------
+# Timing diagnostics
+# ------------------------------------------------------------
+# timing_diagnostics off disables timing measurement, timing console output,
+# and timing.csv writing.
+#
+# timing_per_step controls accepted-step console timing output.
+# timing_csv writes output/csv/timing.csv.
+# timing_summary prints the final accumulated timing summary.
+timing_diagnostics off
+timing_per_step off
+timing_csv off
+timing_summary off
+
+# ------------------------------------------------------------
+# PETSc field-split / Schur options, used only when backend=petsc
+# ------------------------------------------------------------
+block_layout auto
+fieldsplit_type schur
+schur_factorization full
+schur_precondition pcd
+velocity_pc ilu
+velocity_ilu_levels 1
+mechanical_pc ilu
+mechanical_ilu_levels 1
+pressure_pc jacobi
+sub_linear_solver preonly
+
+schur_pressure_shift 0.0
+schur_pressure_mass_weight -1.0
+schur_pressure_laplacian_weight -1.0
+
+# Optional PCD pressure preconditioner controls
+pcd_kp_mass_shift 1.0e-8
+pcd_ap_mass_weight -1.0
+pcd_ap_laplacian_weight 1.0
+pcd_pressure_solver fgmres
+pcd_pressure_rtol 1.0e-3
+pcd_pressure_max_iter 120
+pcd_kp_solver preonly
+pcd_kp_pc ilu
+pcd_kp_ilu_levels 1
+pcd_ap_solver preonly
+pcd_ap_pc jacobi
+pcd_ap_ilu_levels 1

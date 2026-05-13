@@ -1,0 +1,21 @@
+# Postprocessing output paths
+# VTK files:
+#   ./output/fsi_case/fsi_fluid_0000.vtk
+#   ./output/fsi_case/fsi_solid_0000.vtk  (multi-domain)
+# or ./output/fsi_case/fsi_0000.vtk       (single-domain)
+output_directory ./output/Solid
+output_name Cook16
+output_every 1
+
+# Drag / lift files. Use auto to follow output_directory + output_name.
+force_output 0
+force_boundary CIRCLE
+force_csv auto
+force_svg auto
+
+# Explicit paths are also supported:
+# force_csv ./output/fsi_case/tables/drag_lift.csv
+# force_svg ./output/fsi_case/figures/drag_lift.svg
+
+# Mesh quality file. Use auto to follow output_directory + output_name.
+minJ_csv auto

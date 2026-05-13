@@ -1,0 +1,5 @@
+youngs_modulus 200
+poisson_ratio 0.3
+
+newmark_beta 0.25   
+newmark_gamma 0.5

@@ -1,0 +1,3 @@
+youngs_modulus 200.0
+poisson_ratio 0.3
+rho 1.0

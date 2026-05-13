@@ -1,0 +1,87 @@
+# ============================================================
+# Postprocessing / output-path settings
+# ============================================================
+
+# ------------------------------------------------------------
+# Output folder structure
+# ------------------------------------------------------------
+# output_root creates the organized default tree:
+#   output/
+#     vtk/       solution_0000.vtk, solution_0001.vtk, ...
+#     csv/       force.csv, minJ.csv, timing.csv, hysteresis.csv
+#     figures/   force.svg, hysteresis.svg, minJ.svg if enabled
+#     dofs/      final_dofs.txt, final_raw_vector.txt
+output_root ./output
+vtk_dir ./output/vtk
+csv_dir ./output/csv
+figure_dir ./output/figures
+dof_dir ./output/dofs
+
+# ------------------------------------------------------------
+# Main output switches
+# ------------------------------------------------------------
+# vtk_output controls accepted-step VTK writing.
+# vtk_interval is mapped to solver output_every.
+# svg_output controls generated SVG figures.
+# final_dofs_output writes final global DOF dumps in output/dofs/.
+vtk_output on
+vtk_interval 1
+svg_output on
+svg_interval 1
+final_dofs_output on
+
+# ------------------------------------------------------------
+# Deferred postprocessing
+# ------------------------------------------------------------
+# off: write VTK/CSV/SVG during accepted steps.
+# on : store accepted snapshots and write heavier outputs after time stepping.
+postprocess_deferred off
+
+# ------------------------------------------------------------
+# Force / drag-lift output
+# ------------------------------------------------------------
+# force_output on writes output/csv/force.csv and, when svg_output is on,
+# output/figures/force.svg.
+force_output off
+force_boundary CIRCLE
+force_boundary_check_tol 1e-8
+force_attack_angle_deg 0.0
+force_csv auto
+force_svg auto
+
+# ------------------------------------------------------------
+# Mesh-quality output
+# ------------------------------------------------------------
+# minJ_output on writes output/csv/minJ.csv.
+# minJ_only_fsi on keeps minJ focused on ALE/FSI/solid-style runs.
+minJ_output off
+minJ_only_fsi on
+minJ_csv auto
+
+# ------------------------------------------------------------
+# Hysteresis output
+# ------------------------------------------------------------
+# hysteresis_output on writes output/csv/hysteresis.csv and, if svg_output is on,
+# output/figures/hysteresis.svg.
+hysteresis_output on
+hysteresis_csv auto
+hysteresis_svg auto
+
+# x-axis: prescribed uy value on TOP, no sign flip here.
+hysteresis_x_axis time
+
+# y-axis: reaction force sum on BOTTOM uy, normal reaction convention.
+hysteresis_y_axis value displacement point 48,60 1 1.0
+
+# Alternative examples:
+# 1) Use raw residual instead of reaction:
+# hysteresis_y_axis residual BOTTOM uy 1.0
+#
+# 2) Plot a single point displacement on x-axis using node id 120, uy, with sign flip:
+# hysteresis_x_axis value displacement node 120 uy -1.0
+#
+# 3) Plot mean boundary displacement on x-axis:
+# hysteresis_x_axis value displacement boundary TOP uy mean -1.0
+#
+# 4) Plot time on x-axis:
+# hysteresis_x_axis time 1.0

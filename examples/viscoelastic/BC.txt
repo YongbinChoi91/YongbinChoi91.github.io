@@ -1,0 +1,6 @@
+# Boundary conditions only
+DIRICHLET LEFT ux 0.0
+DIRICHLET BOTTOM uy 0.0
+DIRICHLET TOP uy piecewise_cycle(4.0; 0,0; 1.0,0.15; 2.0,0; 3.0,-0.15; 4.0,0)
+#DIRICHLET TOP uy 0.15*t
+

@@ -1,0 +1,56 @@
+# Boundary condition syntax
+#
+# Existing named-boundary form:
+#   DIRICHLET field BOUNDARY component expression
+#   NEUMANN   field BOUNDARY component expression
+#
+# Examples:
+#   DIRICHLET displacement LEFT ux 0.0
+#   DIRICHLET displacement LEFT uy 0.0
+#   NEUMANN   displacement RIGHT uy 4.0*t
+#
+# Components can be written as x/y/z or ux/uy/uz for displacement.
+# For velocity, vx/vy/vz are also accepted.
+#
+# New coordinate-selector forms:
+#
+# 1) Point Dirichlet
+#    Fix one node whose coordinates match POINT[x,y] or POINT[x,y,z].
+#    The POINT[...] token must not contain spaces.
+#
+#   DIRICHLET displacement POINT[48,60] ux 0.0
+#   DIRICHLET displacement POINT[48,60] uy 0.0
+#
+# 2) Line Dirichlet
+#    Fix all field nodes lying on the line segment from p0 to p1.
+#    This does not require a named boundary group such as LEFT or RIGHT.
+#    The LINE[...] token must not contain spaces.
+#
+#   DIRICHLET displacement LINE[(48,44),(48,60)] ux 0.0
+#   DIRICHLET displacement LINE[(48,44),(48,60)] uy 0.0
+#
+# 3) Line Neumann / traction
+#    Apply traction on existing mesh boundary entities whose boundary-edge
+#    nodes lie on the selected line segment. The boundary group name is not
+#    needed, but the mesh must still contain boundary edge rows somewhere.
+#    Current implementation selects whole boundary edges only; it does not
+#    cut an edge in the middle. For this mesh, RIGHT is split at these y values:
+#      44, 44.772090539356753, 45.544181078713507,
+#      46.778441049238829, 48.012701019764357,
+#      49.184462804931457, 50.356224590098357,
+#      51.800911173227917, 53.245597756357732,
+#      54.365447220224112, 55.485296684090478,
+#      56.648605213391413, 57.811913742692333,
+#      58.905956871346163, 60
+#
+#   NEUMANN displacement LINE[(48,44),(48,50.356224590098357)] uy 4.0*t
+#
+# Not supported:
+#   NEUMANN displacement POINT[48,60] uy 1.0
+# Use a separate point-load feature for concentrated nodal loads if needed.
+#
+# Left side is fixed to remove rigid motion.
+# Right side has prescribed x-extension only; y is free.
+DIRICHLET displacement LEFT x 0.0
+DIRICHLET displacement LEFT y 0.0
+NEUMANN displacement RIGHT y 4.0*t
