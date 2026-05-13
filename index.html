@@ -26,15 +26,7 @@
 <span></span>
 <span></span>
 </button>
-<nav aria-label="Primary navigation" class="top-links">
-<a class="route-link" data-route="home" href="#home">Home</a>
-<a class="route-link" data-route="main" href="#main">Main page</a>
-<a class="route-link" data-route="install" href="#install">Install</a>
-<a class="route-link" data-anchor="framework" data-route="main" href="#framework">Framework</a>
-<a class="route-link" data-anchor="code-structure" data-route="main" href="#code-structure">Code Structure</a>
-<a class="route-link" data-anchor="applications" data-route="main" href="#applications">Applications</a>
-<a class="route-link" data-anchor="contact" data-route="main" href="#contact">Contact</a>
-</nav>
+<nav aria-label="Primary navigation" class="top-links"><a class="route-link" data-route="home" href="#home">Home</a><a class="route-link" data-route="main" href="#main">Main Page</a><a class="route-link" data-route="framework" href="#framework">Framework</a><a class="route-link" data-route="code-structure" href="#code-structure">Code Structure</a><a class="route-link" data-route="applications" href="#applications">Applications</a><a class="route-link" data-route="gallery" href="#gallery">Gallery</a><a class="route-link" data-route="install" href="#install">Install</a><a class="route-link" data-route="contact" href="#contact">Contact</a></nav>
 </header>
 <main id="top">
 <div class="page" data-page="install" id="page-install">
@@ -167,17 +159,14 @@ make multiscale</code></pre>
               postprocessing pipeline.
             </p>
 <div class="hero-actions">
-<button class="button primary route-card" data-route="main" type="button">Enter main page</button>
+<button class="button primary route-card" data-route="main" type="button">Enter Main Page</button>
 <button class="button secondary route-card" data-route="install" type="button">Install guide</button>
 </div>
 </div>
 <div class="landing-summary placeholder-panel">
 <p class="eyebrow">What this code is for</p>
 <h2>One reusable solver path organized by application area.</h2>
-<p>
-              The landing page is intentionally simple. Open the main page to view the full application map,
-              framework architecture, file-oriented code view, benchmark slots, and gallery placeholders.
-            </p>
+<p>Home is the visual entry point. Enter the Main Page to see the complete site map, then open each dedicated documentation page from there.</p>
 <div aria-label="Application areas" class="application-tabs compact-application-tabs">
 <button class="application-tab route-card" data-preview="solid" data-route="app-solid" type="button">
 <span>Solid</span>
@@ -196,7 +185,7 @@ make multiscale</code></pre>
 <small>Analysis</small>
 </button>
 </div>
-<div class="landing-hover-preview" data-preview-box data-active-preview="solid" aria-live="polite">
+<div aria-live="polite" class="landing-hover-preview" data-active-preview="solid" data-preview-box="">
 <div class="landing-preview-item active" data-preview-panel="solid"><strong>Solid Mechanics</strong><span>Large-deformation solid, inelasticity, dynamics, and polygonal VEM placeholders.</span></div>
 <div class="landing-preview-item" data-preview-panel="fluid"><strong>Fluid Mechanics</strong><span>Velocity-pressure flow, stabilization, and temperature-coupled placeholder.</span></div>
 <div class="landing-preview-item" data-preview-panel="fsi"><strong>FSI</strong><span>Interface coupling and ALE mesh-motion placeholder.</span></div>
@@ -206,98 +195,89 @@ make multiscale</code></pre>
 </section>
 </div>
 <div class="page" data-page="main" id="page-main">
-<section class="hero section-wrap">
-<div class="hero-copy">
-<p class="eyebrow">Modern C++ finite element solver</p>
-<h1>Generic FEM framework for nonlinear mechanics and multiphysics simulation.</h1>
+<section class="subpage-hero section-wrap main-hub-hero">
+<button class="back-button route-card" data-route="home">← Back to home</button>
+<p class="eyebrow">Documentation hub</p>
+<h1>HAEFEM Main Page</h1>
 <p class="lead">
-              A research-oriented C++ finite element framework built around local weak forms,
-              automatic differentiation, reusable assembly, nonlinear solvers, and a clean
-              postprocessing pipeline.
+              This page works as the central lobby of the website. Home stays as the visual landing page,
+              while the Main Page gives visitors a clear route into the framework concept, implementation map,
+              application branches, gallery, installation guide, and contact information.
             </p>
 <div class="hero-actions">
-<a class="button primary" data-anchor="applications" data-route="main" href="#applications">View applications</a>
-<a class="button secondary" data-anchor="framework" data-route="main" href="#framework">Explore framework</a>
-</div>
-</div>
-<div aria-label="Simulation placeholder collage" class="hero-visual">
-<div class="visual-main placeholder-panel application-preview" data-preview-box data-active-preview="solid">
-<div class="application-preview-layer active preview-solid" data-preview-panel="solid">
-<div class="preview-graphic solid-preview-graphic" aria-hidden="true"></div>
-<span class="visual-label">Solid Mechanics preview</span>
-<div class="preview-copy">
-<strong>Solid Mechanics</strong>
-<small>Elasticity · Plasticity · Dynamics · VEM</small>
-</div>
-</div>
-<div class="application-preview-layer preview-fluid" data-preview-panel="fluid">
-<div class="preview-graphic fluid-preview-graphic" aria-hidden="true"></div>
-<span class="visual-label">Fluid Mechanics preview</span>
-<div class="preview-copy">
-<strong>Fluid Mechanics</strong>
-<small>Incompressible flow · Stabilization · Thermal coupling</small>
-</div>
-</div>
-<div class="application-preview-layer preview-fsi" data-preview-panel="fsi">
-<div class="preview-graphic fsi-preview-graphic" aria-hidden="true"></div>
-<span class="visual-label">FSI preview</span>
-<div class="preview-copy">
-<strong>Fluid-Structure Interaction</strong>
-<small>ALE · Interface transfer · Mesh motion</small>
-</div>
-</div>
-<div class="application-preview-layer preview-multiscale" data-preview-panel="multiscale">
-<div class="preview-graphic multiscale-preview-graphic" aria-hidden="true"></div>
-<span class="visual-label">Multiscale Analysis preview</span>
-<div class="preview-copy">
-<strong>Multiscale Analysis</strong>
-<small>RVE · Homogenization · Macro-micro coupling</small>
-</div>
-</div>
-</div>
-<div aria-label="Main application tabs" class="visual-grid application-tabs hero-application-tabs">
-<button class="mini-visual application-tab route-card" data-preview="solid" data-route="app-solid" type="button">
-<span>Solid</span>
-<small>Mechanics</small>
-</button>
-<button class="mini-visual application-tab route-card" data-preview="fluid" data-route="app-fluid" type="button">
-<span>Fluid</span>
-<small>Mechanics</small>
-</button>
-<button class="mini-visual application-tab route-card" data-preview="fsi" data-route="app-fsi" type="button">
-<span>FSI</span>
-<small>Coupling</small>
-</button>
-<button class="mini-visual application-tab route-card" data-preview="multiscale" data-route="app-multiscale" type="button">
-<span>Multiscale</span>
-<small>Analysis</small>
-</button>
-</div>
+<button class="button primary route-card" data-route="applications" type="button">View Applications</button>
+<button class="button secondary route-card" data-route="framework" type="button">Explore Framework</button>
 </div>
 </section>
-<section aria-label="Core features" class="feature-strip section-wrap">
-<article>
-<span>01</span>
-<h2>Weak-form driven</h2>
-<p>Physics models are defined locally while assembly and solver logic remain reusable.</p>
+<section class="doc-section section-wrap main-hub-section">
+<div class="section-heading">
+<p class="eyebrow">Site map</p>
+<h2>Choose where to go next.</h2>
+<p>
+              Each card opens a dedicated page. The Main Page only summarizes the website structure,
+              so visitors are not forced to scroll through long technical sections before finding the topic they need.
+            </p>
+</div>
+<div class="framework-summary-grid page-hub-grid main-hub-grid">
+<article class="framework-summary-card route-card main-hub-card" data-route="framework" tabindex="0">
+<span class="tag">Architecture</span>
+<h3>Framework</h3>
+<p>Weak-form-driven design, automatic differentiation, reusable assembly, Newton solve flow, and extension philosophy.</p>
+<span class="text-link">Open Framework →</span>
 </article>
-<article>
-<span>02</span>
-<h2>Modern C++ only</h2>
-<p>The simulation pipeline is designed as a standalone C++ codebase without Python runtime dependency.</p>
+<article class="framework-summary-card route-card main-hub-card" data-route="code-structure" tabindex="0">
+<span class="tag">Implementation</span>
+<h3>Code Structure</h3>
+<p>Input layer, mesh and DOF layout, space utilities, kinematics, weak forms, assembly, solver, backend, and postprocess modules.</p>
+<span class="text-link">Open Code Structure →</span>
 </article>
-<article>
-<span>03</span>
-<h2>AD-based tangents</h2>
-<p>Residuals and consistent tangents are generated from the same weak-form implementation.</p>
+<article class="framework-summary-card route-card main-hub-card" data-route="applications" tabindex="0">
+<span class="tag">Physics</span>
+<h3>Applications</h3>
+<p>Solid mechanics, fluid mechanics, FSI, multiscale analysis, and VEM model branches with detailed example pages.</p>
+<span class="text-link">Open Applications →</span>
 </article>
-<article>
-<span>04</span>
-<h2>Extensible modules</h2>
-<p>FEM, VEM, multiphysics, and multiscale modules share a common infrastructure.</p>
+<article class="framework-summary-card route-card main-hub-card" data-route="gallery" tabindex="0">
+<span class="tag">Results</span>
+<h3>Gallery</h3>
+<p>Prepared space for simulation images, VTK screenshots, benchmark plots, animations, and future result showcases.</p>
+<span class="text-link">Open Gallery →</span>
 </article>
+<article class="framework-summary-card route-card main-hub-card" data-route="install" tabindex="0">
+<span class="tag">Setup</span>
+<h3>Install</h3>
+<p>Conda environment, Trilinos/Sacado setup, Makefile paths, backend choices, and build commands.</p>
+<span class="text-link">Open Install →</span>
+</article>
+<article class="framework-summary-card route-card main-hub-card" data-route="contact" tabindex="0">
+<span class="tag">Profile</span>
+<h3>Contact</h3>
+<p>Developer profile, GitHub links, project repository, and collaboration/contact information.</p>
+<span class="text-link">Open Contact →</span>
+</article>
+</div>
 </section>
-<section class="doc-section section-wrap compact-framework" id="framework">
+<section class="doc-section section-wrap main-hub-flow-section">
+<div class="section-heading">
+<p class="eyebrow">Recommended reading path</p>
+<h2>A clean path for first-time visitors.</h2>
+<p>
+              The site can be read like a portfolio: first understand the solver idea, then inspect the code organization,
+              then open the application branch that matches the visitor's interest.
+            </p>
+</div>
+<div class="pipeline main-hub-pipeline">
+<div>Home</div>
+<div>Main Page</div>
+<div>Framework</div>
+<div>Code Structure</div>
+<div>Applications</div>
+<div>Gallery</div>
+<div>Contact</div>
+</div>
+</section>
+</div>
+<div class="page" data-page="framework" id="page-framework"><section class="subpage-hero section-wrap"><button class="back-button route-card" data-route="home" type="button">← Back to home</button><p class="eyebrow">Framework</p><h1>Framework Architecture</h1><p class="lead">The framework page explains the solver concept, weak-form workflow, AD tangent extraction, and extension rules behind HAEFEM.</p></section><section class="doc-section section-wrap compact-framework" id="framework">
 <div class="section-heading clean-framework-heading">
 <p class="eyebrow">Framework</p>
 <h2>Concept and computational workflow.</h2>
@@ -330,8 +310,7 @@ make multiscale</code></pre>
 <span>Flow</span>
 <p>Input → Mesh / fields → DOF layout → Local weak form → AD tangent → CSR assembly → Newton solve → Output</p>
 </div>
-</section>
-<section class="doc-section section-wrap" id="code-structure">
+</section></div><div class="page" data-page="code-structure" id="page-code-structure"><section class="subpage-hero section-wrap"><button class="back-button route-card" data-route="home" type="button">← Back to home</button><p class="eyebrow">Code Structure</p><h1>Code Structure</h1><p class="lead">The code-structure page collects the implementation map, function maps, and file-oriented module view in one technical documentation page.</p></section><section class="doc-section section-wrap" id="code-structure">
 <div class="section-heading clean-framework-heading">
 <p class="eyebrow">Code Structure</p>
 <h2>Implementation modules at a glance.</h2>
@@ -417,8 +396,7 @@ make multiscale</code></pre>
 <button class="function-map-jump route-card" data-route="framework-multiscale-functions" type="button"><strong>Multiscale / RVE</strong><small>PBC, warm start, sensitivity</small></button>
 </div>
 </div>
-</section>
-<section class="doc-section section-wrap file-view-section">
+</section><section class="doc-section section-wrap file-view-section">
 <div class="section-heading">
 <p class="eyebrow">Code Structure</p>
 <h2>File-oriented view.</h2>
@@ -488,8 +466,7 @@ make multiscale</code></pre>
 </div>
 </div>
 </div>
-</section>
-<section class="doc-section section-wrap" id="applications">
+</section></div><div class="page" data-page="applications" id="page-applications"><section class="subpage-hero section-wrap"><button class="back-button route-card" data-route="home" type="button">← Back to home</button><p class="eyebrow">Applications</p><h1>Applications</h1><p class="lead">Application pages are organized by physics area, then by detailed model pages for examples, theory, simulation notes, and future results.</p></section><section class="doc-section section-wrap" id="applications">
 <div class="section-heading">
 <p class="eyebrow">Applications</p>
 <h2>Application pages prepared for detailed examples.</h2>
@@ -535,8 +512,7 @@ make multiscale</code></pre>
 </div>
 </article>
 </div>
-</section>
-<section class="doc-section section-wrap" id="benchmarks">
+</section><section class="doc-section section-wrap" id="benchmarks">
 <div class="section-heading">
 <p class="eyebrow">Benchmarks</p>
 <h2>Validation cards for future benchmark results.</h2>
@@ -552,8 +528,7 @@ make multiscale</code></pre>
 <article><h3>RVE homogenization</h3><p>Macro-micro consistency slot.</p></article>
 <article><h3>VEM patch test</h3><p>Polygonal element validation slot.</p></article>
 </div>
-</section>
-<section class="doc-section section-wrap" id="gallery">
+</section></div><div class="page" data-page="gallery" id="page-gallery"><section class="subpage-hero section-wrap"><button class="back-button route-card" data-route="home" type="button">← Back to home</button><p class="eyebrow">Gallery</p><h1>Gallery</h1><p class="lead">A dedicated result-gallery space for future screenshots, VTK captures, benchmark figures, and animations.</p></section><section class="doc-section section-wrap" id="gallery">
 <div class="section-heading">
 <p class="eyebrow">Gallery</p>
 <h2>Result gallery placeholder.</h2>
@@ -570,8 +545,7 @@ make multiscale</code></pre>
 <div>RVE</div>
 <div>Benchmark</div>
 </div>
-</section>
-<section class="contact section-wrap" id="contact">
+</section></div><div class="page" data-page="contact" id="page-contact"><section class="subpage-hero section-wrap"><button class="back-button route-card" data-route="home" type="button">← Back to home</button><p class="eyebrow">Contact</p><h1>Contact</h1><p class="lead">Contact and project links for HAEFEM, including the developer profile and repository.</p></section><section class="contact section-wrap" id="contact">
 <div>
 <p class="eyebrow">Contact</p>
 <h2>Yongbin Choi</h2>
@@ -582,14 +556,12 @@ make multiscale</code></pre>
 <p>
               GitHub: <a href="https://github.com/YongbinChoi91" rel="noopener" target="_blank">YongbinChoi91</a><br/>
               Project repository: <a href="https://github.com/YongbinChoi91/HAEFEM" rel="noopener" target="_blank">HAEFEM on GitHub</a>
-            </p>
+</p>
 </div>
 <button class="button primary route-card" data-route="home" type="button">Back to landing</button>
-</section>
-</div>
-<div class="page" data-page="app-fem" id="page-app-fem">
+</section></div><div class="page" data-page="app-fem" id="page-app-fem">
 <section class="subpage-hero section-wrap">
-<button class="back-button route-card" data-route="main">← Back to applications</button>
+<button class="back-button route-card" data-route="applications">← Back to applications</button>
 <p class="eyebrow">Application / FEM</p>
 <h1>Finite Element Method</h1>
 <p class="lead">FEM-oriented overview page. For the clean application hierarchy, Solid, Fluid, FSI, and Multiscale are also available directly from the Applications section.</p>
@@ -603,7 +575,7 @@ make multiscale</code></pre>
 </div>
 <div class="page" data-page="app-multiphysics" id="page-app-multiphysics">
 <section class="subpage-hero section-wrap">
-<button class="back-button route-card" data-anchor="applications" data-route="main">← Back to applications</button>
+<button class="back-button route-card" data-route="applications">← Back to applications</button>
 <p class="eyebrow">Application / Multiphysics</p>
 <h1>Multiphysics Coupling</h1>
 <p class="lead">
@@ -630,7 +602,7 @@ make multiscale</code></pre>
 </div>
 <div class="page" data-page="app-solid" id="page-app-solid">
 <section class="subpage-hero section-wrap">
-<button class="back-button route-card" data-anchor="applications" data-route="main">← Back to applications</button>
+<button class="back-button route-card" data-route="applications">← Back to applications</button>
 <p class="eyebrow">Application / Solid Mechanics</p>
 <h1>Solid Mechanics</h1>
 <p class="lead">
@@ -730,7 +702,7 @@ make multiscale</code></pre>
 </div>
 <div class="page" data-page="app-fluid" id="page-app-fluid">
 <section class="subpage-hero section-wrap">
-<button class="back-button route-card" data-anchor="applications" data-route="main">← Back to applications</button>
+<button class="back-button route-card" data-route="applications">← Back to applications</button>
 <p class="eyebrow">Application / Fluid Mechanics</p>
 <h1>Fluid Mechanics</h1>
 <p class="lead">
@@ -765,7 +737,7 @@ make multiscale</code></pre>
 </div>
 <div class="page" data-page="app-fsi" id="page-app-fsi">
 <section class="subpage-hero section-wrap">
-<button class="back-button route-card" data-anchor="applications" data-route="main">← Back to applications</button>
+<button class="back-button route-card" data-route="applications">← Back to applications</button>
 <p class="eyebrow">Application / Fluid-Structure Interaction</p>
 <h1>Fluid-Structure Interaction</h1>
 <p class="lead">
@@ -800,7 +772,7 @@ make multiscale</code></pre>
 </div>
 <div class="page" data-page="app-multiscale" id="page-app-multiscale">
 <section class="subpage-hero section-wrap">
-<button class="back-button route-card" data-route="main">← Back to applications</button>
+<button class="back-button route-card" data-route="applications">← Back to applications</button>
 <p class="eyebrow">Application / Multiscale</p>
 <h1>Multiscale FEM</h1>
 <p class="lead">A dedicated area for single RVE verification and full macro-micro finite element simulations.</p>
@@ -2257,7 +2229,7 @@ history_diagnostics on</code></pre>
 </article>
 </div>
 <div class="code-accordion">
-<details class="code-details" open>
+<details class="code-details" open="">
 <summary>1. The active model assembles only displacement DOFs.</summary>
 <pre class="example-code"><code>std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
     (void)mesh;
@@ -2665,7 +2637,7 @@ G += div_v * delta_p * Scalar(dV);</code></pre></div>
 <div class="plasticity-tab-panel active" data-rve-panel="theory" role="tabpanel">
 <div class="section-heading"><p class="eyebrow">Theory</p><h2>Periodic micro fluctuation problem.</h2><p>The RVE receives a macro deformation gradient and solves for a periodic fluctuation field. The averaged Piola stress is then used as the macro constitutive response.</p></div>
 <div class="math-explain-grid theory-grid">
-<article class="math-card"><span class="tag">1 · Macro input</span><h3>Prescribed deformation gradient</h3><div class="formula-block">\[\mathbf{F}_M = \begin{bmatrix} F_{11} & F_{12} \ F_{21} & F_{22} \end{bmatrix}\]</div><p>The standalone RVE run is driven by command-line or input-file values for the macro deformation gradient.</p></article>
+<article class="math-card"><span class="tag">1 · Macro input</span><h3>Prescribed deformation gradient</h3><div class="formula-block">\[\mathbf{F}_M = \begin{bmatrix} F_{11} &amp; F_{12} \ F_{21} &amp; F_{22} \end{bmatrix}\]</div><p>The standalone RVE run is driven by command-line or input-file values for the macro deformation gradient.</p></article>
 <article class="math-card"><span class="tag">2 · Micro split</span><h3>Affine part plus periodic fluctuation</h3><div class="formula-block">\[\mathbf{u}(\mathbf{X}) = (\mathbf{F}_M-\mathbf{I})\mathbf{X} + \mathbf{w}(\mathbf{X}), \qquad \mathbf{w}^{+}=\mathbf{w}^{-}\]</div><p>Periodic boundary constraints enforce matching fluctuation values on paired RVE boundaries, while one anchor removes rigid-body motion.</p></article>
 <article class="math-card"><span class="tag">3 · Homogenization</span><h3>Volume-averaged Piola stress</h3><div class="formula-block">\[\bar{\mathbf{P}} = \frac{1}{|\Omega_{RVE}|}\int_{\Omega_{RVE}} \mathbf{P}\,dV\]</div><p>The code stores both the integrated stress and the volume-normalized average, which is useful for ACEFEM-style comparisons.</p></article>
 <article class="math-card"><span class="tag">4 · Sensitivity</span><h3>Macro tangent data</h3><div class="formula-block">\[\mathbb{C}_{iA aB}=\frac{\partial}{\partial F_{aB}}\int_{\Omega_{RVE}} P_{iA}\,dV\]</div><p>The sensitivity convention is integrated-Piola first; volume normalization can be applied later when needed by the macro formulation.</p></article>
@@ -2676,9 +2648,9 @@ G += div_v * delta_p * Scalar(dV);</code></pre></div>
 <div class="cook-workflow"><article><span>1</span><h3>Read micro problem</h3><p>Micro mesh, DOFs, material parameters, and solver settings are read into a normal <code>Problem</code>.</p></article><article><span>2</span><h3>Build PBC pairs</h3><p>Left/right and bottom/top boundary nodes are paired with a coordinate tolerance.</p></article><article><span>3</span><h3>Add anchor</h3><p>Anchor constraints remove rigid-body modes from the periodic fluctuation field.</p></article><article><span>4</span><h3>Assemble Kuu</h3><p>The generic assembly path builds the micro equilibrium residual and tangent.</p></article><article><span>5</span><h3>Solve KKT</h3><p>Displacement corrections and Lagrange multiplier corrections are solved together.</p></article><article><span>6</span><h3>Average response</h3><p>Integrated Piola stress, averaged stress, and optional sensitivity data are written to CSV.</p></article></div>
 <div class="example-grid two-col local-equation-grid">
 <article class="detail-card"><span class="tag">Sparse KKT system</span><h2>Periodic constraints are solved as an augmented saddle-point system.</h2><div class="equation-box block-matrix-equation"><span class="matrix-block two-by-two"><span>K<sub>uu</sub></span><span>C<sup>T</sup></span><span>C</span><span>0</span></span><span class="matrix-times">×</span><span class="matrix-block vector-block"><span>Δu</span><span>Δλ</span></span><span class="matrix-equals">=</span><span class="matrix-minus">−</span><span class="matrix-block vector-block"><span>R<sub>u</sub></span><span>R<sub>c</sub></span></span></div><p>Instead of allocating a dense augmented matrix, the implementation preserves the CSR graph of <code>Kuu</code> and appends only the sparse constraint rows and columns.</p></article>
-<article class="detail-card"><span class="tag">Implementation link</span><h2>Relevant functions</h2><ul class="clean-list function-link-list code-list"><li><button class="function-link route-card" data-route="framework-multiscale-functions" data-anchor="fn-build-square-rve-pbc" type="button"><code>build_square_rve_pbc_constraints()</code></button></li><li><button class="function-link route-card" data-route="framework-multiscale-functions" data-anchor="fn-solve-rve-pbc-augmented" type="button"><code>solve_rve_pbc_augmented()</code></button></li><li><button class="function-link route-card" data-route="framework-multiscale-functions" data-anchor="fn-make-augmented-matrix" type="button"><code>make_augmented_matrix()</code></button></li><li><button class="function-link route-card" data-route="framework-multiscale-functions" data-anchor="fn-compute-rve-macro-response" type="button"><code>compute_rve_macro_response()</code></button></li></ul></article>
+<article class="detail-card"><span class="tag">Implementation link</span><h2>Relevant functions</h2><ul class="clean-list function-link-list code-list"><li><button class="function-link route-card" data-anchor="fn-build-square-rve-pbc" data-route="framework-multiscale-functions" type="button"><code>build_square_rve_pbc_constraints()</code></button></li><li><button class="function-link route-card" data-anchor="fn-solve-rve-pbc-augmented" data-route="framework-multiscale-functions" type="button"><code>solve_rve_pbc_augmented()</code></button></li><li><button class="function-link route-card" data-anchor="fn-make-augmented-matrix" data-route="framework-multiscale-functions" type="button"><code>make_augmented_matrix()</code></button></li><li><button class="function-link route-card" data-anchor="fn-compute-rve-macro-response" data-route="framework-multiscale-functions" type="button"><code>compute_rve_macro_response()</code></button></li></ul></article>
 </div>
-<div class="actual-code-stack"><details class="code-details" open><summary>Standalone RVE execution pattern</summary><pre class="example-code"><code>RveSolveOptions opt;
+<div class="actual-code-stack"><details class="code-details" open=""><summary>Standalone RVE execution pattern</summary><pre class="example-code"><code>RveSolveOptions opt;
 opt.Fmacro = {{ {F11, F12}, {F21, F22} }};
 opt.pair_tol = 1.0e-8;
 opt.vtk_output = "output/rve_solution.vtk";
@@ -2731,7 +2703,7 @@ opt.use_warm_start       = true;</code></pre></article>
 <article class="detail-card"><span class="tag">Safety controls</span><h2>Do not accept a stale RVE state too early.</h2><p>A cached micro state can be close but still not accurate enough for the macro tangent. The solver can force a minimum number of warm-start corrections and use a tighter tolerance.</p><pre class="example-code"><code>opt.min_warm_start_iterations = 1;
 opt.warm_start_tol = 1.0e-11;</code></pre></article>
 </div>
-<div class="example-grid two-col"><article class="detail-card"><span class="tag">Implementation link</span><h2>Relevant functions</h2><ul class="clean-list function-link-list code-list"><li><button class="function-link route-card" data-route="framework-multiscale-functions" data-anchor="fn-configure-rve-context" type="button"><code>configure_multiscale_rve_context()</code></button></li><li><button class="function-link route-card" data-route="framework-multiscale-functions" data-anchor="fn-solve-rve-pbc-augmented" type="button"><code>solve_rve_pbc_augmented()</code></button></li><li><button class="function-link route-card" data-route="framework-multiscale-functions" data-anchor="fn-compute-rve-sensitivity" type="button"><code>compute_rve_sensitivity_from_du_dF()</code></button></li><li><button class="function-link route-card" data-route="framework-multiscale-functions" data-anchor="fn-consume-rve-diagnostics" type="button"><code>consume_multiscale_rve_diagnostics()</code></button></li></ul></article><article class="detail-card"><span class="tag">Parallelization note</span><h2>Macro elements and RVE calls are natural parallel targets.</h2><p>The macro assembly and the RVE solves can be organized around macro element/Gauss-point work units. This page keeps the algorithm visible while leaving backend-specific OpenMP tuning to the solver settings.</p></article></div>
+<div class="example-grid two-col"><article class="detail-card"><span class="tag">Implementation link</span><h2>Relevant functions</h2><ul class="clean-list function-link-list code-list"><li><button class="function-link route-card" data-anchor="fn-configure-rve-context" data-route="framework-multiscale-functions" type="button"><code>configure_multiscale_rve_context()</code></button></li><li><button class="function-link route-card" data-anchor="fn-solve-rve-pbc-augmented" data-route="framework-multiscale-functions" type="button"><code>solve_rve_pbc_augmented()</code></button></li><li><button class="function-link route-card" data-anchor="fn-compute-rve-sensitivity" data-route="framework-multiscale-functions" type="button"><code>compute_rve_sensitivity_from_du_dF()</code></button></li><li><button class="function-link route-card" data-anchor="fn-consume-rve-diagnostics" data-route="framework-multiscale-functions" type="button"><code>consume_multiscale_rve_diagnostics()</code></button></li></ul></article><article class="detail-card"><span class="tag">Parallelization note</span><h2>Macro elements and RVE calls are natural parallel targets.</h2><p>The macro assembly and the RVE solves can be organized around macro element/Gauss-point work units. This page keeps the algorithm visible while leaving backend-specific OpenMP tuning to the solver settings.</p></article></div>
 </div>
 </div>
 </section>
@@ -3035,7 +3007,7 @@ for (int j = 0; j &lt; n; ++j) {
 <div class="page detail-page" data-page="detail-vem-quadratic" id="page-detail-vem-quadratic"><section class="example-page section-wrap"><button class="back-button route-card" data-route="app-vem">← Back to VEM</button><p class="eyebrow">VEM / Quadratic VEM</p><h1>Quadratic VEM examples</h1><p class="lead">Prepared for second-order polygonal elements and DOFI stabilization notes.</p><div class="example-layout"><div class="example-visual placeholder-panel"><span>Quadratic VEM placeholder</span></div><div class="example-content"><h2>Example slots</h2><ul class="clean-list"><li>Polygon triangulation and T6 integration comparison.</li><li>High-order displacement field visualization.</li><li>Stabilization parameter and convergence plots.</li></ul></div></div></section></div>
 <div class="page detail-page framework-detail-page" data-page="framework-concept" id="page-framework-concept">
 <section class="subpage-hero section-wrap">
-<button class="back-button route-card" data-anchor="framework" data-route="main">← Back to Framework</button>
+<button class="back-button route-card" data-route="framework">← Back to Framework</button>
 <p class="eyebrow">Framework concept</p>
 <h1>Local weak-form first.</h1>
 <p class="lead">
@@ -3057,7 +3029,7 @@ for (int j = 0; j &lt; n; ++j) {
 </div>
 <div class="page detail-page framework-detail-page" data-page="framework-workflow" id="page-framework-workflow">
 <section class="subpage-hero section-wrap">
-<button class="back-button route-card" data-anchor="framework" data-route="main">← Back to Framework</button>
+<button class="back-button route-card" data-route="framework">← Back to Framework</button>
 <p class="eyebrow">Framework workflow</p>
 <h1>One reusable solve path.</h1>
 <p class="lead">
@@ -3078,7 +3050,7 @@ for (int j = 0; j &lt; n; ++j) {
 </div>
 <div class="page detail-page framework-detail-page" data-page="framework-extensibility" id="page-framework-extensibility">
 <section class="subpage-hero section-wrap">
-<button class="back-button route-card" data-anchor="framework" data-route="main">← Back to Framework</button>
+<button class="back-button route-card" data-route="framework">← Back to Framework</button>
 <p class="eyebrow">Framework extensibility</p>
 <h1>Built for research extensions.</h1>
 <p class="lead">
@@ -3100,7 +3072,7 @@ for (int j = 0; j &lt; n; ++j) {
 </div>
 <div class="page detail-page framework-detail-page" data-page="framework-input" id="page-framework-input">
 <section class="subpage-hero section-wrap wide-page-wrap">
-<button class="back-button route-card" data-anchor="code-structure" data-route="main">← Back to Code Structure</button>
+<button class="back-button route-card" data-route="code-structure">← Back to Code Structure</button>
 <p class="eyebrow">Framework / Input layer</p>
 <h1>Input / Configuration</h1>
 <p class="lead">Text input files are converted into the runtime Problem and ProblemParameters objects used by the solver.</p>
@@ -3148,7 +3120,7 @@ for (int j = 0; j &lt; n; ++j) {
 </div>
 <div class="page detail-page framework-detail-page" data-page="framework-mesh" id="page-framework-mesh">
 <section class="subpage-hero section-wrap wide-page-wrap">
-<button class="back-button route-card" data-anchor="code-structure" data-route="main">← Back to Code Structure</button>
+<button class="back-button route-card" data-route="code-structure">← Back to Code Structure</button>
 <p class="eyebrow">Framework / Core data model</p>
 <h1>Mesh / Field / DOF Layout</h1>
 <p class="lead">This page explains how fields, domains, element connectivity, boundary groups, text-based input formats, and global DOF numbering are represented in the framework.</p>
@@ -3414,7 +3386,7 @@ DISPLACEMENT_ELEMENTS
 </div>
 <div class="page detail-page framework-detail-page" data-page="framework-space" id="page-framework-space">
 <section class="subpage-hero section-wrap wide-page-wrap">
-<button class="back-button route-card" data-anchor="code-structure" data-route="main">← Back to Code Structure</button>
+<button class="back-button route-card" data-route="code-structure">← Back to Code Structure</button>
 <p class="eyebrow">Framework / FE space</p>
 <h1>Space / Shape Functions / Quadrature</h1>
 <p class="lead">Reference element topology, shape functions, quadrature rules, and Jacobian data are centralized here.</p>
@@ -3464,7 +3436,7 @@ DISPLACEMENT_ELEMENTS
 </div>
 <div class="page detail-page framework-detail-page" data-page="framework-kinematics" id="page-framework-kinematics">
 <section class="subpage-hero section-wrap wide-page-wrap">
-<button class="back-button route-card" data-anchor="code-structure" data-route="main">← Back to Code Structure</button>
+<button class="back-button route-card" data-route="code-structure">← Back to Code Structure</button>
 <p class="eyebrow">Framework / Mechanics helpers</p>
 <h1>Kinematics</h1>
 <p class="lead">Header-only tensor utilities are shared by ordinary double evaluation and Sacado automatic differentiation.</p>
@@ -3532,7 +3504,7 @@ DISPLACEMENT_ELEMENTS
 </div>
 <div class="page detail-page framework-detail-page" data-page="framework-weakform" id="page-framework-weakform">
 <section class="subpage-hero section-wrap wide-page-wrap">
-<button class="back-button route-card" data-anchor="code-structure" data-route="main">← Back to Code Structure</button>
+<button class="back-button route-card" data-route="code-structure">← Back to Code Structure</button>
 <p class="eyebrow">Framework / Physics plug-in point</p>
 <h1>Weak Form / Constitutive Model</h1>
 <p class="lead">The weak-form module is where the local physics is defined; the rest of the solver stays reusable.</p>
@@ -3581,7 +3553,7 @@ DISPLACEMENT_ELEMENTS
 </div>
 <div class="page detail-page framework-detail-page" data-page="framework-assembly" id="page-framework-assembly">
 <section class="subpage-hero section-wrap wide-page-wrap">
-<button class="back-button route-card" data-anchor="code-structure" data-route="main">← Back to Code Structure</button>
+<button class="back-button route-card" data-route="code-structure">← Back to Code Structure</button>
 <p class="eyebrow">Framework / Global system construction</p>
 <h1>Global Assembly</h1>
 <p class="lead">Local element residuals and tangents are scattered into a global residual vector and CSR tangent matrix.</p>
@@ -3630,7 +3602,7 @@ DISPLACEMENT_ELEMENTS
 </div>
 <div class="page detail-page framework-detail-page" data-page="framework-solver" id="page-framework-solver">
 <section class="subpage-hero section-wrap wide-page-wrap">
-<button class="back-button route-card" data-anchor="code-structure" data-route="main">← Back to Code Structure</button>
+<button class="back-button route-card" data-route="code-structure">← Back to Code Structure</button>
 <p class="eyebrow">Framework / Nonlinear solve</p>
 <h1>Nonlinear Solver</h1>
 <p class="lead">The unified time-step solver controls Newton iterations, boundary conditions, adaptive stepping, diagnostics, and output calls.</p>
@@ -3678,7 +3650,7 @@ DISPLACEMENT_ELEMENTS
 </div>
 <div class="page detail-page framework-detail-page" data-page="framework-backend" id="page-framework-backend">
 <section class="subpage-hero section-wrap wide-page-wrap">
-<button class="back-button route-card" data-anchor="code-structure" data-route="main">← Back to Code Structure</button>
+<button class="back-button route-card" data-route="code-structure">← Back to Code Structure</button>
 <p class="eyebrow">Framework / Linear algebra</p>
 <h1>Linear Solver Backend</h1>
 <p class="lead">A common CSR interface lets the nonlinear solver switch between direct and iterative solver packages.</p>
@@ -3888,7 +3860,7 @@ DISPLACEMENT_ELEMENTS
 </div>
 <div class="page detail-page framework-detail-page" data-page="framework-postprocess" id="page-framework-postprocess">
 <section class="subpage-hero section-wrap wide-page-wrap">
-<button class="back-button route-card" data-anchor="code-structure" data-route="main">← Back to Code Structure</button>
+<button class="back-button route-card" data-route="code-structure">← Back to Code Structure</button>
 <p class="eyebrow">Framework / Output and diagnostics</p>
 <h1>Postprocessing</h1>
 <p class="lead">The postprocessing layer writes visualization files and diagnostic CSV/SVG outputs without polluting solver logic.</p>
@@ -3939,7 +3911,7 @@ DISPLACEMENT_ELEMENTS
 </div>
 <div class="page detail-page framework-detail-page" data-page="framework-multiscale" id="page-framework-multiscale">
 <section class="subpage-hero section-wrap wide-page-wrap">
-<button class="back-button route-card" data-anchor="code-structure" data-route="main">← Back to Code Structure</button>
+<button class="back-button route-card" data-route="code-structure">← Back to Code Structure</button>
 <p class="eyebrow">Framework / Multiscale layer</p>
 <h1>Multiscale / RVE</h1>
 <p class="lead">The multiscale layer connects a macro weak form to a micro RVE problem through periodic constraints, homogenized stress, sensitivity transfer, warm-start caches, and diagnostics.</p>
@@ -3949,7 +3921,7 @@ DISPLACEMENT_ELEMENTS
 <div class="framework-detail-grid">
 <article class="detail-card"><h2>Main files</h2><ul class="clean-list code-list"><li><code>multiscale.h</code></li><li><code>multiscale.cpp</code></li><li><code>multiscale_main.cpp</code></li><li><code>single_rve_pbc.cpp</code></li><li><code>weak_form_macro.cpp</code></li></ul></article>
 <article class="detail-card"><h2>Key structures</h2><ul class="clean-list code-list"><li><code>RveSolveOptions</code></li><li><code>RveSolveResult</code></li><li><code>RvePbcSystem</code></li><li><code>RveMacroResponse</code></li><li><code>RveSensitivity</code></li><li><code>MultiscaleRveDiagnostics</code></li></ul></article>
-<article class="detail-card"><h2>Key functions</h2><p class="function-map-intro">Click a function to open the implementation-level view.</p><ul class="clean-list function-link-list code-list"><li><button class="function-link route-card" data-route="framework-multiscale-functions" data-anchor="fn-configure-rve-context" type="button"><code>configure_multiscale_rve_context()</code></button></li><li><button class="function-link route-card" data-route="framework-multiscale-functions" data-anchor="fn-build-square-rve-pbc" type="button"><code>build_square_rve_pbc_constraints()</code></button></li><li><button class="function-link route-card" data-route="framework-multiscale-functions" data-anchor="fn-solve-rve-pbc-augmented" type="button"><code>solve_rve_pbc_augmented()</code></button></li><li><button class="function-link route-card" data-route="framework-multiscale-functions" data-anchor="fn-compute-rve-macro-response" type="button"><code>compute_rve_macro_response()</code></button></li><li><button class="function-link route-card" data-route="framework-multiscale-functions" data-anchor="fn-compute-rve-sensitivity" type="button"><code>compute_rve_sensitivity_from_du_dF()</code></button></li></ul><span class="text-link route-card inline-route-link" data-route="framework-multiscale-functions" tabindex="0">Open full function map →</span></article>
+<article class="detail-card"><h2>Key functions</h2><p class="function-map-intro">Click a function to open the implementation-level view.</p><ul class="clean-list function-link-list code-list"><li><button class="function-link route-card" data-anchor="fn-configure-rve-context" data-route="framework-multiscale-functions" type="button"><code>configure_multiscale_rve_context()</code></button></li><li><button class="function-link route-card" data-anchor="fn-build-square-rve-pbc" data-route="framework-multiscale-functions" type="button"><code>build_square_rve_pbc_constraints()</code></button></li><li><button class="function-link route-card" data-anchor="fn-solve-rve-pbc-augmented" data-route="framework-multiscale-functions" type="button"><code>solve_rve_pbc_augmented()</code></button></li><li><button class="function-link route-card" data-anchor="fn-compute-rve-macro-response" data-route="framework-multiscale-functions" type="button"><code>compute_rve_macro_response()</code></button></li><li><button class="function-link route-card" data-anchor="fn-compute-rve-sensitivity" data-route="framework-multiscale-functions" type="button"><code>compute_rve_sensitivity_from_du_dF()</code></button></li></ul><span class="text-link route-card inline-route-link" data-route="framework-multiscale-functions" tabindex="0">Open full function map →</span></article>
 </div>
 <div class="framework-wide-layout">
 <article class="detail-card"><h2>Standalone RVE path</h2><div class="flow-stack"><span>Read micro problem</span><span>Prescribe \(\mathbf{F}_M\)</span><span>Build periodic constraints</span><span>Solve augmented KKT system</span><span>Write VTK / CSV response</span></div></article>
@@ -3967,7 +3939,7 @@ DISPLACEMENT_ELEMENTS
 </section>
 <section class="doc-section section-wrap wide-page-wrap function-map-section">
 <div class="function-map-layout">
-<aside class="function-sidebar detail-card"><span class="tag">Jump to function</span><ul class="clean-list code-list"><li><a data-route="framework-multiscale-functions" data-anchor="fn-configure-rve-context" href="#framework-multiscale-functions:fn-configure-rve-context"><code>configure_multiscale_rve_context()</code></a></li><li><a data-route="framework-multiscale-functions" data-anchor="fn-build-square-rve-pbc" href="#framework-multiscale-functions:fn-build-square-rve-pbc"><code>build_square_rve_pbc_constraints()</code></a></li><li><a data-route="framework-multiscale-functions" data-anchor="fn-solve-rve-pbc-augmented" href="#framework-multiscale-functions:fn-solve-rve-pbc-augmented"><code>solve_rve_pbc_augmented()</code></a></li><li><a data-route="framework-multiscale-functions" data-anchor="fn-make-augmented-matrix" href="#framework-multiscale-functions:fn-make-augmented-matrix"><code>make_augmented_matrix()</code></a></li><li><a data-route="framework-multiscale-functions" data-anchor="fn-make-augmented-residual" href="#framework-multiscale-functions:fn-make-augmented-residual"><code>make_augmented_residual()</code></a></li><li><a data-route="framework-multiscale-functions" data-anchor="fn-compute-rve-macro-response" href="#framework-multiscale-functions:fn-compute-rve-macro-response"><code>compute_rve_macro_response()</code></a></li><li><a data-route="framework-multiscale-functions" data-anchor="fn-compute-rve-piola-du" href="#framework-multiscale-functions:fn-compute-rve-piola-du"><code>compute_rve_macro_piola_du()</code></a></li><li><a data-route="framework-multiscale-functions" data-anchor="fn-compute-rve-sensitivity" href="#framework-multiscale-functions:fn-compute-rve-sensitivity"><code>compute_rve_sensitivity_from_du_dF()</code></a></li><li><a data-route="framework-multiscale-functions" data-anchor="fn-write-rve-macro-csv" href="#framework-multiscale-functions:fn-write-rve-macro-csv"><code>write_rve_macro_csv()</code></a></li><li><a data-route="framework-multiscale-functions" data-anchor="fn-consume-rve-diagnostics" href="#framework-multiscale-functions:fn-consume-rve-diagnostics"><code>consume_multiscale_rve_diagnostics()</code></a></li></ul></aside>
+<aside class="function-sidebar detail-card"><span class="tag">Jump to function</span><ul class="clean-list code-list"><li><a data-anchor="fn-configure-rve-context" data-route="framework-multiscale-functions" href="#framework-multiscale-functions:fn-configure-rve-context"><code>configure_multiscale_rve_context()</code></a></li><li><a data-anchor="fn-build-square-rve-pbc" data-route="framework-multiscale-functions" href="#framework-multiscale-functions:fn-build-square-rve-pbc"><code>build_square_rve_pbc_constraints()</code></a></li><li><a data-anchor="fn-solve-rve-pbc-augmented" data-route="framework-multiscale-functions" href="#framework-multiscale-functions:fn-solve-rve-pbc-augmented"><code>solve_rve_pbc_augmented()</code></a></li><li><a data-anchor="fn-make-augmented-matrix" data-route="framework-multiscale-functions" href="#framework-multiscale-functions:fn-make-augmented-matrix"><code>make_augmented_matrix()</code></a></li><li><a data-anchor="fn-make-augmented-residual" data-route="framework-multiscale-functions" href="#framework-multiscale-functions:fn-make-augmented-residual"><code>make_augmented_residual()</code></a></li><li><a data-anchor="fn-compute-rve-macro-response" data-route="framework-multiscale-functions" href="#framework-multiscale-functions:fn-compute-rve-macro-response"><code>compute_rve_macro_response()</code></a></li><li><a data-anchor="fn-compute-rve-piola-du" data-route="framework-multiscale-functions" href="#framework-multiscale-functions:fn-compute-rve-piola-du"><code>compute_rve_macro_piola_du()</code></a></li><li><a data-anchor="fn-compute-rve-sensitivity" data-route="framework-multiscale-functions" href="#framework-multiscale-functions:fn-compute-rve-sensitivity"><code>compute_rve_sensitivity_from_du_dF()</code></a></li><li><a data-anchor="fn-write-rve-macro-csv" data-route="framework-multiscale-functions" href="#framework-multiscale-functions:fn-write-rve-macro-csv"><code>write_rve_macro_csv()</code></a></li><li><a data-anchor="fn-consume-rve-diagnostics" data-route="framework-multiscale-functions" href="#framework-multiscale-functions:fn-consume-rve-diagnostics"><code>consume_multiscale_rve_diagnostics()</code></a></li></ul></aside>
 <div class="function-content-stack">
 <article class="detail-card function-detail-card" id="fn-configure-rve-context"><span class="tag">Context</span><h2><code>configure_multiscale_rve_context()</code></h2><p>Copies the micro <code>Problem</code>, micro parameters, and default RVE options so the macro weak form can call the RVE solver during Gauss-point evaluation.</p><pre class="example-code"><code>configure_multiscale_rve_context(micro_problem, micro_params, default_options);</code></pre></article>
 <article class="detail-card function-detail-card" id="fn-build-square-rve-pbc"><span class="tag">PBC construction</span><h2><code>build_square_rve_pbc_constraints()</code></h2><p>Pairs opposite RVE boundaries, builds macro-dependent periodic displacement constraints, and adds anchor constraints that remove rigid-body motion.</p><pre class="example-code"><code>RvePbcSystem pbc = build_square_rve_pbc_constraints(mesh, options);</code></pre></article>
@@ -3986,7 +3958,7 @@ std::vector&lt;std::vector&lt;double&gt;&gt; dIntP_du;</code></pre></article>
 </div>
 <div class="page detail-page framework-detail-page" data-page="framework-vem" id="page-framework-vem">
 <section class="subpage-hero section-wrap wide-page-wrap">
-<button class="back-button route-card" data-anchor="code-structure" data-route="main">← Back to Code Structure</button>
+<button class="back-button route-card" data-route="code-structure">← Back to Code Structure</button>
 <p class="eyebrow">Framework / Polygonal extension</p>
 <h1>VEM Extension</h1>
 <p class="lead">The VEM module handles polygonal geometry and projection data while the rest of the solver remains FEM-like.</p>
@@ -4348,7 +4320,6 @@ static std::array&lt;std::array&lt;double,2&gt;,3&gt; triangle_shape_gradients(
 <li><a data-anchor="fn-read-postprocessing-parameters" data-route="framework-input-functions" href="#framework-input-functions:fn-read-postprocessing-parameters"><code>read_postprocessing_parameters()</code></a></li>
 <li><a data-anchor="fn-make-scalar-function" data-route="framework-input-functions" href="#framework-input-functions:fn-make-scalar-function"><code>make_scalar_function()</code></a></li>
 <li><a data-anchor="fn-eval-scalar-function" data-route="framework-input-functions" href="#framework-input-functions:fn-eval-scalar-function"><code>eval_scalar_function()</code></a></li>
-
 <li><a data-anchor="fn-print-startup-summary" data-route="framework-input-functions" href="#framework-input-functions:fn-print-startup-summary"><code>print_*_summary()</code></a></li></ul>
 </aside>
 <div class="function-detail-stack">
@@ -4396,7 +4367,6 @@ static std::array&lt;std::array&lt;double,2&gt;,3&gt; triangle_shape_gradients(
 );</code></pre>
 <p class="code-note">Used by Dirichlet, Neumann, and plotting/hysteresis definitions.</p>
 </article>
-
 <article class="function-detail-card" id="fn-print-startup-summary"><span class="tag">main.cpp / mesh.cpp</span><h2><code>print_*_summary()</code></h2><p>Startup summary helpers print problem kind, field order, solver/backend choices, and model parameters before the nonlinear solve begins.</p><pre><code>static void print_problem_kind_summary(const Problem&amp; problem);
 static void print_dof_field_order_summary(const Problem&amp; problem);</code></pre><p class="code-note">These are grouped as print_*_summary() because the page describes the diagnostic summary family rather than one single exported API.</p></article>
 </div>
@@ -4421,7 +4391,6 @@ static void print_dof_field_order_summary(const Problem&amp; problem);</code></p
 <li><a data-anchor="fn-read-dofs-info" data-route="framework-mesh-functions" href="#framework-mesh-functions:fn-read-dofs-info"><code>read_dofs_info()</code></a></li>
 <li><a data-anchor="fn-read-mixed-mesh" data-route="framework-mesh-functions" href="#framework-mesh-functions:fn-read-mixed-mesh"><code>read_mixed_mesh()</code></a></li>
 <li><a data-anchor="fn-read-multi-domain-problem" data-route="framework-mesh-functions" href="#framework-mesh-functions:fn-read-multi-domain-problem"><code>read_multi_domain_problem()</code></a></li>
-
 <li><a data-anchor="fn-apply-dofs-info" data-route="framework-mesh-functions" href="#framework-mesh-functions:fn-apply-dofs-info"><code>apply_dofs_info()</code></a></li>
 <li><a data-anchor="fn-cached-dof-layout" data-route="framework-mesh-functions" href="#framework-mesh-functions:fn-cached-dof-layout"><code>cached_dof_layout()</code></a></li>
 <li><a data-anchor="fn-make-generic-element-dofs-for-fields" data-route="framework-mesh-functions" href="#framework-mesh-functions:fn-make-generic-element-dofs-for-fields"><code>make_generic_element_dofs_for_fields()</code></a></li></ul>
@@ -4494,12 +4463,9 @@ static void print_dof_field_order_summary(const Problem&amp; problem);</code></p
 <pre><code>Problem read_multi_domain_problem(const std::string&amp; filename);</code></pre>
 <p class="code-note">Used for FSI and future multi-domain coupled problems.</p>
 </article>
-
 <article class="function-detail-card" id="fn-apply-dofs-info"><span class="tag">mesh.cpp / mesh.h</span><h2><code>apply_dofs_info()</code></h2><p>Applies DOFS_info declarations to a FieldMesh or Problem, including active field order, history declarations, VEM order, and domain naming.</p><pre><code>void apply_dofs_info(FieldMesh&amp; mesh, const DofsInfo&amp; info);
 void apply_dofs_info(Problem&amp; problem, const DofsInfo&amp; info);</code></pre><p class="code-note">This is the bridge between the text input declaration and the runtime DOF/history layout.</p></article>
-
 <article class="function-detail-card" id="fn-cached-dof-layout"><span class="tag">mesh.cpp / mesh.h</span><h2><code>cached_dof_layout()</code></h2><p>Returns the cached generic DofLayout for a mesh and rebuilds it only when the mesh layout has been invalidated.</p><pre><code>const DofLayout&amp; cached_dof_layout(const FieldMesh&amp; mesh);</code></pre><p class="code-note">Avoids reconstructing the field registry repeatedly inside hot loops.</p></article>
-
 <article class="function-detail-card" id="fn-make-generic-element-dofs-for-fields"><span class="tag">mesh.cpp / mesh.h</span><h2><code>make_generic_element_dofs_for_fields()</code></h2><p>Builds the element-local global DOF list for a selected set of active field names.</p><pre><code>std::vector&lt;int&gt; make_generic_element_dofs_for_fields(
     const DofLayout&amp; mesh,
     int elem_id,
@@ -4637,7 +4603,6 @@ void apply_dofs_info(Problem&amp; problem, const DofsInfo&amp; info);</code></pr
 <li><a data-anchor="fn-print-active-constitutive-parameters" data-route="framework-weakform-functions" href="#framework-weakform-functions:fn-print-active-constitutive-parameters"><code>print_active_constitutive_parameters()</code></a></li>
 <li><a data-anchor="fn-history-diagnostics" data-route="framework-weakform-functions" href="#framework-weakform-functions:fn-history-diagnostics"><code>HistoryLocalDiagnostics::observe()</code></a></li>
 <li><a data-anchor="fn-initialize-history-store" data-route="framework-weakform-functions" href="#framework-weakform-functions:fn-initialize-history-store"><code>initialize_material_history_store()</code></a></li>
-
 <li><a data-anchor="fn-active-constitutive-model-name" data-route="framework-weakform-functions" href="#framework-weakform-functions:fn-active-constitutive-model-name"><code>active_constitutive_model_name()</code></a></li>
 <li><a data-anchor="fn-active-constitutive-field-names" data-route="framework-weakform-functions" href="#framework-weakform-functions:fn-active-constitutive-field-names"><code>active_constitutive_field_names()</code></a></li>
 <li><a data-anchor="fn-compute-element-system" data-route="framework-weakform-functions" href="#framework-weakform-functions:fn-compute-element-system"><code>compute_element_system()</code></a></li>
@@ -4694,13 +4659,10 @@ void apply_dofs_info(Problem&amp; problem, const DofsInfo&amp; info);</code></pr
 );</code></pre>
 <p class="code-note">Global DOFs and local history variables remain separate.</p>
 </article>
-
 <article class="function-detail-card" id="fn-active-constitutive-model-name"><span class="tag">weak_form.cpp</span><h2><code>active_constitutive_model_name()</code></h2><p>Returns the active model label used in startup diagnostics and documentation-level model identification.</p><pre><code>const char* active_constitutive_model_name();</code></pre><p class="code-note">Useful for confirming which weak-form implementation was linked into the executable.</p></article>
-
 <article class="function-detail-card" id="fn-active-constitutive-field-names"><span class="tag">weak_form.cpp</span><h2><code>active_constitutive_field_names()</code></h2><p>Declares which named fields the active constitutive kernel actually assembles.</p><pre><code>std::vector&lt;std::string&gt; active_constitutive_field_names(
     const FieldMesh&amp; mesh
 );</code></pre><p class="code-note">Assembly uses this list to build element DOFs only for fields required by the current model.</p></article>
-
 <article class="function-detail-card" id="fn-compute-element-system"><span class="tag">weak_form.cpp / weak_form.h</span><h2><code>compute_element_system()</code></h2><p>Element-level wrapper that evaluates the active weak form and returns residual/tangent data for assembly.</p><pre><code>ElementSystem compute_element_system(
     const FieldMesh&amp; mesh,
     int elem_id,
@@ -4708,7 +4670,6 @@ void apply_dofs_info(Problem&amp; problem, const DofsInfo&amp; info);</code></pr
     const ProblemParameters&amp; params,
     const ElementState&amp; state
 );</code></pre><p class="code-note">This card is the implementation-facing alias for the local element-system evaluation path.</p></article>
-
 <article class="function-detail-card" id="fn-commit-history-store"><span class="tag">weak_form.h</span><h2><code>commit_material_history_store()</code></h2><p>Commits converged trial history variables to the accepted Gauss-point state after a successful global step.</p><pre><code>void commit_material_history_store(MaterialHistoryStore&amp; history);</code></pre><p class="code-note">Plasticity, viscoelasticity, and other history models should only commit after global Newton convergence.</p></article>
 </div>
 </div>
@@ -4812,7 +4773,6 @@ void apply_dofs_info(Problem&amp; problem, const DofsInfo&amp; info);</code></pr
 <li><a data-anchor="fn-enforce-bcs" data-route="framework-solver-functions" href="#framework-solver-functions:fn-enforce-bcs"><code>enforce_bcs_in_solution()</code></a></li>
 <li><a data-anchor="fn-make-fixed-mask" data-route="framework-solver-functions" href="#framework-solver-functions:fn-make-fixed-mask"><code>make_fixed_mask()</code></a></li>
 <li><a data-anchor="fn-pressure-schur" data-route="framework-solver-functions" href="#framework-solver-functions:fn-pressure-schur"><code>build_pressure_schur_preconditioner_matrix()</code></a></li>
-
 <li><a data-anchor="fn-update-pressure-pcd-data-cached" data-route="framework-solver-functions" href="#framework-solver-functions:fn-update-pressure-pcd-data-cached"><code>update_pressure_pcd_data_cached()</code></a></li></ul>
 </aside>
 <div class="function-detail-stack">
@@ -4872,7 +4832,6 @@ void apply_dofs_info(Problem&amp; problem, const DofsInfo&amp; info);</code></pr
 );</code></pre>
 <p class="code-note">Only active for PETSc Schur/fieldsplit configurations.</p>
 </article>
-
 <article class="function-detail-card" id="fn-update-pressure-pcd-data-cached"><span class="tag">solver.cpp</span><h2><code>update_pressure_pcd_data_cached()</code></h2><p>Updates or reuses cached pressure-convection-diffusion data for PETSc PCD-style Schur preconditioning.</p><pre><code>static void update_pressure_pcd_data_cached(
     const FieldMesh&amp; mesh,
     const ProblemParameters&amp; params,
@@ -4900,7 +4859,6 @@ void apply_dofs_info(Problem&amp; problem, const DofsInfo&amp; info);</code></pr
 <li><a data-anchor="fn-csr-to-csc" data-route="framework-backend-functions" href="#framework-backend-functions:fn-csr-to-csc"><code>csr_to_csc()</code></a></li>
 <li><a data-anchor="fn-solve-umfpack" data-route="framework-backend-functions" href="#framework-backend-functions:fn-solve-umfpack"><code>solve_umfpack()</code></a></li>
 <li><a data-anchor="fn-pcd-shell-apply" data-route="framework-backend-functions" href="#framework-backend-functions:fn-pcd-shell-apply"><code>pcd_shell_apply()</code></a></li>
-
 <li><a data-anchor="fn-solve-petsc" data-route="framework-backend-functions" href="#framework-backend-functions:fn-solve-petsc"><code>solve_petsc()</code></a></li>
 <li><a data-anchor="fn-solve-pardiso" data-route="framework-backend-functions" href="#framework-backend-functions:fn-solve-pardiso"><code>solve_pardiso()</code></a></li></ul>
 </aside>
@@ -4960,7 +4918,6 @@ void apply_dofs_info(Problem&amp; problem, const DofsInfo&amp; info);</code></pr
 );</code></pre>
 <p class="code-note">Used only when PETSc and PCD options are enabled.</p>
 </article>
-
 <article class="function-detail-card" id="fn-solve-petsc"><span class="tag">linear_solver_backend.cpp</span><h2><code>solve_petsc()</code></h2><p>PETSc backend branch that builds PETSc matrices/vectors, configures KSP/PC options, and solves the reduced linear system.</p><pre><code>static Vector solve_petsc(
     const CSRMatrix&amp; A,
     const Vector&amp; rhs,
@@ -4968,7 +4925,6 @@ void apply_dofs_info(Problem&amp; problem, const DofsInfo&amp; info);</code></pr
     const CSRMatrix* preconditioner_matrix,
     const PetscPCDData* pcd_data
 );</code></pre><p class="code-note">Used for iterative solvers, field-split Schur methods, and PCD pressure preconditioning.</p></article>
-
 <article class="function-detail-card" id="fn-solve-pardiso"><span class="tag">linear_solver_backend.cpp</span><h2><code>solve_pardiso()</code></h2><p>MKL Pardiso backend branch for direct sparse solves when the code is compiled with Pardiso support.</p><pre><code>static Vector solve_pardiso(
     const CSRMatrix&amp; A,
     const Vector&amp; rhs
@@ -4995,7 +4951,6 @@ void apply_dofs_info(Problem&amp; problem, const DofsInfo&amp; info);</code></pr
 <li><a data-anchor="fn-precompute-boundary-force" data-route="framework-postprocess-functions" href="#framework-postprocess-functions:fn-precompute-boundary-force"><code>precompute_boundary_force()</code></a></li>
 <li><a data-anchor="fn-compute-min-j" data-route="framework-postprocess-functions" href="#framework-postprocess-functions:fn-compute-min-j"><code>compute_min_deformation_jacobian()</code></a></li>
 <li><a data-anchor="fn-write-force-svg" data-route="framework-postprocess-functions" href="#framework-postprocess-functions:fn-write-force-svg"><code>write_force_svg_from_csv()</code></a></li>
-
 <li><a data-anchor="fn-validate-boundary-integral" data-route="framework-postprocess-functions" href="#framework-postprocess-functions:fn-validate-boundary-integral"><code>validate_boundary_integral_or_throw()</code></a></li>
 <li><a data-anchor="fn-append-force-csv" data-route="framework-postprocess-functions" href="#framework-postprocess-functions:fn-append-force-csv"><code>append_force_csv()</code></a></li>
 <li><a data-anchor="fn-append-minj-csv" data-route="framework-postprocess-functions" href="#framework-postprocess-functions:fn-append-minj-csv"><code>append_minj_csv()</code></a></li></ul>
@@ -5066,18 +5021,15 @@ void apply_dofs_info(Problem&amp; problem, const DofsInfo&amp; info);</code></pr
 );</code></pre>
 <p class="code-note">Keeps lightweight plotting inside the postprocessing module.</p>
 </article>
-
 <article class="function-detail-card" id="fn-validate-boundary-integral"><span class="tag">postprocess.cpp / .h</span><h2><code>validate_boundary_integral_or_throw()</code></h2><p>Runs the boundary normal-integral closure check and throws if the selected boundary is not closed within tolerance.</p><pre><code>void validate_boundary_integral_or_throw(
     const FieldMesh&amp; mesh,
     const std::string&amp; boundary_name,
     double tolerance
 );</code></pre><p class="code-note">This catches invalid drag/lift boundaries before force values are trusted.</p></article>
-
 <article class="function-detail-card" id="fn-append-force-csv"><span class="tag">postprocess.cpp / .h</span><h2><code>append_force_csv()</code></h2><p>Appends one drag/lift or Cartesian force sample to the configured force CSV file.</p><pre><code>void append_force_csv(
     const std::string&amp; filename,
     const BoundaryForceResult&amp; force
 );</code></pre><p class="code-note">Used during accepted time steps when force output is enabled.</p></article>
-
 <article class="function-detail-card" id="fn-append-minj-csv"><span class="tag">postprocess.cpp / .h</span><h2><code>append_minj_csv()</code></h2><p>Appends one minimum deformation-Jacobian diagnostic sample to the configured minJ CSV file.</p><pre><code>void append_minj_csv(
     const std::string&amp; filename,
     const MinJacobianResult&amp; result

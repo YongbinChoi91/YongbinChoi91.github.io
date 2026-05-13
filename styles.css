@@ -3439,3 +3439,50 @@ button.button {
     max-width: 100%;
   }
 }
+
+/* Main page hub layout */
+.main-hub-hero .lead {
+  max-width: 820px;
+}
+
+.main-hub-section {
+  padding-top: 54px;
+}
+
+.main-hub-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.main-hub-card {
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-hub-card .text-link {
+  margin-top: auto;
+}
+
+.main-hub-flow-section {
+  padding-top: 48px;
+}
+
+.main-hub-pipeline {
+  grid-template-columns: repeat(7, minmax(120px, 1fr));
+}
+
+@media (max-width: 980px) {
+  .main-hub-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .main-hub-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .main-hub-card {
+    min-height: auto;
+  }
+}
