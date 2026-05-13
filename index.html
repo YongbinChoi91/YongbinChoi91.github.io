@@ -1,11 +1,23 @@
 <!DOCTYPE html>
 
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>C++ FEM Framework</title>
-<meta content="Modern C++ finite element framework for solid mechanics, fluid mechanics, FSI, multiscale FEM, and VEM." name="description"/>
+<title>HAEFEM — C++ FEM/VEM Multiphysics and Multiscale Solver</title>
+<meta content="HAEFEM is a modern C++ FEM/VEM framework for nonlinear solid mechanics, incompressible flow, fluid-structure interaction, virtual element methods, and multiscale RVE analysis." name="description"/>
+<meta content="HAEFEM, C++ FEM, C++ VEM, finite element method, virtual element method, computational mechanics, nonlinear mechanics, fluid structure interaction, FSI, multiscale analysis, RVE, Sacado automatic differentiation" name="keywords"/>
+<meta content="Yongbin Choi" name="author"/>
+<meta content="index, follow" name="robots"/>
+<link href="https://yongbinchoi91.github.io/" rel="canonical"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://yongbinchoi91.github.io/"/>
+<meta property="og:title" content="HAEFEM — C++ FEM/VEM Multiphysics and Multiscale Solver"/>
+<meta property="og:description" content="Documentation and portfolio website for HAEFEM, a C++ FEM/VEM framework for nonlinear mechanics, FSI, VEM, and multiscale RVE analysis."/>
+<meta property="og:site_name" content="HAEFEM"/>
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="HAEFEM — C++ FEM/VEM Multiphysics and Multiscale Solver"/>
+<meta name="twitter:description" content="A C++ FEM/VEM framework for nonlinear mechanics, FSI, virtual elements, and multiscale RVE analysis."/>
 <link href="styles.css" rel="stylesheet"/>
 <script>
       window.MathJax = {
@@ -14,12 +26,40 @@
       };
     </script>
 <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": "HAEFEM",
+  "alternateName": "HAEFEM C++ FEM/VEM Framework",
+  "description": "HAEFEM is a C++ FEM/VEM framework for nonlinear solid mechanics, incompressible flow, fluid-structure interaction, virtual element methods, and multiscale RVE analysis.",
+  "programmingLanguage": "C++",
+  "codeRepository": "https://github.com/YongbinChoi91/HAEFEM",
+  "url": "https://yongbinchoi91.github.io/",
+  "author": {
+    "@type": "Person",
+    "name": "Yongbin Choi",
+    "url": "https://github.com/YongbinChoi91"
+  },
+  "keywords": [
+    "C++ FEM",
+    "C++ VEM",
+    "finite element method",
+    "virtual element method",
+    "computational mechanics",
+    "nonlinear mechanics",
+    "fluid-structure interaction",
+    "multiscale RVE analysis",
+    "automatic differentiation"
+  ]
+}
+</script>
 </head>
 <body>
 <header class="topbar">
-<a aria-label="C++ FEM Framework home" class="brand route-link" data-route="home" href="#home">
-<span class="brand-mark">FE</span>
-<span>C++ FEM Framework</span>
+<a aria-label="HAEFEM home" class="brand route-link" data-route="home" href="#home">
+<span class="brand-mark">HF</span>
+<span>HAEFEM</span>
 </a>
 <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
 <span></span>
@@ -159,12 +199,12 @@ make multiscale</code></pre>
 <div class="page active" data-page="home" id="page-home">
 <section class="hero section-wrap landing-home">
 <div class="hero-copy landing-copy">
-<p class="eyebrow">Modern C++ finite element solver</p>
-<h1>Generic FEM framework for nonlinear mechanics and multiphysics simulation.</h1>
+<p class="eyebrow">HAEFEM · C++ FEM/VEM solver</p>
+<h1>HAEFEM — C++ FEM/VEM framework for nonlinear mechanics, FSI, and multiscale simulation.</h1>
 <p class="lead">
-              A research-oriented C++ finite element framework built around local weak forms,
-              automatic differentiation, reusable assembly, nonlinear solvers, and a clean
-              postprocessing pipeline.
+              HAEFEM is a research-oriented C++ finite element and virtual element framework built around
+              local weak forms, automatic differentiation, reusable CSR assembly, nonlinear Newton solvers,
+              fluid-structure interaction, and multiscale RVE analysis.
             </p>
 <div class="hero-actions">
 <button class="button primary route-card" data-route="main" type="button">Enter main page</button>
@@ -172,11 +212,11 @@ make multiscale</code></pre>
 </div>
 </div>
 <div class="landing-summary placeholder-panel">
-<p class="eyebrow">What this code is for</p>
-<h2>One reusable solver path organized by application area.</h2>
+<p class="eyebrow">Computational mechanics portfolio</p>
+<h2>One reusable FEM/VEM solver path organized by application area.</h2>
 <p>
-              The landing page is intentionally simple. Open the main page to view the full application map,
-              framework architecture, file-oriented code view, benchmark slots, and gallery placeholders.
+              Explore HAEFEM through solid mechanics, fluid mechanics, FSI, multiscale RVE analysis,
+              VEM formulations, framework architecture, code structure, benchmark slots, and implementation notes.
             </p>
 <div aria-label="Application areas" class="application-tabs compact-application-tabs">
 <button class="application-tab route-card" data-preview="solid" data-route="app-solid" type="button">
@@ -208,12 +248,12 @@ make multiscale</code></pre>
 <div class="page" data-page="main" id="page-main">
 <section class="hero section-wrap">
 <div class="hero-copy">
-<p class="eyebrow">Modern C++ finite element solver</p>
-<h1>Generic FEM framework for nonlinear mechanics and multiphysics simulation.</h1>
+<p class="eyebrow">HAEFEM · C++ FEM/VEM solver</p>
+<h1>HAEFEM — C++ FEM/VEM framework for nonlinear mechanics, FSI, and multiscale simulation.</h1>
 <p class="lead">
-              A research-oriented C++ finite element framework built around local weak forms,
-              automatic differentiation, reusable assembly, nonlinear solvers, and a clean
-              postprocessing pipeline.
+              HAEFEM is a research-oriented C++ finite element and virtual element framework built around
+              local weak forms, automatic differentiation, reusable CSR assembly, nonlinear Newton solvers,
+              fluid-structure interaction, and multiscale RVE analysis.
             </p>
 <div class="hero-actions">
 <a class="button primary" data-anchor="applications" data-route="main" href="#applications">View applications</a>
