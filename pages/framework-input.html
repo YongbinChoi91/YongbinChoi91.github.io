@@ -109,13 +109,14 @@ total_time 5.0
 
 max_iter 20
 tol 1e-8</code></pre></article>
-     <article class="detail-card"><span class="tag">Postprocessing.txt</span><h2>Result and visualization controls</h2><ul class="input-key-reference"><li><code>output_root</code><span>Root output directory.</span></li><li><code>hdf5_output</code><span>Structured result database switch.</span></li><li><code>vtk_output</code><span>Visualization output switch.</span></li><li><code>vtk_interval</code><span>Accepted-step output cadence.</span></li></ul><pre class="example-code"><code>output_root ./output
+     <article class="detail-card"><span class="tag">Postprocessing.txt</span><h2>Result and visualization controls</h2><ul class="input-key-reference"><li><code>output_root</code><span>Root output directory.</span></li><li><code>Create Folder Name / folder_name</code><span>Custom output folder; auto uses the model name.</span></li><li><code>model_output_subdir</code><span>Append the model-name folder when no custom name is supplied.</span></li><li><code>hdf5_output</code><span>Structured result database switch.</span></li><li><code>vtk_output</code><span>Visualization output switch.</span></li><li><code>vtk_interval</code><span>Accepted-step output cadence.</span></li></ul><pre class="example-code"><code>output_root ./output
+Create Folder Name my_run
 hdf5_output on
 
 vtk_output on
 vtk_interval 1
 
-final_dofs_output on</code></pre></article>
+final_dofs_output on</code></pre><p>The shared application setup resolves this example to <code>./output/my_run/</code>. Custom names are sanitized and take precedence over <code>model_output_subdir</code>. Use <code>Create Folder Name auto</code> to select the model-name folder instead. The parser requires a nonempty value when either folder-name key is present.</p></article>
      <a class="detail-card route-card input-format-card" href="framework-dofs-info.html"><span class="tag">DOFS_info.txt</span><h2>Fields and local history</h2><p>Open the formatted field-order, domain, VEM-order, and history-variable reference.</p><span class="text-link">Open DOF input &rarr;</span></a>
      <a class="detail-card route-card input-format-card" href="framework-mesh.html"><span class="tag">ProblemMesh.txt</span><h2>Single- and multi-domain mesh</h2><p>Open the formatted geometry, connectivity, domain, and boundary-section reference.</p><span class="text-link">Open mesh input &rarr;</span></a>
     </div>

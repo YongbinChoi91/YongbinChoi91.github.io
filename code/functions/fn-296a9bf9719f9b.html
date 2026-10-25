@@ -1,0 +1,28 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Compute boundary force using previously resolved boundary metadata."><title>compute_boundary_force_precomputed() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=postprocess_utils.cpp">← core/io/postprocess_utils.cpp</a>
+<p class="eyebrow">Function detail</p><h1>compute_boundary_force_precomputed()</h1><p class="lead">Compute boundary force using previously resolved boundary metadata.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>BoundaryForceResult compute_boundary_force_precomputed(const FieldMesh &amp;mesh, const Vector &amp;x, const ProblemParameters &amp;params, const BoundaryForcePrecompute &amp;precompute, double time, double attack_angle_deg=0.0, DomainType domain_type=DomainType::Fluid)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/postprocess_utils.cpp:1416</dd></div><div><dt>Declaration</dt><dd>core/io/postprocess.h:253</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/postprocess_utils.cpp#L1416" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 1416–1430</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="1416">BoundaryForceResult compute_boundary_force_precomputed(</span>
+<span class="source-line" data-line="1417">    <span class="token keyword">const</span> FieldMesh&amp; mesh,</span>
+<span class="source-line" data-line="1418">    <span class="token keyword">const</span> Vector&amp; x,</span>
+<span class="source-line" data-line="1419">    <span class="token keyword">const</span> ProblemParameters&amp; params,</span>
+<span class="source-line" data-line="1420">    <span class="token keyword">const</span> BoundaryForcePrecompute&amp; precompute,</span>
+<span class="source-line" data-line="1421">    <span class="token keyword">double</span> time,</span>
+<span class="source-line" data-line="1422">    <span class="token keyword">double</span> attack_angle_deg,</span>
+<span class="source-line" data-line="1423">    DomainType domain_type</span>
+<span class="source-line" data-line="1424">){</span>
+<span class="source-line" data-line="1425">    BoundaryForceResult out = compute_boundary_force(</span>
+<span class="source-line" data-line="1426">        mesh,x,params,precompute.boundary_name,time,attack_angle_deg,domain_type</span>
+<span class="source-line" data-line="1427">    );</span>
+<span class="source-line" data-line="1428">    out.boundary_check = precompute.boundary_check;</span>
+<span class="source-line" data-line="1429">    <span class="token keyword">return</span> out;</span>
+<span class="source-line" data-line="1430">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-163e3145b92871.html">← compute_boundary_force_precomputed()</a><a href="fn-5fa61a1f5c30c4.html">initialize_boundary_force_postprocess() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

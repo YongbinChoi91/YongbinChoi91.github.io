@@ -1,0 +1,22 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements hex face reference point post."><title>hex_face_reference_point_post() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=postprocess_utils.cpp">← core/io/postprocess_utils.cpp</a>
+<p class="eyebrow">Function detail</p><h1>hex_face_reference_point_post()</h1><p class="lead">Implements hex face reference point post.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static std::array&lt; double, 3 &gt; hex_face_reference_point_post(int face, double s, double t)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/postprocess_utils.cpp:492</dd></div><div><dt>Declaration</dt><dd>core/io/postprocess_utils.cpp:492</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/postprocess_utils.cpp#L492" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 492–500</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="492"><span class="token keyword">static</span> std::array&lt;<span class="token keyword">double</span>,<span class="token number">3</span>&gt; hex_face_reference_point_post(<span class="token keyword">int</span> face,<span class="token keyword">double</span> s,<span class="token keyword">double</span> t){</span>
+<span class="source-line" data-line="493">    <span class="token keyword">if</span>(face==<span class="token number">0</span>) <span class="token keyword">return</span> { s, t,-<span class="token number">1.0</span>};</span>
+<span class="source-line" data-line="494">    <span class="token keyword">if</span>(face==<span class="token number">1</span>) <span class="token keyword">return</span> { s, t, <span class="token number">1.0</span>};</span>
+<span class="source-line" data-line="495">    <span class="token keyword">if</span>(face==<span class="token number">2</span>) <span class="token keyword">return</span> { s,-<span class="token number">1.0</span>,t};</span>
+<span class="source-line" data-line="496">    <span class="token keyword">if</span>(face==<span class="token number">3</span>) <span class="token keyword">return</span> { <span class="token number">1.0</span>,s, t};</span>
+<span class="source-line" data-line="497">    <span class="token keyword">if</span>(face==<span class="token number">4</span>) <span class="token keyword">return</span> { s, <span class="token number">1.0</span>,t};</span>
+<span class="source-line" data-line="498">    <span class="token keyword">if</span>(face==<span class="token number">5</span>) <span class="token keyword">return</span> {-<span class="token number">1.0</span>,s, t};</span>
+<span class="source-line" data-line="499">    <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Unsupported hex face id.&quot;</span>);</span>
+<span class="source-line" data-line="500">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-aeb2c66e46927a.html">← reference_boundary_entities()</a><a href="fn-ecf650692f0409.html">tet_face_reference_point_post() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

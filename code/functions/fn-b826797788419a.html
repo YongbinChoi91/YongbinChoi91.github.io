@@ -6,7 +6,7 @@
 <p class="eyebrow">Function detail</p><h1>n_velocity_dofs()</h1><p class="lead">Implements n velocity dofs.</p></section>
 <section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
 <h2>Signature</h2><p class="function-signature"><code>int n_velocity_dofs(const FieldMesh &amp;mesh)</code></p>
-<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/mesh/mesh.cpp:28</dd></div><div><dt>Declaration</dt><dd>core/mesh/mesh.h:636</dd></div></dl>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/mesh/mesh.cpp:28</dd></div><div><dt>Declaration</dt><dd>core/mesh/mesh.h:638</dd></div></dl>
 <a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/mesh/mesh.cpp#L28" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
 <div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 28–28</span></div>
 <pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="28"><span class="token keyword">int</span> n_velocity_dofs(<span class="token keyword">const</span> FieldMesh&amp; mesh){ <span class="token keyword">return</span> mesh.dim * static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.velocity_nodes.size()); }</span></code></pre></div>

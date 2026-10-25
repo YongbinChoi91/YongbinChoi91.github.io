@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements normalized constitutive gauss output specs."><title>normalized_constitutive_gauss_output_specs() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=postprocess_hdf5.cpp">← core/io/postprocess_hdf5.cpp</a>
+<p class="eyebrow">Function detail</p><h1>normalized_constitutive_gauss_output_specs()</h1><p class="lead">Implements normalized constitutive gauss output specs.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static std::vector&lt; ConstitutivePostprocessOutputSpec &gt; normalized_constitutive_gauss_output_specs()</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/postprocess_hdf5.cpp:453</dd></div><div><dt>Declaration</dt><dd>core/io/postprocess_hdf5.cpp:453</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/postprocess_hdf5.cpp#L453" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 453–463</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="453"><span class="token keyword">static</span> std::vector&lt;ConstitutivePostprocessOutputSpec&gt; normalized_constitutive_gauss_output_specs(){</span>
+<span class="source-line" data-line="454">    std::vector&lt;ConstitutivePostprocessOutputSpec&gt; specs = active_constitutive_postprocess_outputs();</span>
+<span class="source-line" data-line="455">    specs.erase(</span>
+<span class="source-line" data-line="456">        std::remove_if(specs.begin(), specs.end(), [](<span class="token keyword">const</span> ConstitutivePostprocessOutputSpec&amp; spec){</span>
+<span class="source-line" data-line="457">            <span class="token keyword">return</span> spec.location != ConstitutivePostprocessLocation::GaussPoint;</span>
+<span class="source-line" data-line="458">        }),</span>
+<span class="source-line" data-line="459">        specs.end()</span>
+<span class="source-line" data-line="460">    );</span>
+<span class="source-line" data-line="461">    <span class="token keyword">for</span>(<span class="token keyword">auto</span>&amp; spec:specs) spec.name = normalize_save_data_name(spec.name);</span>
+<span class="source-line" data-line="462">    <span class="token keyword">return</span> specs;</span>
+<span class="source-line" data-line="463">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-ff0c155f473efc.html">← is_generic_solid_gauss_output()</a><a href="fn-cc30307e935780.html">find_constitutive_gauss_spec() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

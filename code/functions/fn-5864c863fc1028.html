@@ -1,0 +1,78 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements write xy svg plot."><title>write_xy_svg_plot() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=postprocess_utils.cpp">← core/io/postprocess_utils.cpp</a>
+<p class="eyebrow">Function detail</p><h1>write_xy_svg_plot()</h1><p class="lead">Implements write xy svg plot.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>void write_xy_svg_plot(const std::string &amp;svg_filename, const std::string &amp;title, const std::string &amp;x_label, const std::string &amp;y_label, const std::vector&lt; double &gt; &amp;x, const std::vector&lt; PostprocessSvgSeries &gt; &amp;series)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/postprocess_utils.cpp:304</dd></div><div><dt>Declaration</dt><dd>core/io/postprocess.h:39</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/postprocess_utils.cpp#L304" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 304–368</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="304"><span class="token keyword">void</span> write_xy_svg_plot(</span>
+<span class="source-line" data-line="305">    <span class="token keyword">const</span> std::string&amp; svg_filename,</span>
+<span class="source-line" data-line="306">    <span class="token keyword">const</span> std::string&amp; title,</span>
+<span class="source-line" data-line="307">    <span class="token keyword">const</span> std::string&amp; x_label,</span>
+<span class="source-line" data-line="308">    <span class="token keyword">const</span> std::string&amp; y_label,</span>
+<span class="source-line" data-line="309">    <span class="token keyword">const</span> std::vector&lt;<span class="token keyword">double</span>&gt;&amp; x,</span>
+<span class="source-line" data-line="310">    <span class="token keyword">const</span> std::vector&lt;PostprocessSvgSeries&gt;&amp; series</span>
+<span class="source-line" data-line="311">){</span>
+<span class="source-line" data-line="312">    <span class="token keyword">if</span>(x.empty() || series.empty()) <span class="token keyword">return</span>;</span>
+<span class="source-line" data-line="313"> </span>
+<span class="source-line" data-line="314">    <span class="token keyword">double</span> xmin=*std::min_element(x.begin(),x.end());</span>
+<span class="source-line" data-line="315">    <span class="token keyword">double</span> xmax=*std::max_element(x.begin(),x.end());</span>
+<span class="source-line" data-line="316">    <span class="token keyword">double</span> ymin=std::numeric_limits&lt;<span class="token keyword">double</span>&gt;::infinity();</span>
+<span class="source-line" data-line="317">    <span class="token keyword">double</span> ymax=-std::numeric_limits&lt;<span class="token keyword">double</span>&gt;::infinity();</span>
+<span class="source-line" data-line="318">    <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; s:series){</span>
+<span class="source-line" data-line="319">        <span class="token keyword">for</span>(<span class="token keyword">double</span> v:s.values){</span>
+<span class="source-line" data-line="320">            ymin=std::min(ymin,v);</span>
+<span class="source-line" data-line="321">            ymax=std::max(ymax,v);</span>
+<span class="source-line" data-line="322">        }</span>
+<span class="source-line" data-line="323">    }</span>
+<span class="source-line" data-line="324">    <span class="token keyword">if</span>(!std::isfinite(ymin) || !std::isfinite(ymax)) <span class="token keyword">return</span>;</span>
+<span class="source-line" data-line="325">    pad_svg_range(xmin,xmax);</span>
+<span class="source-line" data-line="326">    pad_svg_range(ymin,ymax);</span>
+<span class="source-line" data-line="327"> </span>
+<span class="source-line" data-line="328">    <span class="token keyword">const</span> <span class="token keyword">int</span> W=<span class="token number">900</span>,H=<span class="token number">520</span>,L=<span class="token number">80</span>,R=<span class="token number">30</span>,T=<span class="token number">40</span>,B=<span class="token number">70</span>;</span>
+<span class="source-line" data-line="329">    <span class="token keyword">auto</span> X=[&amp;](<span class="token keyword">double</span> v){ <span class="token keyword">return</span> L + (v-xmin)/(xmax-xmin)*(W-L-R); };</span>
+<span class="source-line" data-line="330">    <span class="token keyword">auto</span> Y=[&amp;](<span class="token keyword">double</span> v){ <span class="token keyword">return</span> H-B - (v-ymin)/(ymax-ymin)*(H-T-B); };</span>
+<span class="source-line" data-line="331">    <span class="token keyword">auto</span> polyline=[&amp;](<span class="token keyword">const</span> std::vector&lt;<span class="token keyword">double</span>&gt;&amp; y){</span>
+<span class="source-line" data-line="332">        std::ostringstream os;</span>
+<span class="source-line" data-line="333">        <span class="token keyword">const</span> std::size_t n=std::min(x.size(),y.size());</span>
+<span class="source-line" data-line="334">        <span class="token keyword">for</span>(std::size_t i=<span class="token number">0</span>;i&lt;n;++i){</span>
+<span class="source-line" data-line="335">            <span class="token keyword">if</span>(i) os &lt;&lt; <span class="token string">&#x27; &#x27;</span>;</span>
+<span class="source-line" data-line="336">            os &lt;&lt; X(x[i]) &lt;&lt; <span class="token string">&#x27;,&#x27;</span> &lt;&lt; Y(y[i]);</span>
+<span class="source-line" data-line="337">        }</span>
+<span class="source-line" data-line="338">        <span class="token keyword">return</span> os.str();</span>
+<span class="source-line" data-line="339">    };</span>
+<span class="source-line" data-line="340"> </span>
+<span class="source-line" data-line="341">    ensure_output_parent_directory(svg_filename);</span>
+<span class="source-line" data-line="342">    std::ofstream out(svg_filename);</span>
+<span class="source-line" data-line="343">    <span class="token keyword">if</span>(!out) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Could not open SVG file for writing: &quot;</span>+svg_filename);</span>
+<span class="source-line" data-line="344">    out &lt;&lt; <span class="token string">&quot;&lt;svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; width=\&quot;&quot;</span> &lt;&lt; W &lt;&lt; <span class="token string">&quot;\&quot; height=\&quot;&quot;</span> &lt;&lt; H &lt;&lt; <span class="token string">&quot;\&quot; viewBox=\&quot;0 0 &quot;</span> &lt;&lt; W &lt;&lt; <span class="token string">&#x27; &#x27;</span> &lt;&lt; H &lt;&lt; <span class="token string">&quot;\&quot;&gt;\n&quot;</span>;</span>
+<span class="source-line" data-line="345">    out &lt;&lt; <span class="token string">&quot;&lt;rect width=\&quot;100%\&quot; height=\&quot;100%\&quot; fill=\&quot;white\&quot;/&gt;\n&quot;</span>;</span>
+<span class="source-line" data-line="346">    out &lt;&lt; <span class="token string">&quot;&lt;line x1=\&quot;&quot;</span> &lt;&lt; L &lt;&lt; <span class="token string">&quot;\&quot; y1=\&quot;&quot;</span> &lt;&lt; H-B &lt;&lt; <span class="token string">&quot;\&quot; x2=\&quot;&quot;</span> &lt;&lt; W-R &lt;&lt; <span class="token string">&quot;\&quot; y2=\&quot;&quot;</span> &lt;&lt; H-B &lt;&lt; <span class="token string">&quot;\&quot; stroke=\&quot;black\&quot;/&gt;\n&quot;</span>;</span>
+<span class="source-line" data-line="347">    out &lt;&lt; <span class="token string">&quot;&lt;line x1=\&quot;&quot;</span> &lt;&lt; L &lt;&lt; <span class="token string">&quot;\&quot; y1=\&quot;&quot;</span> &lt;&lt; T &lt;&lt; <span class="token string">&quot;\&quot; x2=\&quot;&quot;</span> &lt;&lt; L &lt;&lt; <span class="token string">&quot;\&quot; y2=\&quot;&quot;</span> &lt;&lt; H-B &lt;&lt; <span class="token string">&quot;\&quot; stroke=\&quot;black\&quot;/&gt;\n&quot;</span>;</span>
+<span class="source-line" data-line="348">    out &lt;&lt; <span class="token string">&quot;&lt;text x=\&quot;&quot;</span> &lt;&lt; W/<span class="token number">2</span> &lt;&lt; <span class="token string">&quot;\&quot; y=\&quot;25\&quot; text-anchor=\&quot;middle\&quot; font-family=\&quot;sans-serif\&quot; font-size=\&quot;18\&quot;&gt;&quot;</span> &lt;&lt; xml_escape(title) &lt;&lt; <span class="token string">&quot;&lt;/text&gt;\n&quot;</span>;</span>
+<span class="source-line" data-line="349">    out &lt;&lt; <span class="token string">&quot;&lt;text x=\&quot;&quot;</span> &lt;&lt; W/<span class="token number">2</span> &lt;&lt; <span class="token string">&quot;\&quot; y=\&quot;&quot;</span> &lt;&lt; H-<span class="token number">20</span> &lt;&lt; <span class="token string">&quot;\&quot; text-anchor=\&quot;middle\&quot; font-family=\&quot;sans-serif\&quot; font-size=\&quot;14\&quot;&gt;&quot;</span> &lt;&lt; xml_escape(x_label) &lt;&lt; <span class="token string">&quot;&lt;/text&gt;\n&quot;</span>;</span>
+<span class="source-line" data-line="350">    out &lt;&lt; <span class="token string">&quot;&lt;text x=\&quot;20\&quot; y=\&quot;&quot;</span> &lt;&lt; H/<span class="token number">2</span> &lt;&lt; <span class="token string">&quot;\&quot; transform=\&quot;rotate(-90 20 &quot;</span> &lt;&lt; H/<span class="token number">2</span> &lt;&lt; <span class="token string">&quot;)\&quot; text-anchor=\&quot;middle\&quot; font-family=\&quot;sans-serif\&quot; font-size=\&quot;14\&quot;&gt;&quot;</span> &lt;&lt; xml_escape(y_label) &lt;&lt; <span class="token string">&quot;&lt;/text&gt;\n&quot;</span>;</span>
+<span class="source-line" data-line="351">    write_svg_axes_grid(out,W,H,L,R,T,B,xmin,xmax,ymin,ymax);</span>
+<span class="source-line" data-line="352"> </span>
+<span class="source-line" data-line="353">    <span class="token keyword">int</span> legend_y=<span class="token number">50</span>;</span>
+<span class="source-line" data-line="354">    <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; s:series){</span>
+<span class="source-line" data-line="355">        out &lt;&lt; <span class="token string">&quot;&lt;polyline fill=\&quot;none\&quot; stroke=\&quot;&quot;</span> &lt;&lt; s.color &lt;&lt; <span class="token string">&quot;\&quot; stroke-width=\&quot;2\&quot; points=\&quot;&quot;</span> &lt;&lt; xml_escape(polyline(s.values)) &lt;&lt; <span class="token string">&quot;\&quot;/&gt;\n&quot;</span>;</span>
+<span class="source-line" data-line="356">        <span class="token keyword">const</span> std::size_t n=std::min(x.size(),s.values.size());</span>
+<span class="source-line" data-line="357">        <span class="token keyword">for</span>(std::size_t i=<span class="token number">0</span>;i&lt;n;++i){</span>
+<span class="source-line" data-line="358">            out &lt;&lt; <span class="token string">&quot;&lt;circle cx=\&quot;&quot;</span> &lt;&lt; X(x[i]) &lt;&lt; <span class="token string">&quot;\&quot; cy=\&quot;&quot;</span> &lt;&lt; Y(s.values[i])</span>
+<span class="source-line" data-line="359">                &lt;&lt; <span class="token string">&quot;\&quot; r=\&quot;3\&quot; fill=\&quot;white\&quot; stroke=\&quot;&quot;</span> &lt;&lt; s.color &lt;&lt; <span class="token string">&quot;\&quot; stroke-width=\&quot;1.5\&quot;/&gt;\n&quot;</span>;</span>
+<span class="source-line" data-line="360">        }</span>
+<span class="source-line" data-line="361">        out &lt;&lt; <span class="token string">&quot;&lt;line x1=\&quot;&quot;</span> &lt;&lt; W-<span class="token number">155</span> &lt;&lt; <span class="token string">&quot;\&quot; y1=\&quot;&quot;</span> &lt;&lt; legend_y-<span class="token number">4</span> &lt;&lt; <span class="token string">&quot;\&quot; x2=\&quot;&quot;</span> &lt;&lt; W-<span class="token number">125</span> &lt;&lt; <span class="token string">&quot;\&quot; y2=\&quot;&quot;</span> &lt;&lt; legend_y-<span class="token number">4</span></span>
+<span class="source-line" data-line="362">            &lt;&lt; <span class="token string">&quot;\&quot; stroke=\&quot;&quot;</span> &lt;&lt; s.color &lt;&lt; <span class="token string">&quot;\&quot; stroke-width=\&quot;2\&quot;/&gt;\n&quot;</span>;</span>
+<span class="source-line" data-line="363">        out &lt;&lt; <span class="token string">&quot;&lt;text x=\&quot;&quot;</span> &lt;&lt; W-<span class="token number">118</span> &lt;&lt; <span class="token string">&quot;\&quot; y=\&quot;&quot;</span> &lt;&lt; legend_y</span>
+<span class="source-line" data-line="364">            &lt;&lt; <span class="token string">&quot;\&quot; font-family=\&quot;sans-serif\&quot; font-size=\&quot;12\&quot;&gt;&quot;</span> &lt;&lt; xml_escape(s.label) &lt;&lt; <span class="token string">&quot;&lt;/text&gt;\n&quot;</span>;</span>
+<span class="source-line" data-line="365">        legend_y += <span class="token number">18</span>;</span>
+<span class="source-line" data-line="366">    }</span>
+<span class="source-line" data-line="367">    out &lt;&lt; <span class="token string">&quot;&lt;/svg&gt;\n&quot;</span>;</span>
+<span class="source-line" data-line="368">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-3b633c303ac74f.html">← hysteresis_svg_filename()</a><a href="fn-0146c22b0c4f81.html">make_solution_vtk_path() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

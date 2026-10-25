@@ -36,6 +36,24 @@ FOLDER_DESCRIPTIONS = {
     "vem": "Virtual element geometry, projection, and stabilization.",
 }
 
+# Explorer-specific explanations for output configuration shared by all models.
+FUNCTION_DESCRIPTIONS = {
+    ("core/io/parameter_reader.cpp", "read_postprocessing_parameters"): (
+        "Read output switches, paths, plot settings, and diagnostic controls from Postprocessing.txt.",
+        "Create Folder Name <name> and folder_name <name> set the output folder name. "
+        "The value must be nonempty; auto delegates naming to configure_model_output_paths. "
+        "This parser stores the settings; directory creation and result writing happen elsewhere.",
+    ),
+    ("core/io/postprocess_utils.cpp", "configure_model_output_paths"): (
+        "Resolve model output paths using the configured root and optional custom folder name.",
+        "A nonempty folder_name other than auto overrides the model-based folder name and is sanitized. "
+        "A custom folder is used even when model_output_subdir is off; otherwise that switch controls "
+        "whether the sanitized model name is appended. An existing matching final path component is "
+        "not appended twice. The resolved root contains vtk, debug_csv, figures, and debug_dofs; "
+        "the HDF5 filename still uses the sanitized model name. This function sets paths without creating directories.",
+    ),
+}
+
 
 @dataclass
 class Function:
@@ -202,6 +220,8 @@ def parse_functions(files: dict[str, list[str]]) -> tuple[dict[str, dict[str, li
             source_brief = nearby_line_comment(declaration, declaration_line) or nearby_line_comment(body, start)
             if not brief:
                 brief = source_brief
+            if (str(body), name) in FUNCTION_DESCRIPTIONS:
+                brief, detail = FUNCTION_DESCRIPTIONS[(str(body), name)]
             if uid not in registry:
                 registry[uid] = Function(
                     uid=uid, name=name, signature=signature,

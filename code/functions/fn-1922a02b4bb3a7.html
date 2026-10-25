@@ -1,0 +1,22 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Precompute boundary metadata for repeated drag/lift evaluations."><title>precompute_boundary_force() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=postprocess_utils.cpp">← core/io/postprocess_utils.cpp</a>
+<p class="eyebrow">Function detail</p><h1>precompute_boundary_force()</h1><p class="lead">Precompute boundary metadata for repeated drag/lift evaluations.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>BoundaryForcePrecompute precompute_boundary_force(const FieldMesh &amp;mesh, const std::string &amp;boundary_name)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/postprocess_utils.cpp:1406</dd></div><div><dt>Declaration</dt><dd>core/io/postprocess.h:247</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/postprocess_utils.cpp#L1406" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 1406–1414</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="1406">BoundaryForcePrecompute precompute_boundary_force(</span>
+<span class="source-line" data-line="1407">    <span class="token keyword">const</span> FieldMesh&amp; mesh,</span>
+<span class="source-line" data-line="1408">    <span class="token keyword">const</span> std::string&amp; boundary_name</span>
+<span class="source-line" data-line="1409">){</span>
+<span class="source-line" data-line="1410">    BoundaryForcePrecompute pre;</span>
+<span class="source-line" data-line="1411">    pre.boundary_name = boundary_name;</span>
+<span class="source-line" data-line="1412">    pre.boundary_check = compute_boundary_integral_check(mesh,boundary_name);</span>
+<span class="source-line" data-line="1413">    <span class="token keyword">return</span> pre;</span>
+<span class="source-line" data-line="1414">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-5f93f71dafc7aa.html">← write_force_svg_from_csv()</a><a href="fn-163e3145b92871.html">compute_boundary_force_precomputed() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>
