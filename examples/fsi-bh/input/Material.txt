@@ -1,0 +1,15 @@
+# Fluid -- Python Run_FSI.py compatible
+rho 1e3
+mu 1e-3
+u_bar 1.5
+
+# Solid Neo-Hookean -- Python Run_FSI.py compatible
+structure_rho 5e3
+youngs_modulus 5.0e6
+poisson_ratio 0.3
+
+# Fluid-domain mesh motion
+# Select BH or HE.  BH is the Python default in Run_FSI.py.
+mesh_motion_type BH
+mesh_motion_coefficient 1.0e-8
+mesh_motion_poisson_ratio -0.1

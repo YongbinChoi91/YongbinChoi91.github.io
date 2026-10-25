@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   Incompressible Navier&ndash;Stokes flow example &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="example-page section-wrap cook-page">
+    <a class="back-button route-card" href="app-fluid.html">
+     &larr; Back to Fluid Mechanics
+    </a>
+    <p class="eyebrow">
+     Fluid Mechanics / Incompressible Flow
+    </p>
+    <h1>
+     Incompressible Navier&ndash;Stokes flow example
+    </h1>
+    <p class="lead">
+     A mixed velocity-pressure flow benchmark. The page uses the same Theory / Simulation layout as the nonlinear
+            solid pages: first the governing equations, then the actual C++ weak-form implementation and input files.
+    </p>
+   </section>
+
+   <section class="doc-section section-wrap cook-page hyperelastic-document-section" id="incompressible-flow-model">
+    <div class="plasticity-document-panel hyperelastic-document-panel">
+     <div aria-label="3D incompressible flow documentation tabs" class="plasticity-tabs" role="tablist">
+      <button aria-selected="true" class="active" data-fluid-tab="theory" role="tab" type="button">
+       Theory
+      </button>
+      <button aria-selected="false" data-fluid-tab="simulation" role="tab" type="button">
+       Simulation
+      </button>
+     </div>
+     <div class="plasticity-tab-panel active" data-fluid-panel="theory" role="tabpanel">
+      <div class="section-heading">
+       <p class="eyebrow">
+        Theory
+       </p>
+       <h2>
+        Continuity and momentum equations for incompressible flow.
+       </h2>
+       <p>
+        This first fluid page stays intentionally compact. The visitor only needs to see the mixed unknowns,
+                  the incompressibility equation, and the momentum balance before reading the simulation code.
+       </p>
+      </div>
+      <div class="math-explain-grid theory-grid">
+       <article class="math-card wide">
+        <span class="tag">Strong form</span>
+        <h3>Transient incompressible momentum balance</h3>
+        <div class="formula-block large-formula">
+         \[\rho(\partial_t\mathbf{v}+(\mathbf{v}\cdot\nabla)\mathbf{v})
+         -\nabla\cdot\boldsymbol{\sigma}=\mathbf{0},
+         \qquad \nabla\cdot\mathbf{v}=0\quad\text{in }\Omega.\]
+        </div>
+       </article>
+       <article class="math-card wide">
+        <span class="tag">Boundary conditions</span>
+        <h3>Velocity and traction boundaries</h3>
+        <div class="formula-block">
+         \[\mathbf{v}=\bar{\mathbf{v}}\ \text{on }\Gamma_v,
+         \qquad \boldsymbol{\sigma}\mathbf{n}=\bar{\mathbf{t}}\ \text{on }\Gamma_t.\]
+        </div>
+        <p>The 3D inlet, wall, obstacle, and outlet groups and their actual values are defined by <code>input/BC.txt</code>.</p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         1 &middot; Unknowns
+        </span>
+        <h3>
+         Velocity-pressure pair
+        </h3>
+        <div class="formula-block">
+         \[
+\mathbf{v}(\mathbf{x},t) \in \mathbb{R}^{d},
+\qquad
+p(\mathbf{x},t) \in \mathbb{R}
+\]
+        </div>
+        <p>
+         The input declaration uses
+         <code>
+          field_key velocity pressure
+         </code>
+         . Therefore the same generic element
+                    vector contains the vector velocity block and the scalar pressure block.
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         2 &middot; Continuity
+        </span>
+        <h3>
+         Incompressibility constraint
+        </h3>
+        <div class="formula-block">
+         \[
+\nabla \cdot \mathbf{v} = 0
+\]
+        </div>
+        <p>
+         Pressure acts as the constraint field for this equation. In the discrete system this produces the
+                    pressure row of the mixed velocity-pressure Newton system.
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         3 &middot; Momentum
+        </span>
+        <h3>
+         Transient Navier-Stokes balance
+        </h3>
+        <div class="formula-block">
+         \[
+\rho \left(
+\frac{\partial \mathbf{v}}{\partial t}
++ (\mathbf{v}\cdot\nabla)\mathbf{v}
+\right)
+- \nabla\cdot\boldsymbol{\sigma}
+= \mathbf{0}
+\]
+        </div>
+        <p>
+         The code evaluates the time-acceleration term, the convective term, and the stress-divergence term
+                    at each Gauss point.
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         4 &middot; Stress
+        </span>
+        <h3>
+         Newtonian Cauchy stress
+        </h3>
+        <div class="formula-block">
+         \[
+\boldsymbol{\sigma}
+= -p\mathbf{I}
++ \mu\left(\nabla\mathbf{v}+\nabla\mathbf{v}^{T}\right)
+\]
+        </div>
+        <p>
+         The pressure part contributes
+         <code>
+          -p div(delta_v)
+         </code>
+         , while the viscous part contributes the
+                    symmetric velocity-gradient term in the weak form.
+        </p>
+       </article>
+      </div>
+      <div class="section-heading compact-heading">
+       <p class="eyebrow">Weak form and code mapping</p>
+       <h2>The mixed weak form uses the identifiers from the classical fluid kernel.</h2>
+       <div class="formula-block large-formula">
+        \[G_e=\int_{\Omega_e}\rho(\partial_t\mathbf v+(\mathbf v\cdot\nabla)\mathbf v)\cdot\delta\mathbf v
+        +2\mu\boldsymbol\varepsilon(\mathbf v):\boldsymbol\varepsilon(\delta\mathbf v)
+        -p\nabla\cdot\delta\mathbf v+(\nabla\cdot\mathbf v)\delta p\,d\Omega.\]
+       </div>
+      </div>
+      <div class="equation-code-table-wrap">
+       <table class="equation-code-table">
+        <thead><tr><th>Mathematical quantity</th><th>Meaning</th><th>Code identifier</th><th>Source function</th></tr></thead>
+        <tbody>
+         <tr><td>\(\mathbf v\)</td><td>Velocity</td><td><code>velocity</code>, <code>v</code></td><td><code>weak_scalar_classical_fluid</code></td></tr>
+         <tr><td>\(p\)</td><td>Pressure</td><td><code>pressure</code>, <code>p</code></td><td><code>weak_scalar_classical_fluid</code></td></tr>
+         <tr><td>\(\nabla\mathbf v\)</td><td>Velocity gradient</td><td><code>grad_v</code></td><td><code>weak_scalar_classical_fluid</code></td></tr>
+         <tr><td>\(\delta\mathbf v\)</td><td>Velocity test function</td><td><code>delta_v</code></td><td><code>weak_scalar_classical_fluid</code></td></tr>
+         <tr><td>\(G_e\)</td><td>Scalar mixed weak form</td><td><code>G</code></td><td><code>weak_scalar_classical_fluid</code></td></tr>
+        </tbody>
+       </table>
+      </div>
+     </div>
+     <div class="plasticity-tab-panel" data-fluid-panel="simulation" role="tabpanel">
+      <div class="section-heading">
+       <p class="eyebrow">
+        Simulation
+       </p>
+       <h2>
+        Input files, execution flow, and implementation excerpts.
+       </h2>
+       <p>
+        The simulation tab follows the nonlinear solid page style: short workflow cards first, then real C++
+                  code blocks from
+        <code>
+         weak_form.cpp
+        </code>
+        . The fluid weak form is still a scalar
+        <code>
+         G
+        </code>
+        ; AD extracts
+                  the residual and tangent from that scalar statement.
+       </p>
+      </div>
+      <div class="cook-workflow">
+       <article>
+        <span>
+         1
+        </span>
+        <h3>
+         Input declaration
+        </h3>
+        <p>
+         <code>
+          DOFS_info.txt
+         </code>
+         declares
+         <code>
+          field_key velocity pressure
+         </code>
+         , so both fields enter the local element vector.
+        </p>
+       </article>
+       <article>
+        <span>
+         2
+        </span>
+        <h3>
+         Material constants
+        </h3>
+        <p>
+         <code>
+          Material.txt
+         </code>
+         provides
+         <code>
+          rho
+         </code>
+         ,
+         <code>
+          mu
+         </code>
+         , and
+         <code>
+          u_bar
+         </code>
+         for the flow model and inlet ramp.
+        </p>
+       </article>
+       <article>
+        <span>
+         3
+        </span>
+        <h3>
+         Gauss point fields
+        </h3>
+        <p>
+         The element routine interpolates
+         <code>
+          v
+         </code>
+         ,
+         <code>
+          p
+         </code>
+         ,
+         <code>
+          grad_v
+         </code>
+         ,
+         <code>
+          delta_v
+         </code>
+         , and
+         <code>
+          delta_p
+         </code>
+         .
+        </p>
+       </article>
+       <article>
+        <span>
+         4
+        </span>
+        <h3>
+         Weak-form volume terms
+        </h3>
+        <p>
+         The scalar
+         <code>
+          G
+         </code>
+         accumulates acceleration, convection, viscous stress, pressure stress, and continuity.
+        </p>
+       </article>
+       <article>
+        <span>
+         5
+        </span>
+        <h3>
+         Stabilization
+        </h3>
+        <p>
+         When enabled, SUPG/PSPG-style residual terms are added through the same scalar weak-form path.
+        </p>
+       </article>
+       <article>
+        <span>
+         6
+        </span>
+        <h3>
+         Element residual/tangent
+        </h3>
+        <p>
+         Nested Sacado AD computes
+         <code>
+          R = dG/d(delta_x)
+         </code>
+         and
+         <code>
+          K = dR/dx
+         </code>
+         for generic assembly.
+        </p>
+       </article>
+      </div>
+      <div class="actual-code-intro">
+       <h3>
+        Implementation excerpts
+       </h3>
+       <p>
+        These snippets mirror the actual C++ structure: active fields, scalar weak form, Gauss-point
+                  interpolation, volume terms, stabilization, and AD residual/tangent extraction.
+       </p>
+      </div>
+      <div class="actual-code-stack">
+       <details class="code-details" open="">
+        <summary>
+         1. Active model and active fields
+        </summary>
+        <div class="code-window">
+         <pre><code>const char* active_constitutive_model_name() {
+    return "classical_velocity_pressure_bdf2_ad_supg_pspg_optional";
+}
+
+std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
+    if (!mesh.dof_field_order.empty()) {
+        return mesh.dof_field_order;
+    }
+    return active_field_names(mesh);
+}</code></pre>
+        </div>
+       </details>
+       <details class="code-details">
+        <summary>
+         2. Scalar weak-form function and local layout
+        </summary>
+        <div class="code-window">
+         <pre><code>template &lt;class Scalar&gt;
+static Scalar weak_scalar_classical_fluid(
+    const FieldMesh&amp; mesh,
+    int elem_id,
+    const std::vector&lt;Scalar&gt;&amp; x_elem,
+    const std::vector&lt;Scalar&gt;&amp; test_elem,
+    const ProblemParameters&amp; params,
+    const ElementState&amp; state
+) {
+    const double dt = state.dt;
+    const ClassicalLocalLayout L = make_classical_layout(mesh, elem_id);
+    const auto&amp; V = L.field("velocity");
+    const auto&amp; P = L.field("pressure");
+
+    const BDFCoefficientsDtMultiplied bdf =
+        bdf_coefficients_dt_multiplied(dt, state.dt_previous, state.step);
+
+    Scalar G(0.0);
+    const ElementGeometry geom = make_velocity_geometry_element(mesh, elem_id);
+
+    const double rho = params.material.rho;
+    const double mu  = params.material.mu;</code></pre>
+        </div>
+       </details>
+       <details class="code-details">
+        <summary>
+         3. Gauss-point interpolation
+        </summary>
+        <div class="code-window">
+         <pre><code>for (const auto&amp; gp : gauss_rule(V.element_type, params.solver.gauss_order)) {
+    const ShapeData sv = compute_shape(V.element_type, gp.xi, gp.eta, gp.zeta);
+    const ShapeData sp = compute_shape(P.element_type, gp.xi, gp.eta, gp.zeta);
+    const JacobianData J = compute_jacobian_data(geom, sv);
+
+    const auto dNv = compute_dN_dx(sv, J);
+    const auto dNp = compute_dN_dx(sp, J);
+    const double dV = J.detJ * gp.weight;
+
+    const auto v = hpx::field_value_as&lt;Scalar&gt;(L, "velocity", x_elem, sv.N);
+    const auto v_n = hpx::field_value_as&lt;Scalar&gt;(L, "velocity", state.x_n_elem, sv.N);
+    const auto v_nm1 = hpx::field_value_as&lt;Scalar&gt;(L, "velocity", state.x_nm1_elem, sv.N);
+    const auto grad_v = hpx::field_grad_as&lt;Scalar&gt;(L, "velocity", x_elem, dNv);
+
+    const auto delta_v = hpx::field_value_as&lt;Scalar&gt;(L, "velocity", test_elem, sv.N);
+    const auto grad_delta_v = hpx::field_grad_as&lt;Scalar&gt;(L, "velocity", test_elem, dNv);
+    const Scalar delta_p = hpx::scalar_field_value_as&lt;Scalar&gt;(L, "pressure", test_elem, sp.N);</code></pre>
+        </div>
+       </details>
+       <details class="code-details">
+        <summary>
+         4. Momentum and continuity contributions to G
+        </summary>
+        <div class="code-window">
+         <pre><code>std::vector&lt;Scalar&gt; dt_times_accel(L.dim, Scalar(0.0));
+std::vector&lt;Scalar&gt; conv(L.dim, Scalar(0.0));
+for (int i = 0; i &lt; L.dim; ++i) {
+    dt_times_accel[i] =
+        Scalar(bdf.b0) * v[i]
+      + Scalar(bdf.b1) * v_n[i]
+      + Scalar(bdf.b2) * v_nm1[i];
+
+    for (int j = 0; j &lt; L.dim; ++j) {
+        conv[i] += v[j] * grad_v[i][j];
+    }
+}
+
+const Scalar p = hpx::scalar_field_value_as&lt;Scalar&gt;(L, "pressure", x_elem, sp.N);
+
+Scalar div_v(0.0);
+Scalar div_delta_v(0.0);
+for (int i = 0; i &lt; L.dim; ++i) {
+    div_v += grad_v[i][i];
+    div_delta_v += grad_delta_v[i][i];
+}
+
+for (int i = 0; i &lt; L.dim; ++i) {
+    G += Scalar(rho) * dt_times_accel[i] * delta_v[i] * Scalar(dV);
+    G += Scalar(dt) * Scalar(rho) * conv[i] * delta_v[i] * Scalar(dV);
+}
+for (int i = 0; i &lt; L.dim; ++i) {
+    for (int j = 0; j &lt; L.dim; ++j) {
+        G += Scalar(dt) * Scalar(mu)
+           * (grad_v[i][j] + grad_v[j][i])
+           * grad_delta_v[i][j]
+           * Scalar(dV);
+    }
+}
+G -= Scalar(dt) * p * div_delta_v * Scalar(dV);
+G += div_v * delta_p * Scalar(dV);</code></pre>
+        </div>
+       </details>
+       <details class="code-details">
+        <summary>
+         5. Optional SUPG/PSPG-style stabilization
+        </summary>
+        <div class="code-window">
+         <pre><code>if (params.solver.stabilization) {
+    Scalar v_norm2(0.0);
+    for (int i = 0; i &lt; L.dim; ++i) v_norm2 += v[i] * v[i];
+
+    const double h_T = std::max(std::sqrt(std::abs(2.0 * dV)), 1.0e-12);
+    const double inv_h2 = 1.0 / (h_T * h_T);
+    const double inv_h4 = inv_h2 * inv_h2;
+    const double time_part = (sigma_BDF * sigma_BDF) / (dt * dt);
+    const double visc_part = C_k * nu * nu * inv_h4;
+    const Scalar denom = Scalar(time_part + visc_part) + v_norm2 * Scalar(inv_h2);
+    const Scalar Tau_M = Scalar(1.0) / sqrt(denom);
+    const Scalar Tau_C = Scalar(h_T * h_T) / Tau_M;
+
+    for (int i = 0; i &lt; L.dim; ++i) {
+        G += Tau_M * strong_res[i] * grad_delta_v_times_v[i] * Scalar(dV);
+        G += Tau_M * strong_res[i] * grad_delta_p[i] * Scalar(dV);
+    }
+    G += penalty * Tau_C * div_v * div_delta_v * Scalar(dV);
+}</code></pre>
+        </div>
+       </details>
+       <details class="code-details">
+        <summary>
+         6. AD residual and tangent extraction
+        </summary>
+        <div class="code-window">
+         <pre><code>ElementSystem compute_constitutive_element_system(
+    const FieldMesh&amp; mesh,
+    int elem_id,
+    const Vector&amp; x_elem,
+    const ProblemParameters&amp; params,
+    const ElementState&amp; state
+) {
+    const int n = static_cast&lt;int&gt;(x_elem.size());
+
+    std::vector&lt;WeakOuterFad&gt; x_ad(n);
+    std::vector&lt;WeakOuterFad&gt; test_ad(n);
+    for (int j = 0; j &lt; n; ++j) {
+        const WeakInnerFad x_value(x_elem[j]);
+        x_ad[j] = WeakOuterFad(n, j, x_value);
+    }
+    for (int i = 0; i &lt; n; ++i) {
+        test_ad[i] = WeakOuterFad(WeakInnerFad(n, i, 0.0));
+    }
+
+    const WeakOuterFad G = weak_scalar_classical_fluid(mesh, elem_id, x_ad, test_ad, params, state);
+
+    ElementSystem sys;
+    sys.residual.assign(n, 0.0);
+    sys.tangent.assign(n * n, 0.0);
+
+    const WeakInnerFad G_value = G.val();
+    for (int i = 0; i &lt; n; ++i) {
+        sys.residual[i] = weak_inner_dx(G_value, i);
+        const int row = i * n;
+        for (int j = 0; j &lt; n; ++j) {
+            const WeakInnerFad dG_dxj = (j &lt; G.size()) ? G.dx(j) : WeakInnerFad(0.0);
+            sys.tangent[row + j] = weak_inner_dx(dG_dxj, i);
+        }
+    }
+    return sys;
+}</code></pre>
+        </div>
+       </details>
+      </div>
+      <div class="example-run-panel">
+       <p class="eyebrow">Build and smoke-test</p>
+       <h2>Back up the active files and run the 3D example.</h2>
+       <pre><code>cp FEM/models/weak_form.cpp FEM/models/weak_form.cpp.bak
+cp -R FEM/input FEM/input.bak
+cp Web/examples/navier-stokes-3d/weak_form.cpp FEM/models/weak_form.cpp
+cp Web/examples/navier-stokes-3d/input/*.txt FEM/input/
+make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
+       <p>Validation target: two accepted time steps, decreasing nonlinear residuals, and generated output files.</p>
+      </div>
+      <div class="section-heading compact-heading">
+       <p class="eyebrow">
+        Download input files
+       </p>
+       <h2>
+        All text files used by this example.
+       </h2>
+       <p>
+        These files are included in the website package under
+        <code>
+         examples/navier-stokes-3d/input/
+        </code>
+        .
+       </p>
+      </div>
+      <div class="download-grid">
+       <a class="download-card" download="" href="../examples/navier-stokes-3d/input/ProblemMesh.txt">
+        <span class="tag">
+         mesh
+        </span>
+        <h3>
+         ProblemMesh.txt
+        </h3>
+        <p>
+         Mixed velocity-pressure channel/cylinder mesh.
+        </p>
+       </a>
+       <a class="download-card" download="" href="../examples/navier-stokes-3d/input/DOFS_info.txt">
+        <span class="tag">
+         dofs
+        </span>
+        <h3>
+         DOFS_info.txt
+        </h3>
+        <p>
+         Declares the active unknown fields with
+         <code>
+          field_key velocity pressure
+         </code>
+         .
+        </p>
+       </a>
+       <a class="download-card" download="" href="../examples/navier-stokes-3d/input/BC.txt">
+        <span class="tag">
+         bc
+        </span>
+        <h3>
+         BC.txt
+        </h3>
+        <p>
+         Applies inlet velocity, no-slip walls/cylinder, and outlet pressure.
+        </p>
+       </a>
+       <a class="download-card" download="" href="../examples/navier-stokes-3d/input/Material.txt">
+        <span class="tag">
+         material
+        </span>
+        <h3>
+         Material.txt
+        </h3>
+        <p>
+         Defines
+         <code>
+          rho 1
+         </code>
+         ,
+         <code>
+          mu 1e-3
+         </code>
+         , and
+         <code>
+          u_bar 2.0
+         </code>
+         .
+        </p>
+       </a>
+       <a class="download-card" download="" href="../examples/navier-stokes-3d/input/Solver.txt">
+        <span class="tag">
+         solver
+        </span>
+        <h3>
+         Solver.txt
+        </h3>
+        <p>
+         Controls Gauss order, backend, Newton tolerances, adaptive dt, and stabilization.
+        </p>
+       </a>
+       <a class="download-card" download="" href="../examples/navier-stokes-3d/input/Postprocessing.txt">
+        <span class="tag">
+         output
+        </span>
+        <h3>
+         Postprocessing.txt
+        </h3>
+        <p>
+         Controls VTK output and drag/lift force output.
+        </p>
+       </a>
+       <a class="download-card" download="" href="../examples/navier-stokes-3d/weak_form.cpp">
+        <span class="tag">
+         model
+        </span>
+        <h3>
+         weak_form.cpp
+        </h3>
+        <p>
+         Verified classical Navier-Stokes weak form synchronized from the runnable 3D model.
+        </p>
+       </a>
+      </div>
+      <button class="example-zip-button" disabled type="button">Download complete example (.zip) — coming after final validation</button>
+     </div>
+    </div>
+   </section>
+   <section class="doc-section section-wrap cook-page example-result-pending">
+    <p class="eyebrow">Result</p>
+    <h2>Result pending validation</h2>
+    <p>The final 3D velocity or pressure image will be added here after the two-step fluid smoke test.</p>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

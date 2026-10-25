@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements multiscale rve sample labels for element."><title>multiscale_rve_sample_labels_for_element() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../multiscale.html?file=rve_output.cpp">← core/multiscale/rve_output.cpp</a>
+<p class="eyebrow">Function detail</p><h1>multiscale_rve_sample_labels_for_element()</h1><p class="lead">Implements multiscale rve sample labels for element.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>std::vector&lt; std::string &gt; multiscale_rve_sample_labels_for_element(const FieldMesh &amp;mesh, int elem_id, const ProblemParameters &amp;params)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/multiscale/rve_output.cpp:109</dd></div><div><dt>Declaration</dt><dd>core/multiscale/multiscale.h:162</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/multiscale/rve_output.cpp#L109" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 109–120</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="109">std::vector&lt;std::string&gt; multiscale_rve_sample_labels_for_element(</span>
+<span class="source-line" data-line="110">    <span class="token keyword">const</span> FieldMesh&amp; mesh,</span>
+<span class="source-line" data-line="111">    <span class="token keyword">int</span> elem_id,</span>
+<span class="source-line" data-line="112">    <span class="token keyword">const</span> ProblemParameters&amp; params</span>
+<span class="source-line" data-line="113">) {</span>
+<span class="source-line" data-line="114">    std::vector&lt;std::string&gt; labels;</span>
+<span class="source-line" data-line="115">    <span class="token keyword">if</span> (params.solver.multiscale_plot_points.empty()) <span class="token keyword">return</span> labels;</span>
+<span class="source-line" data-line="116">    <span class="token keyword">for</span> (<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; pt : params.solver.multiscale_plot_points) {</span>
+<span class="source-line" data-line="117">        <span class="token keyword">if</span> (choose_sample_element(mesh, pt.x, pt.y) == elem_id) labels.push_back(pt.label);</span>
+<span class="source-line" data-line="118">    }</span>
+<span class="source-line" data-line="119">    <span class="token keyword">return</span> labels;</span>
+<span class="source-line" data-line="120">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-796bdd6ded948d.html">← write_rve_macro_csv()</a><a href="fn-4b716b8a1869eb.html">multiscale_rve_sample_filename() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

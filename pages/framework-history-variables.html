@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   History Variables &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body class="framework-detail-page">
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap wide-page-wrap">
+    <a class="back-button route-card" href="framework-mesh.html">
+     &larr; Back to Mesh / DOF Layout
+    </a>
+    <p class="eyebrow">
+     Framework / Material state
+    </p>
+    <h1>
+     History Variables
+    </h1>
+    <p class="lead">
+     History variables are Gauss-point state variables used by path-dependent models such as plasticity or viscoelasticity.
+    </p>
+   </section>
+   <section class="doc-section section-wrap wide-page-wrap framework-detail-wide">
+    <article class="framework-hero-card">
+     <span class="tag">
+      Local state
+     </span>
+     <h2>
+      History variables are not global DOFs.
+     </h2>
+     <p>
+      They are allocated per domain, element, and Gauss point. The nonlinear solver still solves only for the active fields in
+      <code>
+       field_key
+      </code>
+      , while the weak form updates trial history variables locally and commits them after an accepted step.
+     </p>
+    </article>
+    <div class="example-grid two-col">
+     <article class="detail-card">
+      <h2>
+       Elasto-plastic example
+      </h2>
+      <pre class="example-code"><code>field_key displacement
+
+# 2D plane-strain plasticity history
+# {h11, h22, h33, h12, gamma}
+history plasticity 5</code></pre>
+     </article>
+     <article class="detail-card">
+      <h2>
+       Where it is used
+      </h2>
+      <ul class="input-key-reference">
+       <li>
+        <code>
+         MaterialHistoryStore
+        </code>
+        stores history per domain/element/Gauss point.
+       </li>
+       <li>
+        <code>
+         h_n
+        </code>
+        is the accepted state from the previous step.
+       </li>
+       <li>
+        <code>
+         h_trial
+        </code>
+        is the current Newton/trial update.
+       </li>
+       <li>
+        <code>
+         commit_material_history_store()
+        </code>
+        accepts the trial state after convergence.
+       </li>
+      </ul>
+     </article>
+    </div>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

@@ -1,0 +1,313 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="============================================================================ Postprocessing.txt ============================================================================"><title>read_postprocessing_parameters() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=parameter_reader.cpp">← core/io/parameter_reader.cpp</a>
+<p class="eyebrow">Function detail</p><h1>read_postprocessing_parameters()</h1><p class="lead">============================================================================ Postprocessing.txt ============================================================================</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>void read_postprocessing_parameters(const std::string &amp;postprocess_file, ProblemParameters &amp;p)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/parameter_reader.cpp:629</dd></div><div><dt>Declaration</dt><dd>core/io/parameter_reader.cpp:629</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/parameter_reader.cpp#L629" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 629–928</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="629"><span class="token keyword">void</span> read_postprocessing_parameters(<span class="token keyword">const</span> std::string&amp; postprocess_file,</span>
+<span class="source-line" data-line="630">                                           ProblemParameters&amp; p){</span>
+<span class="source-line" data-line="631">    p.solver.plot_config_file = postprocess_file;</span>
+<span class="source-line" data-line="632">    std::ifstream file(postprocess_file);</span>
+<span class="source-line" data-line="633">    <span class="token keyword">if</span>(!file) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Cannot open postprocessing file: &quot;</span>+postprocess_file);</span>
+<span class="source-line" data-line="634"> </span>
+<span class="source-line" data-line="635">    std::string output_directory;</span>
+<span class="source-line" data-line="636">    std::string output_name;</span>
+<span class="source-line" data-line="637"> </span>
+<span class="source-line" data-line="638">    <span class="token keyword">auto</span> split_prefix = [](<span class="token keyword">const</span> std::string&amp; prefix, std::string&amp; dir, std::string&amp; name){</span>
+<span class="source-line" data-line="639">        <span class="token keyword">const</span> std::size_t slash = prefix.find_last_of(<span class="token string">&quot;/\\&quot;</span>);</span>
+<span class="source-line" data-line="640">        <span class="token keyword">if</span>(slash == std::string::npos){</span>
+<span class="source-line" data-line="641">            dir = <span class="token string">&quot;.&quot;</span>;</span>
+<span class="source-line" data-line="642">            name = prefix;</span>
+<span class="source-line" data-line="643">        } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="644">            dir = prefix.substr(<span class="token number">0</span>, slash);</span>
+<span class="source-line" data-line="645">            name = prefix.substr(slash + <span class="token number">1</span>);</span>
+<span class="source-line" data-line="646">            <span class="token keyword">if</span>(dir.empty()) dir = <span class="token string">&quot;.&quot;</span>;</span>
+<span class="source-line" data-line="647">        }</span>
+<span class="source-line" data-line="648">    };</span>
+<span class="source-line" data-line="649"> </span>
+<span class="source-line" data-line="650">    <span class="token keyword">auto</span> trim_trailing_slashes = [](std::string s){</span>
+<span class="source-line" data-line="651">        <span class="token keyword">while</span>(s.size() &gt; <span class="token number">1</span> &amp;&amp; (s.back() == <span class="token string">&#x27;/&#x27;</span> || s.back() == <span class="token string">&#x27;\\&#x27;</span>)) s.pop_back();</span>
+<span class="source-line" data-line="652">        <span class="token keyword">return</span> s;</span>
+<span class="source-line" data-line="653">    };</span>
+<span class="source-line" data-line="654"> </span>
+<span class="source-line" data-line="655">    <span class="token keyword">auto</span> rebuild_output_prefix = [&amp;](){</span>
+<span class="source-line" data-line="656">        std::string dir, name;</span>
+<span class="source-line" data-line="657">        split_prefix(p.solver.output_prefix, dir, name);</span>
+<span class="source-line" data-line="658">        <span class="token keyword">if</span>(!output_directory.empty()) dir = trim_trailing_slashes(output_directory);</span>
+<span class="source-line" data-line="659">        <span class="token keyword">if</span>(!output_name.empty()) name = output_name;</span>
+<span class="source-line" data-line="660">        <span class="token keyword">if</span>(dir.empty() || dir == <span class="token string">&quot;.&quot;</span>) p.solver.output_prefix = name;</span>
+<span class="source-line" data-line="661">        <span class="token keyword">else</span> p.solver.output_prefix = dir + <span class="token string">&quot;/&quot;</span> + name;</span>
+<span class="source-line" data-line="662">    };</span>
+<span class="source-line" data-line="663"> </span>
+<span class="source-line" data-line="664">    <span class="token keyword">auto</span> parse_hysteresis_axis = [&amp;](std::stringstream&amp; line, <span class="token keyword">const</span> std::string&amp; axis_name){</span>
+<span class="source-line" data-line="665">        TimeSolverSettings::HysteresisAxisSpec axis;</span>
+<span class="source-line" data-line="666">        axis.enabled = <span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="667">        std::string mode;</span>
+<span class="source-line" data-line="668">        line &gt;&gt; mode;</span>
+<span class="source-line" data-line="669">        mode = lower_copy(mode);</span>
+<span class="source-line" data-line="670">        <span class="token keyword">if</span>(mode.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad &quot;</span> + axis_name + <span class="token string">&quot; line: missing mode.&quot;</span>);</span>
+<span class="source-line" data-line="671">        axis.mode = mode;</span>
+<span class="source-line" data-line="672"> </span>
+<span class="source-line" data-line="673">        <span class="token keyword">auto</span> read_scale_offset = [&amp;](){</span>
+<span class="source-line" data-line="674">            <span class="token keyword">if</span>(line &gt;&gt; axis.scale){</span>
+<span class="source-line" data-line="675">                <span class="token keyword">if</span>(line &gt;&gt; axis.offset) {}</span>
+<span class="source-line" data-line="676">            }</span>
+<span class="source-line" data-line="677">        };</span>
+<span class="source-line" data-line="678"> </span>
+<span class="source-line" data-line="679">        <span class="token keyword">auto</span> parse_point_coordinates = [&amp;](<span class="token keyword">const</span> std::string&amp; first_token){</span>
+<span class="source-line" data-line="680">            std::array&lt;<span class="token keyword">double</span>,<span class="token number">3</span>&gt; pnt{{<span class="token number">0.0</span>,<span class="token number">0.0</span>,<span class="token number">0.0</span>}};</span>
+<span class="source-line" data-line="681">            std::string token = first_token;</span>
+<span class="source-line" data-line="682">            <span class="token keyword">if</span>(token.find(<span class="token string">&#x27;,&#x27;</span>) != std::string::npos){</span>
+<span class="source-line" data-line="683">                std::replace(token.begin(), token.end(), <span class="token string">&#x27;,&#x27;</span>, <span class="token string">&#x27; &#x27;</span>);</span>
+<span class="source-line" data-line="684">                std::stringstream ps(token);</span>
+<span class="source-line" data-line="685">                <span class="token keyword">if</span>(!(ps &gt;&gt; pnt[<span class="token number">0</span>] &gt;&gt; pnt[<span class="token number">1</span>])){</span>
+<span class="source-line" data-line="686">                    <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad &quot;</span> + axis_name + <span class="token string">&quot; value point coordinates. Use x,y[,z].&quot;</span>);</span>
+<span class="source-line" data-line="687">                }</span>
+<span class="source-line" data-line="688">                <span class="token keyword">if</span>(!(ps &gt;&gt; pnt[<span class="token number">2</span>])) pnt[<span class="token number">2</span>] = <span class="token number">0.0</span>;</span>
+<span class="source-line" data-line="689">            } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="690">                <span class="token keyword">if</span>(token.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad &quot;</span> + axis_name + <span class="token string">&quot; value point line: missing coordinates.&quot;</span>);</span>
+<span class="source-line" data-line="691">                pnt[<span class="token number">0</span>] = std::stod(token);</span>
+<span class="source-line" data-line="692">                <span class="token keyword">if</span>(!(line &gt;&gt; pnt[<span class="token number">1</span>])){</span>
+<span class="source-line" data-line="693">                    <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad &quot;</span> + axis_name + <span class="token string">&quot; value point coordinates. Use x y or x,y[,z].&quot;</span>);</span>
+<span class="source-line" data-line="694">                }</span>
+<span class="source-line" data-line="695">            }</span>
+<span class="source-line" data-line="696">            <span class="token keyword">return</span> pnt;</span>
+<span class="source-line" data-line="697">        };</span>
+<span class="source-line" data-line="698"> </span>
+<span class="source-line" data-line="699">        <span class="token keyword">if</span>(mode==<span class="token string">&quot;time&quot;</span>){</span>
+<span class="source-line" data-line="700">            read_scale_offset();</span>
+<span class="source-line" data-line="701">            <span class="token keyword">if</span>(axis.label.empty()) axis.label = <span class="token string">&quot;time&quot;</span>;</span>
+<span class="source-line" data-line="702">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(mode==<span class="token string">&quot;function&quot;</span> || mode==<span class="token string">&quot;expr&quot;</span> || mode==<span class="token string">&quot;expression&quot;</span>){</span>
+<span class="source-line" data-line="703">            std::string expr = rest_trim(line);</span>
+<span class="source-line" data-line="704">            <span class="token keyword">if</span>(expr.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad &quot;</span> + axis_name + <span class="token string">&quot; function line: missing expression.&quot;</span>);</span>
+<span class="source-line" data-line="705">            axis.mode = <span class="token string">&quot;function&quot;</span>;</span>
+<span class="source-line" data-line="706">            axis.function = make_scalar_function(expr);</span>
+<span class="source-line" data-line="707">            axis.label = expr;</span>
+<span class="source-line" data-line="708">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(mode==<span class="token string">&quot;prescribed&quot;</span> || mode==<span class="token string">&quot;bc&quot;</span> || mode==<span class="token string">&quot;dirichlet&quot;</span> ||</span>
+<span class="source-line" data-line="709">                  mode==<span class="token string">&quot;reaction&quot;</span> || mode==<span class="token string">&quot;force&quot;</span> || mode==<span class="token string">&quot;external&quot;</span> ||</span>
+<span class="source-line" data-line="710">                  mode==<span class="token string">&quot;residual&quot;</span> || mode==<span class="token string">&quot;internal&quot;</span>){</span>
+<span class="source-line" data-line="711">            std::string a,b,c;</span>
+<span class="source-line" data-line="712">            line &gt;&gt; a &gt;&gt; b;</span>
+<span class="source-line" data-line="713">            <span class="token keyword">if</span>(a.empty() || b.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad &quot;</span> + axis_name + <span class="token string">&quot; line: missing target.&quot;</span>);</span>
+<span class="source-line" data-line="714">            <span class="token keyword">if</span>(is_known_field_name(a)){</span>
+<span class="source-line" data-line="715">                line &gt;&gt; c;</span>
+<span class="source-line" data-line="716">                <span class="token keyword">if</span>(c.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad &quot;</span> + axis_name + <span class="token string">&quot; line. Use: &quot;</span> + axis_name + <span class="token string">&quot; &quot;</span> + mode + <span class="token string">&quot; field group component [scale [offset]].&quot;</span>);</span>
+<span class="source-line" data-line="717">                <span class="token keyword">bool</span> explicit_field=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="718">                axis.target = parse_field_component_target_tokens(a,b,c,explicit_field);</span>
+<span class="source-line" data-line="719">            } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="720">                axis.target = target_from_alias(a,b);</span>
+<span class="source-line" data-line="721">            }</span>
+<span class="source-line" data-line="722">            <span class="token keyword">if</span>(mode==<span class="token string">&quot;force&quot;</span> || mode==<span class="token string">&quot;external&quot;</span>) axis.mode=<span class="token string">&quot;reaction&quot;</span>;</span>
+<span class="source-line" data-line="723">            <span class="token keyword">if</span>(mode==<span class="token string">&quot;internal&quot;</span>) axis.mode=<span class="token string">&quot;residual&quot;</span>;</span>
+<span class="source-line" data-line="724">            read_scale_offset();</span>
+<span class="source-line" data-line="725">            <span class="token keyword">if</span>(axis.label.empty()) axis.label = axis.mode + <span class="token string">&quot; &quot;</span> + axis.target.field + <span class="token string">&quot; &quot;</span> + axis.target.group + <span class="token string">&quot; &quot;</span> + b;</span>
+<span class="source-line" data-line="726">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(mode==<span class="token string">&quot;value&quot;</span> || mode==<span class="token string">&quot;field&quot;</span> || mode==<span class="token string">&quot;dof&quot;</span> || mode==<span class="token string">&quot;point&quot;</span>){</span>
+<span class="source-line" data-line="727">            axis.mode = <span class="token string">&quot;value&quot;</span>;</span>
+<span class="source-line" data-line="728">            std::string field, selector;</span>
+<span class="source-line" data-line="729">            line &gt;&gt; field &gt;&gt; selector;</span>
+<span class="source-line" data-line="730">            <span class="token keyword">if</span>(field.empty() || selector.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad &quot;</span> + axis_name + <span class="token string">&quot; value line.&quot;</span>);</span>
+<span class="source-line" data-line="731">            axis.target.field = lower_copy(field);</span>
+<span class="source-line" data-line="732">            selector = lower_copy(selector);</span>
+<span class="source-line" data-line="733">            <span class="token keyword">if</span>(selector==<span class="token string">&quot;node&quot;</span>){</span>
+<span class="source-line" data-line="734">                std::string comp;</span>
+<span class="source-line" data-line="735">                line &gt;&gt; axis.node &gt;&gt; comp;</span>
+<span class="source-line" data-line="736">                <span class="token keyword">if</span>(axis.node &lt; <span class="token number">0</span> || comp.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad &quot;</span> + axis_name + <span class="token string">&quot; value node line. Use: &quot;</span> + axis_name + <span class="token string">&quot; value field node node_id component [scale [offset]].&quot;</span>);</span>
+<span class="source-line" data-line="737">                axis.target.group = <span class="token string">&quot;&quot;</span>;</span>
+<span class="source-line" data-line="738">                axis.target.component = component_index_from_string(comp);</span>
+<span class="source-line" data-line="739">                axis.reduction = <span class="token string">&quot;point&quot;</span>;</span>
+<span class="source-line" data-line="740">                read_scale_offset();</span>
+<span class="source-line" data-line="741">                axis.label = axis.target.field + <span class="token string">&quot; node &quot;</span> + std::to_string(axis.node) + <span class="token string">&quot; &quot;</span> + comp;</span>
+<span class="source-line" data-line="742">            } <span class="token keyword">else</span> <span class="token keyword">if</span>(selector==<span class="token string">&quot;point&quot;</span> || selector==<span class="token string">&quot;coord&quot;</span> || selector==<span class="token string">&quot;coordinate&quot;</span> || selector==<span class="token string">&quot;coords&quot;</span>){</span>
+<span class="source-line" data-line="743">                std::string coords, comp;</span>
+<span class="source-line" data-line="744">                line &gt;&gt; coords;</span>
+<span class="source-line" data-line="745">                <span class="token keyword">if</span>(coords.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad &quot;</span> + axis_name + <span class="token string">&quot; value point line. Use: &quot;</span> + axis_name + <span class="token string">&quot; value field point x,y[,z] component [scale [offset]].&quot;</span>);</span>
+<span class="source-line" data-line="746">                axis.has_point = <span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="747">                axis.point = parse_point_coordinates(coords);</span>
+<span class="source-line" data-line="748">                line &gt;&gt; comp;</span>
+<span class="source-line" data-line="749">                <span class="token keyword">if</span>(comp.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad &quot;</span> + axis_name + <span class="token string">&quot; value point line. Use: &quot;</span> + axis_name + <span class="token string">&quot; value field point x,y[,z] component [scale [offset]].&quot;</span>);</span>
+<span class="source-line" data-line="750">                axis.target.group = <span class="token string">&quot;&quot;</span>;</span>
+<span class="source-line" data-line="751">                axis.target.component = component_index_from_string(comp);</span>
+<span class="source-line" data-line="752">                axis.reduction = <span class="token string">&quot;point&quot;</span>;</span>
+<span class="source-line" data-line="753">                read_scale_offset();</span>
+<span class="source-line" data-line="754">                std::ostringstream label;</span>
+<span class="source-line" data-line="755">                label &lt;&lt; axis.target.field &lt;&lt; <span class="token string">&quot; point &quot;</span></span>
+<span class="source-line" data-line="756">                      &lt;&lt; std::setprecision(<span class="token number">17</span>) &lt;&lt; axis.point[<span class="token number">0</span>] &lt;&lt; <span class="token string">&quot;,&quot;</span> &lt;&lt; axis.point[<span class="token number">1</span>];</span>
+<span class="source-line" data-line="757">                <span class="token keyword">if</span>(axis.point[<span class="token number">2</span>] != <span class="token number">0.0</span>) label &lt;&lt; <span class="token string">&quot;,&quot;</span> &lt;&lt; axis.point[<span class="token number">2</span>];</span>
+<span class="source-line" data-line="758">                label &lt;&lt; <span class="token string">&quot; &quot;</span> &lt;&lt; comp;</span>
+<span class="source-line" data-line="759">                axis.label = label.str();</span>
+<span class="source-line" data-line="760">            } <span class="token keyword">else</span> <span class="token keyword">if</span>(selector==<span class="token string">&quot;boundary&quot;</span> || selector==<span class="token string">&quot;group&quot;</span>){</span>
+<span class="source-line" data-line="761">                std::string group, comp, reduction_or_scale;</span>
+<span class="source-line" data-line="762">                line &gt;&gt; group &gt;&gt; comp;</span>
+<span class="source-line" data-line="763">                <span class="token keyword">if</span>(group.empty() || comp.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad &quot;</span> + axis_name + <span class="token string">&quot; value boundary line. Use: &quot;</span> + axis_name + <span class="token string">&quot; value field boundary group component [mean|sum] [scale [offset]].&quot;</span>);</span>
+<span class="source-line" data-line="764">                axis.target.group = group;</span>
+<span class="source-line" data-line="765">                axis.target.component = component_index_from_string(comp);</span>
+<span class="source-line" data-line="766">                std::streampos pos = line.tellg();</span>
+<span class="source-line" data-line="767">                <span class="token keyword">if</span>(line &gt;&gt; reduction_or_scale){</span>
+<span class="source-line" data-line="768">                    <span class="token keyword">const</span> std::string rlow=lower_copy(reduction_or_scale);</span>
+<span class="source-line" data-line="769">                    <span class="token keyword">if</span>(rlow==<span class="token string">&quot;sum&quot;</span> || rlow==<span class="token string">&quot;mean&quot;</span> || rlow==<span class="token string">&quot;average&quot;</span> || rlow==<span class="token string">&quot;avg&quot;</span>){</span>
+<span class="source-line" data-line="770">                        axis.reduction = (rlow==<span class="token string">&quot;average&quot;</span> || rlow==<span class="token string">&quot;avg&quot;</span>) ? <span class="token string">&quot;mean&quot;</span> : rlow;</span>
+<span class="source-line" data-line="771">                        read_scale_offset();</span>
+<span class="source-line" data-line="772">                    } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="773">                        line.clear();</span>
+<span class="source-line" data-line="774">                        <span class="token keyword">if</span>(pos != std::streampos(-<span class="token number">1</span>)) line.seekg(pos);</span>
+<span class="source-line" data-line="775">                        read_scale_offset();</span>
+<span class="source-line" data-line="776">                    }</span>
+<span class="source-line" data-line="777">                }</span>
+<span class="source-line" data-line="778">                <span class="token keyword">if</span>(axis.reduction.empty()) axis.reduction = <span class="token string">&quot;mean&quot;</span>;</span>
+<span class="source-line" data-line="779">                axis.label = axis.target.field + <span class="token string">&quot; &quot;</span> + group + <span class="token string">&quot; &quot;</span> + comp;</span>
+<span class="source-line" data-line="780">            } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="781">                <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad &quot;</span> + axis_name + <span class="token string">&quot; value selector. Use node, point, or boundary.&quot;</span>);</span>
+<span class="source-line" data-line="782">            }</span>
+<span class="source-line" data-line="783">        } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="784">            <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Unknown &quot;</span> + axis_name + <span class="token string">&quot; mode: &quot;</span> + mode + <span class="token string">&quot;. Use time, function, prescribed, reaction, residual, or value.&quot;</span>);</span>
+<span class="source-line" data-line="785">        }</span>
+<span class="source-line" data-line="786">        <span class="token keyword">return</span> axis;</span>
+<span class="source-line" data-line="787">    };</span>
+<span class="source-line" data-line="788"> </span>
+<span class="source-line" data-line="789">    <span class="token keyword">struct</span> BoolKey { std::initializer_list&lt;<span class="token keyword">const</span> <span class="token keyword">char</span>*&gt; aliases; <span class="token keyword">bool</span>* value; };</span>
+<span class="source-line" data-line="790">    <span class="token keyword">const</span> BoolKey bool_keys[] = {</span>
+<span class="source-line" data-line="791">        {{<span class="token string">&quot;hdf5_output&quot;</span>,<span class="token string">&quot;h5_output&quot;</span>}, &amp;p.solver.hdf5_output},</span>
+<span class="source-line" data-line="792">        {{<span class="token string">&quot;debug_csv_output&quot;</span>,<span class="token string">&quot;csv_output&quot;</span>}, &amp;p.solver.debug_csv_output},</span>
+<span class="source-line" data-line="793">        {{<span class="token string">&quot;model_output_subdir&quot;</span>}, &amp;p.solver.model_output_subdir},</span>
+<span class="source-line" data-line="794">        {{<span class="token string">&quot;vtk_output&quot;</span>}, &amp;p.solver.vtk_output},</span>
+<span class="source-line" data-line="795">        {{<span class="token string">&quot;svg_output&quot;</span>}, &amp;p.solver.svg_output},</span>
+<span class="source-line" data-line="796">        {{<span class="token string">&quot;final_dofs_output&quot;</span>}, &amp;p.solver.final_dofs_output},</span>
+<span class="source-line" data-line="797">        {{<span class="token string">&quot;plot_window&quot;</span>,<span class="token string">&quot;show_plot_window&quot;</span>}, &amp;p.solver.plot_window},</span>
+<span class="source-line" data-line="798">        {{<span class="token string">&quot;plot_each_step&quot;</span>,<span class="token string">&quot;show_plot_each_step&quot;</span>,<span class="token string">&quot;live_plot&quot;</span>}, &amp;p.solver.plot_each_step},</span>
+<span class="source-line" data-line="799">        {{<span class="token string">&quot;postprocess_deferred&quot;</span>,<span class="token string">&quot;deferred_postprocess&quot;</span>,<span class="token string">&quot;defer_postprocess&quot;</span>}, &amp;p.solver.postprocess_deferred},</span>
+<span class="source-line" data-line="800">        {{<span class="token string">&quot;force_output&quot;</span>,<span class="token string">&quot;drag_lift_output&quot;</span>}, &amp;p.solver.force_output},</span>
+<span class="source-line" data-line="801">        {{<span class="token string">&quot;minj_output&quot;</span>,<span class="token string">&quot;mesh_quality_output&quot;</span>}, &amp;p.solver.minJ_output},</span>
+<span class="source-line" data-line="802">        {{<span class="token string">&quot;minj_only_fsi&quot;</span>}, &amp;p.solver.minJ_only_fsi},</span>
+<span class="source-line" data-line="803">        {{<span class="token string">&quot;hysteresis_output&quot;</span>,<span class="token string">&quot;hysteresis&quot;</span>,<span class="token string">&quot;reaction_output&quot;</span>}, &amp;p.solver.hysteresis_output}</span>
+<span class="source-line" data-line="804">    };</span>
+<span class="source-line" data-line="805"> </span>
+<span class="source-line" data-line="806">    std::string key;</span>
+<span class="source-line" data-line="807">    std::stringstream ss;</span>
+<span class="source-line" data-line="808">    <span class="token keyword">while</span>(next_config_line(file,key,ss)){</span>
+<span class="source-line" data-line="809">        key = lower_copy(key);</span>
+<span class="source-line" data-line="810">        <span class="token keyword">bool</span> handled=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="811">        <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; item:bool_keys){</span>
+<span class="source-line" data-line="812">            <span class="token keyword">if</span>(key_in(key,item.aliases)){ *item.value=read_on_off_bool(ss,key); handled=<span class="token keyword">true</span>; <span class="token keyword">break</span>; }</span>
+<span class="source-line" data-line="813">        }</span>
+<span class="source-line" data-line="814">        <span class="token keyword">if</span>(handled) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="815"> </span>
+<span class="source-line" data-line="816">        <span class="token keyword">if</span>(key==<span class="token string">&quot;output_prefix&quot;</span>){</span>
+<span class="source-line" data-line="817">            ss &gt;&gt; p.solver.output_prefix;</span>
+<span class="source-line" data-line="818">            <span class="token comment">// If output_directory/output_name appeared before output_prefix,</span></span>
+<span class="source-line" data-line="819">            <span class="token comment">// keep their explicit override semantics.</span></span>
+<span class="source-line" data-line="820">            rebuild_output_prefix();</span>
+<span class="source-line" data-line="821">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;output_directory&quot;</span> || key==<span class="token string">&quot;output_dir&quot;</span> || key==<span class="token string">&quot;output_root&quot;</span>){</span>
+<span class="source-line" data-line="822">            ss &gt;&gt; output_directory;</span>
+<span class="source-line" data-line="823">            <span class="token keyword">if</span>(output_directory.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad output_directory line in postprocessing file.&quot;</span>);</span>
+<span class="source-line" data-line="824">            output_directory = trim_trailing_slashes(output_directory);</span>
+<span class="source-line" data-line="825">            p.solver.output_root = output_directory;</span>
+<span class="source-line" data-line="826">            p.solver.vtk_dir = output_directory + <span class="token string">&quot;/vtk&quot;</span>;</span>
+<span class="source-line" data-line="827">            p.solver.csv_dir = output_directory + <span class="token string">&quot;/csv&quot;</span>;</span>
+<span class="source-line" data-line="828">            p.solver.figure_dir = output_directory + <span class="token string">&quot;/figures&quot;</span>;</span>
+<span class="source-line" data-line="829">            p.solver.dof_dir = output_directory + <span class="token string">&quot;/dofs&quot;</span>;</span>
+<span class="source-line" data-line="830">            rebuild_output_prefix();</span>
+<span class="source-line" data-line="831">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;vtk_dir&quot;</span> || key==<span class="token string">&quot;vtk_output_dir&quot;</span>){</span>
+<span class="source-line" data-line="832">            ss &gt;&gt; p.solver.vtk_dir;</span>
+<span class="source-line" data-line="833">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;csv_dir&quot;</span> || key==<span class="token string">&quot;csv_output_dir&quot;</span>){</span>
+<span class="source-line" data-line="834">            ss &gt;&gt; p.solver.csv_dir;</span>
+<span class="source-line" data-line="835">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;figure_dir&quot;</span> || key==<span class="token string">&quot;figures_dir&quot;</span> || key==<span class="token string">&quot;svg_dir&quot;</span>){</span>
+<span class="source-line" data-line="836">            ss &gt;&gt; p.solver.figure_dir;</span>
+<span class="source-line" data-line="837">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;dof_dir&quot;</span> || key==<span class="token string">&quot;dofs_dir&quot;</span>){</span>
+<span class="source-line" data-line="838">            ss &gt;&gt; p.solver.dof_dir;</span>
+<span class="source-line" data-line="839">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;hdf5_file&quot;</span> || key==<span class="token string">&quot;h5_file&quot;</span> || key==<span class="token string">&quot;hdf5_output_file&quot;</span>){</span>
+<span class="source-line" data-line="840">            ss &gt;&gt; p.solver.hdf5_file;</span>
+<span class="source-line" data-line="841">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;save_data&quot;</span> || key==<span class="token string">&quot;hdf5_save_data&quot;</span> || key==<span class="token string">&quot;gauss_save_data&quot;</span>){</span>
+<span class="source-line" data-line="842">            p.solver.save_data.clear();</span>
+<span class="source-line" data-line="843">            std::string item;</span>
+<span class="source-line" data-line="844">            <span class="token keyword">while</span>(ss &gt;&gt; item){</span>
+<span class="source-line" data-line="845">                item = lower_copy(item);</span>
+<span class="source-line" data-line="846">                std::replace(item.begin(), item.end(), <span class="token string">&#x27;-&#x27;</span>, <span class="token string">&#x27;_&#x27;</span>);</span>
+<span class="source-line" data-line="847">                p.solver.save_data.push_back(item);</span>
+<span class="source-line" data-line="848">            }</span>
+<span class="source-line" data-line="849">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;plot_script&quot;</span> || key==<span class="token string">&quot;plot_window_script&quot;</span>){</span>
+<span class="source-line" data-line="850">            ss &gt;&gt; p.solver.plot_script;</span>
+<span class="source-line" data-line="851">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;plot_quantity&quot;</span> || key==<span class="token string">&quot;plot_component&quot;</span>){</span>
+<span class="source-line" data-line="852">            <span class="token comment">// Consumed by scripts/plot_vtk_result.py through --post.  The C++</span></span>
+<span class="source-line" data-line="853">            <span class="token comment">// parser still has to accept the key so Postprocessing.txt remains</span></span>
+<span class="source-line" data-line="854">            <span class="token comment">// the single source of truth for the plot window settings.</span></span>
+<span class="source-line" data-line="855">            std::string ignored;</span>
+<span class="source-line" data-line="856">            ss &gt;&gt; ignored;</span>
+<span class="source-line" data-line="857">            <span class="token keyword">if</span>(ignored.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad &quot;</span> + key + <span class="token string">&quot; line in postprocessing file.&quot;</span>);</span>
+<span class="source-line" data-line="858">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;multiscale_plot_point&quot;</span>){</span>
+<span class="source-line" data-line="859">            TimeSolverSettings::MultiscalePlotPoint pt;</span>
+<span class="source-line" data-line="860">            ss &gt;&gt; pt.x &gt;&gt; pt.y;</span>
+<span class="source-line" data-line="861">            <span class="token keyword">if</span>(!ss) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad multiscale_plot_point line in postprocessing file.&quot;</span>);</span>
+<span class="source-line" data-line="862">            ss &gt;&gt; pt.label;</span>
+<span class="source-line" data-line="863">            <span class="token keyword">if</span>(pt.label.empty()) pt.label = <span class="token string">&quot;P&quot;</span> + std::to_string(p.solver.multiscale_plot_points.size() + <span class="token number">1</span>);</span>
+<span class="source-line" data-line="864">            p.solver.multiscale_plot_points.push_back(pt);</span>
+<span class="source-line" data-line="865">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;multiscale_rve_output_dir&quot;</span>){</span>
+<span class="source-line" data-line="866">            ss &gt;&gt; p.solver.multiscale_rve_output_dir;</span>
+<span class="source-line" data-line="867">            <span class="token keyword">if</span>(p.solver.multiscale_rve_output_dir.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad multiscale_rve_output_dir line in postprocessing file.&quot;</span>);</span>
+<span class="source-line" data-line="868">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key.rfind(<span class="token string">&quot;multiscale_&quot;</span>,<span class="token number">0</span>)==<span class="token number">0</span>){</span>
+<span class="source-line" data-line="869">            <span class="token comment">// Multiscale dashboard options are consumed by the Python plot script.</span></span>
+<span class="source-line" data-line="870">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;vtk_interval&quot;</span>){</span>
+<span class="source-line" data-line="871">            ss &gt;&gt; p.solver.output_every;</span>
+<span class="source-line" data-line="872">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;svg_interval&quot;</span>){</span>
+<span class="source-line" data-line="873">            <span class="token keyword">int</span> ignored=<span class="token number">0</span>; ss &gt;&gt; ignored;</span>
+<span class="source-line" data-line="874">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;output_name&quot;</span> || key==<span class="token string">&quot;case_name&quot;</span>){</span>
+<span class="source-line" data-line="875">            ss &gt;&gt; output_name;</span>
+<span class="source-line" data-line="876">            <span class="token keyword">if</span>(output_name.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad output_name line in postprocessing file.&quot;</span>);</span>
+<span class="source-line" data-line="877">            rebuild_output_prefix();</span>
+<span class="source-line" data-line="878">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;output_every&quot;</span>){</span>
+<span class="source-line" data-line="879">            ss &gt;&gt; p.solver.output_every;</span>
+<span class="source-line" data-line="880">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;force_boundary&quot;</span> || key==<span class="token string">&quot;drag_lift_boundary&quot;</span>){</span>
+<span class="source-line" data-line="881">            ss &gt;&gt; p.solver.force_boundary;</span>
+<span class="source-line" data-line="882">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;force_boundaries&quot;</span> || key==<span class="token string">&quot;drag_lift_boundaries&quot;</span>){</span>
+<span class="source-line" data-line="883">            p.solver.force_boundaries.clear();</span>
+<span class="source-line" data-line="884">            std::string boundary;</span>
+<span class="source-line" data-line="885">            <span class="token keyword">while</span>(ss &gt;&gt; boundary) p.solver.force_boundaries.push_back(boundary);</span>
+<span class="source-line" data-line="886">            <span class="token keyword">if</span>(p.solver.force_boundaries.empty()){</span>
+<span class="source-line" data-line="887">                <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad force_boundaries line: provide at least one boundary name.&quot;</span>);</span>
+<span class="source-line" data-line="888">            }</span>
+<span class="source-line" data-line="889">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;force_boundary_check_tol&quot;</span> || key==<span class="token string">&quot;boundary_integral_tol&quot;</span>){</span>
+<span class="source-line" data-line="890">            ss &gt;&gt; p.solver.force_boundary_check_tol;</span>
+<span class="source-line" data-line="891">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;force_attack_angle_deg&quot;</span> || key==<span class="token string">&quot;angle_of_attack_deg&quot;</span> || key==<span class="token string">&quot;aoa_deg&quot;</span>){</span>
+<span class="source-line" data-line="892">            ss &gt;&gt; p.solver.force_attack_angle_deg;</span>
+<span class="source-line" data-line="893">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;force_csv&quot;</span> || key==<span class="token string">&quot;drag_lift_csv&quot;</span>){</span>
+<span class="source-line" data-line="894">            ss &gt;&gt; p.solver.force_csv;</span>
+<span class="source-line" data-line="895">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;force_svg&quot;</span> || key==<span class="token string">&quot;drag_lift_svg&quot;</span>){</span>
+<span class="source-line" data-line="896">            ss &gt;&gt; p.solver.force_svg;</span>
+<span class="source-line" data-line="897">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;minJ_csv&quot;</span> || key==<span class="token string">&quot;minj_csv&quot;</span>){</span>
+<span class="source-line" data-line="898">            ss &gt;&gt; p.solver.minJ_csv;</span>
+<span class="source-line" data-line="899">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;hysteresis_target&quot;</span> || key==<span class="token string">&quot;reaction_target&quot;</span>){</span>
+<span class="source-line" data-line="900">            <span class="token comment">// Accepted forms:</span></span>
+<span class="source-line" data-line="901">            <span class="token comment">//   hysteresis_target TOP uy</span></span>
+<span class="source-line" data-line="902">            <span class="token comment">//   hysteresis_target displacement TOP y</span></span>
+<span class="source-line" data-line="903">            std::string a,b,c; ss &gt;&gt; a &gt;&gt; b;</span>
+<span class="source-line" data-line="904">            <span class="token keyword">if</span>(a.empty() || b.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad hysteresis_target line.&quot;</span>);</span>
+<span class="source-line" data-line="905">            <span class="token keyword">if</span>(is_known_field_name(a)){</span>
+<span class="source-line" data-line="906">                ss &gt;&gt; c;</span>
+<span class="source-line" data-line="907">                <span class="token keyword">if</span>(c.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad hysteresis_target line. Use: hysteresis_target field group component&quot;</span>);</span>
+<span class="source-line" data-line="908">                <span class="token keyword">bool</span> explicit_field=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="909">                p.solver.hysteresis_target = parse_field_component_target_tokens(a,b,c,explicit_field);</span>
+<span class="source-line" data-line="910">            } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="911">                p.solver.hysteresis_target = target_from_alias(a,b);</span>
+<span class="source-line" data-line="912">            }</span>
+<span class="source-line" data-line="913">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;hysteresis_x_axis&quot;</span> || key==<span class="token string">&quot;hysteresis_x&quot;</span> || key==<span class="token string">&quot;hysteresis_axis_x&quot;</span>){</span>
+<span class="source-line" data-line="914">            p.solver.hysteresis_x_axis = parse_hysteresis_axis(ss,<span class="token string">&quot;hysteresis_x_axis&quot;</span>);</span>
+<span class="source-line" data-line="915">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;hysteresis_y_axis&quot;</span> || key==<span class="token string">&quot;hysteresis_y&quot;</span> || key==<span class="token string">&quot;hysteresis_axis_y&quot;</span>){</span>
+<span class="source-line" data-line="916">            p.solver.hysteresis_y_axis = parse_hysteresis_axis(ss,<span class="token string">&quot;hysteresis_y_axis&quot;</span>);</span>
+<span class="source-line" data-line="917">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;hysteresis_csv&quot;</span> || key==<span class="token string">&quot;reaction_csv&quot;</span>){</span>
+<span class="source-line" data-line="918">            ss &gt;&gt; p.solver.hysteresis_csv;</span>
+<span class="source-line" data-line="919">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;hysteresis_svg&quot;</span> || key==<span class="token string">&quot;reaction_svg&quot;</span>){</span>
+<span class="source-line" data-line="920">            ss &gt;&gt; p.solver.hysteresis_svg;</span>
+<span class="source-line" data-line="921">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;hysteresis_sign&quot;</span> || key==<span class="token string">&quot;reaction_sign&quot;</span>){</span>
+<span class="source-line" data-line="922">            ss &gt;&gt; p.solver.hysteresis_sign;</span>
+<span class="source-line" data-line="923">            p.solver.hysteresis_sign = lower_copy(p.solver.hysteresis_sign);</span>
+<span class="source-line" data-line="924">        } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="925">            <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Unknown key in postprocessing file: &quot;</span>+key);</span>
+<span class="source-line" data-line="926">        }</span>
+<span class="source-line" data-line="927">    }</span>
+<span class="source-line" data-line="928">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-5f7c914d1b1685.html">← read_problem_parameters()</a><a href="fn-d51c3feaaa0195.html">read_postprocessing_parameters() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

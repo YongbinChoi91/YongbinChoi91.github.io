@@ -1,0 +1,27 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements default hysteresis y axis."><title>default_hysteresis_y_axis() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=postprocess_utils.cpp">← core/io/postprocess_utils.cpp</a>
+<p class="eyebrow">Function detail</p><h1>default_hysteresis_y_axis()</h1><p class="lead">Implements default hysteresis y axis.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static TimeSolverSettings::HysteresisAxisSpec default_hysteresis_y_axis(const ProblemParameters &amp;params)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/postprocess_utils.cpp:1951</dd></div><div><dt>Declaration</dt><dd>core/io/postprocess_utils.cpp:1951</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/postprocess_utils.cpp#L1951" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 1951–1964</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="1951"><span class="token keyword">static</span> TimeSolverSettings::HysteresisAxisSpec default_hysteresis_y_axis(<span class="token keyword">const</span> ProblemParameters&amp; params){</span>
+<span class="source-line" data-line="1952">    TimeSolverSettings::HysteresisAxisSpec a;</span>
+<span class="source-line" data-line="1953">    a.enabled=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="1954">    <span class="token keyword">const</span> std::string sign=lower_copy(params.solver.hysteresis_sign);</span>
+<span class="source-line" data-line="1955">    <span class="token keyword">if</span>(sign==<span class="token string">&quot;reaction&quot;</span> || sign==<span class="token string">&quot;force&quot;</span> || sign==<span class="token string">&quot;external&quot;</span>) a.mode=<span class="token string">&quot;reaction&quot;</span>;</span>
+<span class="source-line" data-line="1956">    <span class="token keyword">else</span> <span class="token keyword">if</span>(sign==<span class="token string">&quot;residual&quot;</span> || sign==<span class="token string">&quot;internal&quot;</span>) a.mode=<span class="token string">&quot;residual&quot;</span>;</span>
+<span class="source-line" data-line="1957">    <span class="token keyword">else</span> <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Unknown hysteresis_sign: &quot;</span>+params.solver.hysteresis_sign+<span class="token string">&quot;. Use reaction or residual.&quot;</span>);</span>
+<span class="source-line" data-line="1958">    a.target=params.solver.hysteresis_target;</span>
+<span class="source-line" data-line="1959">    a.scale=<span class="token number">1.0</span>;</span>
+<span class="source-line" data-line="1960">    a.offset=<span class="token number">0.0</span>;</span>
+<span class="source-line" data-line="1961">    a.reduction=<span class="token string">&quot;sum&quot;</span>;</span>
+<span class="source-line" data-line="1962">    a.label=a.mode + <span class="token string">&quot; &quot;</span> + hysteresis_label(a.target);</span>
+<span class="source-line" data-line="1963">    <span class="token keyword">return</span> a;</span>
+<span class="source-line" data-line="1964">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-90edb718b2fa83.html">← default_hysteresis_x_axis()</a><a href="fn-e091101abcf9eb.html">hysteresis_axis_needs_dofs() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

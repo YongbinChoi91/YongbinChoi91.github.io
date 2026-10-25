@@ -1,0 +1,227 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements read shared multi domain problem from lines."><title>read_shared_multi_domain_problem_from_lines() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../mesh.html?file=mesh_reader.cpp">← core/mesh/mesh_reader.cpp</a>
+<p class="eyebrow">Function detail</p><h1>read_shared_multi_domain_problem_from_lines()</h1><p class="lead">Implements read shared multi domain problem from lines.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static Problem read_shared_multi_domain_problem_from_lines(const std::vector&lt; std::string &gt; &amp;lines, const std::string &amp;filename, bool vem_taylor_hood)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/mesh/mesh_reader.cpp:604</dd></div><div><dt>Declaration</dt><dd>core/mesh/mesh_reader.cpp:604</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/mesh/mesh_reader.cpp#L604" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 604–817</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="604"><span class="token keyword">static</span> Problem read_shared_multi_domain_problem_from_lines(<span class="token keyword">const</span> std::vector&lt;std::string&gt;&amp; lines,<span class="token keyword">const</span> std::string&amp; filename,<span class="token keyword">bool</span> vem_taylor_hood){</span>
+<span class="source-line" data-line="605">    Problem problem;</span>
+<span class="source-line" data-line="606">    problem.shared_dofs=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="607"> </span>
+<span class="source-line" data-line="608">    std::vector&lt;Node&gt; global_v_nodes;</span>
+<span class="source-line" data-line="609">    std::vector&lt;Node&gt; global_u_nodes;</span>
+<span class="source-line" data-line="610">    std::vector&lt;Node&gt; global_p_nodes;</span>
+<span class="source-line" data-line="611">    std::map&lt;std::string,std::vector&lt;BoundaryEntity&gt;&gt; global_v_boundaries;</span>
+<span class="source-line" data-line="612">    std::map&lt;std::string,std::vector&lt;BoundaryEntity&gt;&gt; global_u_boundaries;</span>
+<span class="source-line" data-line="613">    std::map&lt;std::string,std::vector&lt;BoundaryEntity&gt;&gt; global_p_boundaries;</span>
+<span class="source-line" data-line="614">    std::vector&lt;std::vector&lt;<span class="token keyword">int</span>&gt;&gt; global_total_velocity_elements;</span>
+<span class="source-line" data-line="615"> </span>
+<span class="source-line" data-line="616">    std::string section;</span>
+<span class="source-line" data-line="617">    std::string current_boundary;</span>
+<span class="source-line" data-line="618">    Domain current_domain;</span>
+<span class="source-line" data-line="619">    <span class="token keyword">bool</span> inside_domain=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="620">    <span class="token keyword">bool</span> have_domain=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="621">    <span class="token keyword">int</span> detected_dim=<span class="token number">0</span>;</span>
+<span class="source-line" data-line="622"> </span>
+<span class="source-line" data-line="623">    <span class="token keyword">auto</span> output_connectivity=[&amp;](<span class="token keyword">const</span> std::vector&lt;<span class="token keyword">int</span>&gt;&amp; conn){</span>
+<span class="source-line" data-line="624">        <span class="token keyword">return</span> vem_taylor_hood ? conn : reorder_quad_python_to_cpp(conn);</span>
+<span class="source-line" data-line="625">    };</span>
+<span class="source-line" data-line="626"> </span>
+<span class="source-line" data-line="627">    <span class="token keyword">auto</span> assign_node=[&amp;](std::vector&lt;Node&gt;&amp; nodes,<span class="token keyword">int</span> id,<span class="token keyword">const</span> std::vector&lt;<span class="token keyword">double</span>&gt;&amp; vals,<span class="token keyword">const</span> std::string&amp; what){</span>
+<span class="source-line" data-line="628">        <span class="token keyword">if</span>(vals.size()!=<span class="token number">2</span> &amp;&amp; vals.size()!=<span class="token number">3</span>) <span class="token keyword">throw</span> std::runtime_error(what+<span class="token string">&quot; node line needs id x y [z].&quot;</span>);</span>
+<span class="source-line" data-line="629">        <span class="token keyword">if</span>(detected_dim==<span class="token number">0</span>) detected_dim=static_cast&lt;<span class="token keyword">int</span>&gt;(vals.size());</span>
+<span class="source-line" data-line="630">        <span class="token keyword">if</span>(static_cast&lt;<span class="token keyword">int</span>&gt;(vals.size())!=detected_dim) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Inconsistent node dimensions in shared multi-domain mesh.&quot;</span>);</span>
+<span class="source-line" data-line="631">        <span class="token keyword">if</span>(id&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(nodes.size())) nodes.resize(id+<span class="token number">1</span>);</span>
+<span class="source-line" data-line="632">        nodes[id].x={{vals[<span class="token number">0</span>],vals[<span class="token number">1</span>],vals.size()==<span class="token number">3</span>?vals[<span class="token number">2</span>]:<span class="token number">0.0</span>}};</span>
+<span class="source-line" data-line="633">    };</span>
+<span class="source-line" data-line="634"> </span>
+<span class="source-line" data-line="635">    <span class="token keyword">auto</span> parse_mixed_connectivity_row=[&amp;](<span class="token keyword">const</span> std::string&amp; line,<span class="token keyword">int</span>&amp; id,std::vector&lt;<span class="token keyword">int</span>&gt;&amp; v,std::vector&lt;<span class="token keyword">int</span>&gt;&amp; u,std::vector&lt;<span class="token keyword">int</span>&gt;&amp; p,<span class="token keyword">const</span> std::string&amp; where){</span>
+<span class="source-line" data-line="636">        <span class="token keyword">const</span> <span class="token keyword">auto</span> parts=split_pipe_fields(line);</span>
+<span class="source-line" data-line="637">        <span class="token keyword">if</span>(parts.size()!=<span class="token number">3</span>) <span class="token keyword">throw</span> std::runtime_error(where+<span class="token string">&quot; row must be &#x27;id velocity | displacement | pressure&#x27;.&quot;</span>);</span>
+<span class="source-line" data-line="638">        std::stringstream vss(parts[<span class="token number">0</span>]);</span>
+<span class="source-line" data-line="639">        read_nonnegative_id(vss,id,where);</span>
+<span class="source-line" data-line="640">        <span class="token keyword">int</span> n;</span>
+<span class="source-line" data-line="641">        <span class="token keyword">while</span>(vss&gt;&gt;n) v.push_back(n);</span>
+<span class="source-line" data-line="642">        u=parse_ints_from_string(parts[<span class="token number">1</span>],where+<span class="token string">&quot; displacement part&quot;</span>);</span>
+<span class="source-line" data-line="643">        p=parse_ints_from_string(parts[<span class="token number">2</span>],where+<span class="token string">&quot; pressure part&quot;</span>);</span>
+<span class="source-line" data-line="644">        <span class="token keyword">if</span>(v.empty()) <span class="token keyword">throw</span> std::runtime_error(where+<span class="token string">&quot; velocity part is empty.&quot;</span>);</span>
+<span class="source-line" data-line="645">    };</span>
+<span class="source-line" data-line="646"> </span>
+<span class="source-line" data-line="647">    <span class="token keyword">for</span>(<span class="token keyword">const</span> std::string&amp; original:lines){</span>
+<span class="source-line" data-line="648">        std::string clean=original;</span>
+<span class="source-line" data-line="649">        <span class="token keyword">const</span> <span class="token keyword">auto</span> comment=clean.find(<span class="token string">&#x27;#&#x27;</span>);</span>
+<span class="source-line" data-line="650">        <span class="token keyword">if</span>(comment!=std::string::npos) clean=clean.substr(<span class="token number">0</span>,comment);</span>
+<span class="source-line" data-line="651">        clean=trim_copy(clean);</span>
+<span class="source-line" data-line="652">        <span class="token keyword">if</span>(clean.empty()) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="653"> </span>
+<span class="source-line" data-line="654">        std::stringstream head(clean);</span>
+<span class="source-line" data-line="655">        std::string key; head &gt;&gt; key;</span>
+<span class="source-line" data-line="656"> </span>
+<span class="source-line" data-line="657">        <span class="token keyword">if</span>(key==<span class="token string">&quot;DIM&quot;</span> &amp;&amp; !inside_domain){</span>
+<span class="source-line" data-line="658">            head &gt;&gt; problem.dim;</span>
+<span class="source-line" data-line="659">            <span class="token keyword">if</span>(problem.dim!=<span class="token number">2</span> &amp;&amp; problem.dim!=<span class="token number">3</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;DIM must be 2 or 3 in shared multi-domain mesh.&quot;</span>);</span>
+<span class="source-line" data-line="660">            detected_dim=problem.dim;</span>
+<span class="source-line" data-line="661">            <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="662">        }</span>
+<span class="source-line" data-line="663">        <span class="token keyword">if</span>(key==<span class="token string">&quot;MESH_TYPE&quot;</span> &amp;&amp; !inside_domain) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="664">        <span class="token keyword">if</span>(key==<span class="token string">&quot;FIELDS&quot;</span>) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="665"> </span>
+<span class="source-line" data-line="666">        <span class="token keyword">if</span>(key==<span class="token string">&quot;DOMAIN&quot;</span>){</span>
+<span class="source-line" data-line="667">            <span class="token keyword">if</span>(inside_domain) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Nested DOMAIN blocks are not allowed in shared multi-domain mesh.&quot;</span>);</span>
+<span class="source-line" data-line="668">            inside_domain=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="669">            have_domain=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="670">            section.clear();</span>
+<span class="source-line" data-line="671">            current_domain=Domain{};</span>
+<span class="source-line" data-line="672">            head &gt;&gt; current_domain.name;</span>
+<span class="source-line" data-line="673">            <span class="token keyword">if</span>(current_domain.name.empty()) current_domain.name=<span class="token string">&quot;domain&quot;</span>+std::to_string(problem.domains.size());</span>
+<span class="source-line" data-line="674">            current_domain.mesh.dim = problem.dim;</span>
+<span class="source-line" data-line="675">            current_domain.mesh.velocity_nodes = global_v_nodes;</span>
+<span class="source-line" data-line="676">            current_domain.mesh.displacement_nodes = global_u_nodes;</span>
+<span class="source-line" data-line="677">            current_domain.mesh.pressure_nodes = global_p_nodes;</span>
+<span class="source-line" data-line="678">            current_domain.mesh.velocity_boundaries = global_v_boundaries;</span>
+<span class="source-line" data-line="679">            current_domain.mesh.displacement_boundaries = global_u_boundaries;</span>
+<span class="source-line" data-line="680">            current_domain.mesh.pressure_boundaries = global_p_boundaries;</span>
+<span class="source-line" data-line="681">            current_domain.mesh.total_velocity_elements = global_total_velocity_elements;</span>
+<span class="source-line" data-line="682">            <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="683">        }</span>
+<span class="source-line" data-line="684">        <span class="token keyword">if</span>(key==<span class="token string">&quot;END_DOMAIN&quot;</span>){</span>
+<span class="source-line" data-line="685">            <span class="token keyword">if</span>(!inside_domain) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;END_DOMAIN without DOMAIN in shared multi-domain mesh.&quot;</span>);</span>
+<span class="source-line" data-line="686">            <span class="token keyword">if</span>(current_domain.type==DomainType::Unknown){</span>
+<span class="source-line" data-line="687">                current_domain.type = (lower_copy(current_domain.name).find(<span class="token string">&quot;fluid&quot;</span>)!=std::string::npos) ? DomainType::Fluid : DomainType::Unknown;</span>
+<span class="source-line" data-line="688">            }</span>
+<span class="source-line" data-line="689">            <span class="token keyword">if</span>(current_domain.type==DomainType::Unknown) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;DOMAIN &quot;</span>+current_domain.name+<span class="token string">&quot; has unknown TYPE.&quot;</span>);</span>
+<span class="source-line" data-line="690">            validate_and_finalize_mixed_mesh_no_compaction(current_domain.mesh,<span class="token string">&quot;DOMAIN &quot;</span>+current_domain.name,vem_taylor_hood);</span>
+<span class="source-line" data-line="691">            current_domain.dof_offset=<span class="token number">0</span>;</span>
+<span class="source-line" data-line="692">            current_domain.n_dofs=total_dof_count(current_domain.mesh);</span>
+<span class="source-line" data-line="693">            problem.domains.push_back(std::move(current_domain));</span>
+<span class="source-line" data-line="694">            inside_domain=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="695">            section.clear();</span>
+<span class="source-line" data-line="696">            <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="697">        }</span>
+<span class="source-line" data-line="698">        <span class="token keyword">if</span>(inside_domain &amp;&amp; key==<span class="token string">&quot;TYPE&quot;</span>){</span>
+<span class="source-line" data-line="699">            std::string t; head &gt;&gt; t;</span>
+<span class="source-line" data-line="700">            current_domain.type=domain_type_from_string(t);</span>
+<span class="source-line" data-line="701">            <span class="token keyword">if</span>(current_domain.type==DomainType::Unknown) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Unknown DOMAIN TYPE in shared multi-domain mesh: &quot;</span>+t);</span>
+<span class="source-line" data-line="702">            <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="703">        }</span>
+<span class="source-line" data-line="704"> </span>
+<span class="source-line" data-line="705">        <span class="token keyword">if</span>(!inside_domain){</span>
+<span class="source-line" data-line="706">            <span class="token keyword">if</span>(key==<span class="token string">&quot;VELOCITY_NODES&quot;</span> || key==<span class="token string">&quot;DISPLACEMENT_NODES&quot;</span> || key==<span class="token string">&quot;PRESSURE_NODES&quot;</span>){</span>
+<span class="source-line" data-line="707">                section=key;</span>
+<span class="source-line" data-line="708">                current_boundary.clear();</span>
+<span class="source-line" data-line="709">                <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="710">            }</span>
+<span class="source-line" data-line="711">            <span class="token keyword">if</span>(key==<span class="token string">&quot;TOTAL_ELEMENTS&quot;</span> || key==<span class="token string">&quot;TOTAL_VELOCITY_ELEMENTS&quot;</span>){</span>
+<span class="source-line" data-line="712">                section=<span class="token string">&quot;TOTAL_ELEMENTS&quot;</span>;</span>
+<span class="source-line" data-line="713">                current_boundary.clear();</span>
+<span class="source-line" data-line="714">                <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="715">            }</span>
+<span class="source-line" data-line="716">            <span class="token keyword">if</span>(key.rfind(<span class="token string">&quot;MIXED_BOUNDARY_&quot;</span>,<span class="token number">0</span>)==<span class="token number">0</span>){</span>
+<span class="source-line" data-line="717">                section=<span class="token string">&quot;MIXED_BOUNDARY&quot;</span>;</span>
+<span class="source-line" data-line="718">                current_boundary=key.substr(std::string(<span class="token string">&quot;MIXED_BOUNDARY_&quot;</span>).size());</span>
+<span class="source-line" data-line="719">                global_v_boundaries[current_boundary];</span>
+<span class="source-line" data-line="720">                global_u_boundaries[current_boundary];</span>
+<span class="source-line" data-line="721">                global_p_boundaries[current_boundary];</span>
+<span class="source-line" data-line="722">                <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="723">            }</span>
+<span class="source-line" data-line="724"> </span>
+<span class="source-line" data-line="725">            std::stringstream ss(clean);</span>
+<span class="source-line" data-line="726">            <span class="token keyword">if</span>(section==<span class="token string">&quot;VELOCITY_NODES&quot;</span> || section==<span class="token string">&quot;DISPLACEMENT_NODES&quot;</span> || section==<span class="token string">&quot;PRESSURE_NODES&quot;</span>){</span>
+<span class="source-line" data-line="727">                <span class="token keyword">int</span> id=-<span class="token number">1</span>; read_nonnegative_id(ss,id,section);</span>
+<span class="source-line" data-line="728">                std::vector&lt;<span class="token keyword">double</span>&gt; vals; <span class="token keyword">double</span> q; <span class="token keyword">while</span>(ss&gt;&gt;q) vals.push_back(q);</span>
+<span class="source-line" data-line="729">                <span class="token keyword">if</span>(section==<span class="token string">&quot;VELOCITY_NODES&quot;</span>) assign_node(global_v_nodes,id,vals,<span class="token string">&quot;velocity&quot;</span>);</span>
+<span class="source-line" data-line="730">                <span class="token keyword">else</span> <span class="token keyword">if</span>(section==<span class="token string">&quot;DISPLACEMENT_NODES&quot;</span>) assign_node(global_u_nodes,id,vals,<span class="token string">&quot;displacement&quot;</span>);</span>
+<span class="source-line" data-line="731">                <span class="token keyword">else</span> assign_node(global_p_nodes,id,vals,<span class="token string">&quot;pressure&quot;</span>);</span>
+<span class="source-line" data-line="732">                <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="733">            }</span>
+<span class="source-line" data-line="734">            <span class="token keyword">if</span>(section==<span class="token string">&quot;TOTAL_ELEMENTS&quot;</span>){</span>
+<span class="source-line" data-line="735">                std::stringstream ss(clean);</span>
+<span class="source-line" data-line="736">                <span class="token keyword">int</span> id=-<span class="token number">1</span>;</span>
+<span class="source-line" data-line="737">                read_nonnegative_id(ss,id,<span class="token string">&quot;TOTAL_ELEMENTS&quot;</span>);</span>
+<span class="source-line" data-line="738">                std::vector&lt;<span class="token keyword">int</span>&gt; v;</span>
+<span class="source-line" data-line="739">                <span class="token keyword">int</span> n;</span>
+<span class="source-line" data-line="740">                <span class="token keyword">while</span>(ss&gt;&gt;n) v.push_back(n);</span>
+<span class="source-line" data-line="741">                <span class="token keyword">if</span>(v.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;TOTAL_ELEMENTS row has no velocity connectivity.&quot;</span>);</span>
+<span class="source-line" data-line="742">                <span class="token keyword">if</span>(id&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(global_total_velocity_elements.size())) global_total_velocity_elements.resize(id+<span class="token number">1</span>);</span>
+<span class="source-line" data-line="743">                global_total_velocity_elements[id]=output_connectivity(v);</span>
+<span class="source-line" data-line="744">                <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="745">            }</span>
+<span class="source-line" data-line="746">            <span class="token keyword">if</span>(section==<span class="token string">&quot;MIXED_BOUNDARY&quot;</span>){</span>
+<span class="source-line" data-line="747">                <span class="token keyword">int</span> id=-<span class="token number">1</span>; std::vector&lt;<span class="token keyword">int</span>&gt; v,u,pn;</span>
+<span class="source-line" data-line="748">                parse_mixed_connectivity_row(clean,id,v,u,pn,<span class="token string">&quot;MIXED_BOUNDARY_&quot;</span>+current_boundary);</span>
+<span class="source-line" data-line="749">                BoundaryEntity ev; ev.element_id=id; ev.node_ids=output_connectivity(v);</span>
+<span class="source-line" data-line="750">                BoundaryEntity eu; eu.element_id=id; eu.node_ids=output_connectivity(u);</span>
+<span class="source-line" data-line="751">                BoundaryEntity ep; ep.element_id=id; ep.node_ids=output_connectivity(pn);</span>
+<span class="source-line" data-line="752">                global_v_boundaries[current_boundary].push_back(std::move(ev));</span>
+<span class="source-line" data-line="753">                global_u_boundaries[current_boundary].push_back(std::move(eu));</span>
+<span class="source-line" data-line="754">                global_p_boundaries[current_boundary].push_back(std::move(ep));</span>
+<span class="source-line" data-line="755">                <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="756">            }</span>
+<span class="source-line" data-line="757">            <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Unknown global shared multi-domain mesh line: &quot;</span>+clean);</span>
+<span class="source-line" data-line="758">        } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="759">            <span class="token keyword">if</span>(key==<span class="token string">&quot;MIXED_ELEMENTS&quot;</span>){</span>
+<span class="source-line" data-line="760">                section=<span class="token string">&quot;MIXED_ELEMENTS&quot;</span>;</span>
+<span class="source-line" data-line="761">                <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="762">            }</span>
+<span class="source-line" data-line="763">            <span class="token keyword">if</span>(key==<span class="token string">&quot;FIELDS&quot;</span>) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="764">            <span class="token keyword">if</span>(section!=<span class="token string">&quot;MIXED_ELEMENTS&quot;</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Only MIXED_ELEMENTS data are allowed inside shared multi-domain DOMAIN blocks: &quot;</span>+clean);</span>
+<span class="source-line" data-line="765"> </span>
+<span class="source-line" data-line="766">            <span class="token keyword">int</span> id=-<span class="token number">1</span>; std::vector&lt;<span class="token keyword">int</span>&gt; v,u,pn;</span>
+<span class="source-line" data-line="767">            parse_mixed_connectivity_row(clean,id,v,u,pn,<span class="token string">&quot;DOMAIN &quot;</span>+current_domain.name+<span class="token string">&quot; MIXED_ELEMENTS&quot;</span>);</span>
+<span class="source-line" data-line="768">            <span class="token keyword">auto</span>&amp; mesh=current_domain.mesh;</span>
+<span class="source-line" data-line="769">            <span class="token keyword">if</span>(id&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.velocity_elements.size())){</span>
+<span class="source-line" data-line="770">                mesh.velocity_elements.resize(id+<span class="token number">1</span>);</span>
+<span class="source-line" data-line="771">                mesh.displacement_elements.resize(id+<span class="token number">1</span>);</span>
+<span class="source-line" data-line="772">                mesh.pressure_elements.resize(id+<span class="token number">1</span>);</span>
+<span class="source-line" data-line="773">            }</span>
+<span class="source-line" data-line="774">            mesh.velocity_elements[id]=output_connectivity(v);</span>
+<span class="source-line" data-line="775">            mesh.displacement_elements[id]=output_connectivity(u);</span>
+<span class="source-line" data-line="776">            mesh.pressure_elements[id]=output_connectivity(pn);</span>
+<span class="source-line" data-line="777">            <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="778">        }</span>
+<span class="source-line" data-line="779">    }</span>
+<span class="source-line" data-line="780"> </span>
+<span class="source-line" data-line="781">    <span class="token keyword">if</span>(inside_domain) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Unclosed DOMAIN block in shared multi-domain mesh.&quot;</span>);</span>
+<span class="source-line" data-line="782">    <span class="token keyword">if</span>(!have_domain || problem.domains.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Shared multi-domain mesh has no DOMAIN blocks: &quot;</span>+filename);</span>
+<span class="source-line" data-line="783">    <span class="token keyword">if</span>(problem.dim==<span class="token number">0</span>){</span>
+<span class="source-line" data-line="784">        <span class="token keyword">if</span>(detected_dim==<span class="token number">0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Shared multi-domain mesh has no DIM.&quot;</span>);</span>
+<span class="source-line" data-line="785">        problem.dim=detected_dim;</span>
+<span class="source-line" data-line="786">    }</span>
+<span class="source-line" data-line="787">    <span class="token keyword">if</span>(global_v_nodes.empty() || global_u_nodes.empty() || global_p_nodes.empty())</span>
+<span class="source-line" data-line="788">        <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Shared multi-domain mesh requires global VELOCITY_NODES, DISPLACEMENT_NODES, and PRESSURE_NODES.&quot;</span>);</span>
+<span class="source-line" data-line="789"> </span>
+<span class="source-line" data-line="790">    <span class="token comment">// Detect the optional total second-order element type used by drag/lift</span></span>
+<span class="source-line" data-line="791">    <span class="token comment">// postprocessing.  The list is deliberately not assembled.</span></span>
+<span class="source-line" data-line="792">    ElementType global_total_type = ElementType::Unknown;</span>
+<span class="source-line" data-line="793">    <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; e:global_total_velocity_elements){</span>
+<span class="source-line" data-line="794">        <span class="token keyword">if</span>(!e.empty()){</span>
+<span class="source-line" data-line="795">            global_total_type = vem_taylor_hood ? ElementType::Polygon : element_type_from_node_count(static_cast&lt;<span class="token keyword">int</span>&gt;(e.size()),problem.dim);</span>
+<span class="source-line" data-line="796">            <span class="token keyword">break</span>;</span>
+<span class="source-line" data-line="797">        }</span>
+<span class="source-line" data-line="798">    }</span>
+<span class="source-line" data-line="799"> </span>
+<span class="source-line" data-line="800">    <span class="token comment">// All domains must already have identical shared node tables.  In particular,</span></span>
+<span class="source-line" data-line="801">    <span class="token comment">// every pressure id used by MIXED_ELEMENTS or MIXED_BOUNDARY_* must be</span></span>
+<span class="source-line" data-line="802">    <span class="token comment">// explicitly listed in PRESSURE_NODES; validation above throws otherwise.</span></span>
+<span class="source-line" data-line="803">    <span class="token keyword">for</span>(<span class="token keyword">auto</span>&amp; d:problem.domains){</span>
+<span class="source-line" data-line="804">        d.mesh.total_velocity_elements = global_total_velocity_elements;</span>
+<span class="source-line" data-line="805">        d.mesh.total_velocity_type = global_total_type;</span>
+<span class="source-line" data-line="806">        d.n_dofs=total_dof_count(d.mesh);</span>
+<span class="source-line" data-line="807">    }</span>
+<span class="source-line" data-line="808"> </span>
+<span class="source-line" data-line="809">    <span class="token comment">// All domains share one global DOF pool.  Use the first domain mesh as the</span></span>
+<span class="source-line" data-line="810">    <span class="token comment">// representative because every domain carries the same global node arrays.</span></span>
+<span class="source-line" data-line="811">    problem.total_dofs=total_dof_count(problem.domains.front().mesh);</span>
+<span class="source-line" data-line="812">    <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; d:problem.domains){</span>
+<span class="source-line" data-line="813">        <span class="token keyword">if</span>(total_dof_count(d.mesh)!=problem.total_dofs) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Shared multi-domain domain global node pools are inconsistent.&quot;</span>);</span>
+<span class="source-line" data-line="814">    }</span>
+<span class="source-line" data-line="815"> </span>
+<span class="source-line" data-line="816">    <span class="token keyword">return</span> problem;</span>
+<span class="source-line" data-line="817">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-a150cab5f32ff0.html">← validate_and_finalize_mixed_mesh_no_compaction()</a><a href="fn-cd22fb091c0508.html">safe_domain_tmp_name() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

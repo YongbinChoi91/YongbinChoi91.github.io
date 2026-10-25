@@ -1,0 +1,27 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements ad2 reference hessian."><title>ad2_reference_hessian() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../space.html?file=space.cpp">← core/space/space.cpp</a>
+<p class="eyebrow">Function detail</p><h1>ad2_reference_hessian()</h1><p class="lead">Implements ad2 reference hessian.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static std::vector&lt; std::array&lt; std::array&lt; double, 3 &gt;, 3 &gt; &gt; ad2_reference_hessian(ElementType type, double xi0, double eta0, double zeta0)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/space/space.cpp:241</dd></div><div><dt>Declaration</dt><dd>core/space/space.cpp:241</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/space/space.cpp#L241" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 241–254</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="241"><span class="token keyword">static</span> std::vector&lt;std::array&lt;std::array&lt;<span class="token keyword">double</span>,<span class="token number">3</span>&gt;,<span class="token number">3</span>&gt;&gt; ad2_reference_hessian(</span>
+<span class="source-line" data-line="242">    ElementType type,</span>
+<span class="source-line" data-line="243">    <span class="token keyword">double</span> xi0,</span>
+<span class="source-line" data-line="244">    <span class="token keyword">double</span> eta0,</span>
+<span class="source-line" data-line="245">    <span class="token keyword">double</span> zeta0</span>
+<span class="source-line" data-line="246">) {</span>
+<span class="source-line" data-line="247">    <span class="token keyword">const</span> std::vector&lt;AD2&gt; Nad = evaluate_shape_ad2(type, xi0, eta0, zeta0);</span>
+<span class="source-line" data-line="248"> </span>
+<span class="source-line" data-line="249">    std::vector&lt;std::array&lt;std::array&lt;<span class="token keyword">double</span>,<span class="token number">3</span>&gt;,<span class="token number">3</span>&gt;&gt; H(Nad.size());</span>
+<span class="source-line" data-line="250">    <span class="token keyword">for</span>(std::size_t a=<span class="token number">0</span>; a&lt;Nad.size(); ++a){</span>
+<span class="source-line" data-line="251">        <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;<span class="token number">3</span>;++i) <span class="token keyword">for</span>(<span class="token keyword">int</span> j=<span class="token number">0</span>;j&lt;<span class="token number">3</span>;++j) H[a][i][j] = Nad[a].h[i][j];</span>
+<span class="source-line" data-line="252">    }</span>
+<span class="source-line" data-line="253">    <span class="token keyword">return</span> H;</span>
+<span class="source-line" data-line="254">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-b317ac75b35f49.html">← evaluate_shape_ad2()</a><a href="fn-1786d8ba7fdf05.html">compute_shape() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

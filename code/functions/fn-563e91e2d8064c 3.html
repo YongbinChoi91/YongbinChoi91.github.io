@@ -1,0 +1,28 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements make solution vtk path."><title>make_solution_vtk_path() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=postprocess_utils.cpp">← core/io/postprocess_utils.cpp</a>
+<p class="eyebrow">Function detail</p><h1>make_solution_vtk_path()</h1><p class="lead">Implements make solution vtk path.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>std::string make_solution_vtk_path(const ProblemParameters &amp;params, const Problem &amp;problem, const Domain &amp;domain, int step)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/postprocess_utils.cpp:366</dd></div><div><dt>Declaration</dt><dd>core/io/postprocess.h:47</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/postprocess_utils.cpp#L366" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 366–380</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="366">std::string make_solution_vtk_path(</span>
+<span class="source-line" data-line="367">    <span class="token keyword">const</span> ProblemParameters&amp; params,</span>
+<span class="source-line" data-line="368">    <span class="token keyword">const</span> Problem&amp; problem,</span>
+<span class="source-line" data-line="369">    <span class="token keyword">const</span> Domain&amp; domain,</span>
+<span class="source-line" data-line="370">    <span class="token keyword">int</span> step</span>
+<span class="source-line" data-line="371">){</span>
+<span class="source-line" data-line="372">    std::ostringstream os;</span>
+<span class="source-line" data-line="373">    <span class="token keyword">if</span>(problem.domains.size()==<span class="token number">1</span>){</span>
+<span class="source-line" data-line="374">        os &lt;&lt; path_join_simple(params.solver.vtk_dir, <span class="token string">&quot;solution_&quot;</span>);</span>
+<span class="source-line" data-line="375">    } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="376">        os &lt;&lt; path_join_simple(params.solver.vtk_dir, <span class="token string">&quot;solution_&quot;</span> + domain.name + <span class="token string">&quot;_&quot;</span>);</span>
+<span class="source-line" data-line="377">    }</span>
+<span class="source-line" data-line="378">    os &lt;&lt; std::setw(<span class="token number">4</span>) &lt;&lt; std::setfill(<span class="token string">&#x27;0&#x27;</span>) &lt;&lt; step &lt;&lt; <span class="token string">&quot;.vtk&quot;</span>;</span>
+<span class="source-line" data-line="379">    <span class="token keyword">return</span> os.str();</span>
+<span class="source-line" data-line="380">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-5fbd4465eb2bbd.html">← write_xy_svg_plot()</a><a href="fn-fcc9011a8d9532.html">need_deferred_snapshot() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

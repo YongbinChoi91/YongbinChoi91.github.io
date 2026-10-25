@@ -1,0 +1,22 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements destroy petsc outer cache."><title>destroy_petsc_outer_cache() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../solver.html?file=linear_solver_petsc.cpp">← core/solver/linear_solver_petsc.cpp</a>
+<p class="eyebrow">Function detail</p><h1>destroy_petsc_outer_cache()</h1><p class="lead">Implements destroy petsc outer cache.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static void destroy_petsc_outer_cache(PetscOuterSolveCache &amp;cache)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/solver/linear_solver_petsc.cpp:115</dd></div><div><dt>Declaration</dt><dd>core/solver/linear_solver_petsc.cpp:115</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/solver/linear_solver_petsc.cpp#L115" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 115–123</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="115"><span class="token keyword">static</span> <span class="token keyword">void</span> destroy_petsc_outer_cache(PetscOuterSolveCache&amp; cache){</span>
+<span class="source-line" data-line="116">    <span class="token keyword">if</span>(cache.is_mech) ISDestroy(&amp;cache.is_mech);</span>
+<span class="source-line" data-line="117">    <span class="token keyword">if</span>(cache.is_p) ISDestroy(&amp;cache.is_p);</span>
+<span class="source-line" data-line="118">    <span class="token keyword">if</span>(cache.x) VecDestroy(&amp;cache.x);</span>
+<span class="source-line" data-line="119">    <span class="token keyword">if</span>(cache.b) VecDestroy(&amp;cache.b);</span>
+<span class="source-line" data-line="120">    <span class="token keyword">if</span>(cache.P &amp;&amp; cache.P!=cache.K) MatDestroy(&amp;cache.P);</span>
+<span class="source-line" data-line="121">    <span class="token keyword">if</span>(cache.K) MatDestroy(&amp;cache.K);</span>
+<span class="source-line" data-line="122">    cache=PetscOuterSolveCache();</span>
+<span class="source-line" data-line="123">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-665c3cd64cf851.html">← destroy_pcd_shell()</a><a href="fn-1d178a246d6bdd.html">petsc_outer_cache_is_compatible() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

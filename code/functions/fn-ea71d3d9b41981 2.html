@@ -1,0 +1,23 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements collect history gauss points."><title>collect_history_gauss_points() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=postprocess_hdf5.cpp">← core/io/postprocess_hdf5.cpp</a>
+<p class="eyebrow">Function detail</p><h1>collect_history_gauss_points()</h1><p class="lead">Implements collect history gauss points.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static std::vector&lt; double &gt; collect_history_gauss_points(const DomainMaterialHistory &amp;domain_history)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/postprocess_hdf5.cpp:545</dd></div><div><dt>Declaration</dt><dd>core/io/postprocess_hdf5.cpp:545</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/postprocess_hdf5.cpp#L545" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 545–554</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="545"><span class="token keyword">static</span> std::vector&lt;<span class="token keyword">double</span>&gt; collect_history_gauss_points(<span class="token keyword">const</span> DomainMaterialHistory&amp; domain_history){</span>
+<span class="source-line" data-line="546">    std::vector&lt;<span class="token keyword">double</span>&gt; data;</span>
+<span class="source-line" data-line="547">    <span class="token keyword">for</span>(<span class="token keyword">const</span> ElementMaterialHistory&amp; eh:domain_history.elements){</span>
+<span class="source-line" data-line="548">        <span class="token keyword">for</span>(<span class="token keyword">const</span> MaterialPointHistory&amp; gp:eh.gp){</span>
+<span class="source-line" data-line="549">            <span class="token keyword">const</span> Vector&amp; h = gp.h_n.empty() ? gp.h_trial : gp.h_n;</span>
+<span class="source-line" data-line="550">            data.insert(data.end(), h.begin(), h.end());</span>
+<span class="source-line" data-line="551">        }</span>
+<span class="source-line" data-line="552">    }</span>
+<span class="source-line" data-line="553">    <span class="token keyword">return</span> data;</span>
+<span class="source-line" data-line="554">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-762a15d74de969.html">← collect_right_cauchy_green_from_F()</a><a href="fn-549030407976a8.html">primary_postprocess_field() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

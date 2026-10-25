@@ -1,0 +1,28 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="============================================================================ Pressure-Schur preconditioner construction ============================================================================"><title>uses_custom_pressure_schur() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../solver.html?file=solver.cpp">← core/solver/solver.cpp</a>
+<p class="eyebrow">Function detail</p><h1>uses_custom_pressure_schur()</h1><p class="lead">============================================================================ Pressure-Schur preconditioner construction ============================================================================</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static bool uses_custom_pressure_schur(const LinearSolverSettings &amp;s)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/solver/solver.cpp:48</dd></div><div><dt>Declaration</dt><dd>core/solver/solver.cpp:48</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/solver/solver.cpp#L48" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 48–62</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="48"><span class="token keyword">static</span> <span class="token keyword">bool</span> uses_custom_pressure_schur(<span class="token keyword">const</span> LinearSolverSettings&amp; s){</span>
+<span class="source-line" data-line="49">    <span class="token comment">// Build a dedicated pressure Schur matrix only when PETSc will actually</span></span>
+<span class="source-line" data-line="50">    <span class="token comment">// use PCFieldSplit in Schur mode.  For additive/multiplicative FieldSplit</span></span>
+<span class="source-line" data-line="51">    <span class="token comment">// or full-matrix PCs, replacing the pressure block of Pmat is harmful and</span></span>
+<span class="source-line" data-line="52">    <span class="token comment">// can make diagnostics misleading.</span></span>
+<span class="source-line" data-line="53">    <span class="token keyword">const</span> std::string prec = lower_copy(s.preconditioner);</span>
+<span class="source-line" data-line="54">    <span class="token keyword">const</span> std::string fst  = lower_copy(s.fieldsplit_type);</span>
+<span class="source-line" data-line="55">    <span class="token keyword">if</span>(!(prec==<span class="token string">&quot;fieldsplit&quot;</span> || prec==<span class="token string">&quot;schur&quot;</span> || prec==<span class="token string">&quot;block_schur&quot;</span>)) <span class="token keyword">return</span> <span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="56">    <span class="token keyword">if</span>(fst!=<span class="token string">&quot;schur&quot;</span>) <span class="token keyword">return</span> <span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="57"> </span>
+<span class="source-line" data-line="58">    <span class="token keyword">const</span> std::string sch=lower_copy(s.schur_precondition);</span>
+<span class="source-line" data-line="59">    <span class="token keyword">return</span> sch==<span class="token string">&quot;pressure_mass&quot;</span> || sch==<span class="token string">&quot;pressure_laplacian&quot;</span> ||</span>
+<span class="source-line" data-line="60">           sch==<span class="token string">&quot;mass_laplacian&quot;</span> || sch==<span class="token string">&quot;pressure_mass_laplacian&quot;</span> ||</span>
+<span class="source-line" data-line="61">           sch==<span class="token string">&quot;mass+laplacian&quot;</span>;</span>
+<span class="source-line" data-line="62">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-2c26810aa5ef62.html">← contains_active_field()</a><a href="fn-5d51ff0bd81008.html">pressure_schur_uses_mass() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

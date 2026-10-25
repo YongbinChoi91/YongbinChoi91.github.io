@@ -1,0 +1,38 @@
+# Postprocessing output paths
+# HDF5 is the default result database.  The solver creates:
+#   <output_directory>/<sanitized_weakform_model_name>/<sanitized_weakform_model_name>.h5
+#
+# HDF5 datasets:
+#   /time/values              accepted output times
+#   /time/steps               accepted step ids
+#   /solution/dofs            all global DOFs for every accepted time
+#   /solution/final_raw_dofs  final global DOF vector
+#   /history/force            time, Drag, Lift when force_output is on
+#   /history/hysteresis       time, x_value, y_value when hysteresis_output is on
+#   /diagnostics/minJ         time, minJ when minJ_output is on
+#   /diagnostics/timing       timing table when timing_diagnostics is on
+#
+# debug_csv_output off is the default.  CSV/TXT files are written only when
+# debug_csv_output on, except hysteresis SVG can still create a temporary
+# debug_csv/hysteresis.csv because the SVG writer reads CSV.
+output_directory ./output/Solid
+hdf5_output on
+debug_csv_output off
+model_output_subdir on
+output_name Cook16
+output_every 1
+
+# Drag / lift output.  When force_output is on, values are stored in HDF5
+# /history/force.  CSV force output is only for debug_csv_output on.
+force_output 0
+force_boundary CIRCLE
+force_csv auto
+force_svg auto
+
+# Explicit legacy CSV/SVG paths are also supported when CSV/SVG output is active:
+# force_csv ./output/fsi_case/tables/drag_lift.csv
+# force_svg ./output/fsi_case/figures/drag_lift.svg
+
+# Mesh quality output is stored in HDF5 /diagnostics/minJ when minJ_output is on.
+# CSV minJ output is only for debug_csv_output on.
+minJ_csv auto

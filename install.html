@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="description" content="Install HiPaCs on macOS Apple Silicon or Ubuntu with Conda, Trilinos, PETSc, SuiteSparse, MPI, OpenMP, and HDF5.">
+ <title>Install · HiPaCs</title>
+ <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+ <header class="topbar">
+  <a class="brand" href="index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a>
+  <button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button>
+  <nav class="top-links" aria-label="Primary navigation">
+   <a href="index.html">Home</a><a href="main.html">Main Page</a><a href="framework.html">Framework</a>
+   <a href="architecture.html">Code Structure</a><a href="applications.html">Applications</a>
+   <a href="gallery.html">Gallery</a><a href="install.html">Install</a><a href="contact.html">Contact</a>
+  </nav>
+ </header>
+ <main id="top">
+  <section class="subpage-hero section-wrap wide-page-wrap">
+   <a class="back-button" href="index.html">← Back to home</a>
+   <p class="eyebrow">macOS Apple Silicon · Ubuntu 24.04 / 22.04</p>
+   <h1>Install HiPaCs</h1>
+   <p class="lead">Use one Conda environment for compilers and numerical libraries, then build the required Trilinos packages into that environment.</p>
+  </section>
+
+  <section class="doc-section section-wrap wide-page-wrap install-guide-page">
+   <div class="section-heading">
+    <p class="eyebrow">Quick start</p><h2>One command creates the supported environment.</h2>
+    <p>The installer creates or updates the <code>hipacs</code> environment, builds Trilinos 17.0.0, checks the Makefile configuration, and compiles FEM with UMFPACK, PETSc, OpenMP, MPI, and HDF5. Pardiso remains optional. It does not run a simulation.</p>
+   </div>
+   <div class="install-quick-grid">
+    <article class="install-card install-command-card"><span class="tag">1 · Clone</span><pre><code>git clone https://github.com/YongbinChoi91/HiPaCs.git
+cd HiPaCs</code></pre></article>
+    <article class="install-card install-command-card"><span class="tag">2 · Install</span><pre><code>bash install.sh</code></pre></article>
+    <article class="install-card install-command-card"><span class="tag">3 · Activate</span><pre><code>conda activate hipacs</code></pre></article>
+   </div>
+   <p class="install-source-links">
+    <a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/environment.yml">environment.yml ↗</a>
+    <a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/INSTALL.md">INSTALL.md ↗</a>
+    <a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/scripts/install_trilinos.sh">install_trilinos.sh ↗</a>
+   </p>
+  </section>
+
+  <section class="doc-section section-wrap wide-page-wrap">
+   <div class="section-heading"><p class="eyebrow">Platform preparation</p><h2>Install Miniforge, then use the same repository workflow.</h2></div>
+   <div class="file-tabs install-platform-tabs">
+    <div class="file-tab-controls" role="tablist" aria-label="Supported operating systems">
+     <button class="file-tab-button active" type="button" role="tab" aria-selected="true" data-install-tab="macos">macOS Apple Silicon</button>
+     <button class="file-tab-button" type="button" role="tab" aria-selected="false" data-install-tab="ubuntu">Ubuntu 24.04 / 22.04</button>
+    </div>
+    <div class="file-tab-panel active" role="tabpanel" data-install-panel="macos">
+     <div class="install-platform-content"><div><h3>Prerequisites</h3><ul class="clean-list"><li>Apple Silicon Mac</li><li>Xcode Command Line Tools</li><li>Miniforge arm64</li><li>Git</li></ul></div>
+      <pre><code>xcode-select --install
+# Install Miniforge arm64, then restart the shell
+conda --version
+bash install.sh</code></pre></div>
+     <p class="framework-note">The Makefiles prefer the Conda OpenMP runtime and fall back to Homebrew <code>libomp</code> only when necessary. Do not mix both runtimes in one executable.</p>
+    </div>
+    <div class="file-tab-panel" role="tabpanel" data-install-panel="ubuntu">
+     <div class="install-platform-content"><div><h3>Prerequisites</h3><ul class="clean-list"><li>Ubuntu 24.04 LTS recommended</li><li>Ubuntu 22.04 LTS compatible</li><li>Miniforge x86_64 or arm64</li><li>Git and basic system certificates</li></ul></div>
+      <pre><code>sudo apt update
+sudo apt install -y git curl ca-certificates
+# Install Miniforge, then restart the shell
+conda --version
+bash install.sh</code></pre></div>
+     <p class="framework-note">Linux builds use <code>-fopenmp</code>. Other distributions require manual compiler and runtime configuration.</p>
+    </div>
+   </div>
+  </section>
+
+  <section class="doc-section section-wrap wide-page-wrap">
+   <div class="section-heading"><p class="eyebrow">Dependency model</p><h2>Conda supplies the toolchain; Trilinos is built from source.</h2></div>
+   <div class="install-grid three-col">
+    <article class="install-card"><span class="tag">Conda</span><h3>Compiler and numerical stack</h3><p>C/C++/Fortran compilers, OpenMPI, SuiteSparse, PETSc, HDF5, BLAS/LAPACK, OpenMP, CMake, Ninja, and pkg-config.</p></article>
+    <article class="install-card"><span class="tag">Python</span><h3>Postprocessing stack</h3><p>Python, NumPy, Matplotlib, h5py, and a Qt backend for interactive plotting.</p></article>
+    <article class="install-card"><span class="tag">Source build</span><h3>Trilinos 17.0.0</h3><p>Sacado, Teuchos, and Kokkos with MPI and OpenMP, installed under <code>$CONDA_PREFIX/hipacs-trilinos</code>.</p></article>
+   </div>
+   <div class="code-window install-wide-code"><div class="window-bar"><span></span><span></span><span></span></div><pre><code># Rebuild Trilinos explicitly
+conda activate hipacs
+bash scripts/install_trilinos.sh
+
+# Select another tested tag or commit
+TRILINOS_REF=&lt;tag-or-commit&gt; bash scripts/install_trilinos.sh</code></pre></div>
+  </section>
+
+  <section class="doc-section section-wrap wide-page-wrap">
+   <div class="section-heading"><p class="eyebrow">Build profile</p><h2>Supported backends are enabled by default.</h2></div>
+   <div class="build-path-table">
+    <article class="install-card"><span class="tag">Default</span><h3>UMFPACK + PETSc + OpenMP + MPI + HDF5</h3><p>The standard Makefile defaults enable the complete supported configuration.</p><pre><code>make -C FEM clean
+make -C FEM</code></pre></article>
+    <article class="install-card"><span class="tag">Optional</span><h3>MKL Pardiso</h3><p>Enable Pardiso only after providing compatible MKL libraries for the current platform.</p><pre><code>make -C FEM \
+  USE_PARDISO=1 \
+  MKL_LIBS="&lt;MKL link flags&gt;"</code></pre></article>
+   </div>
+  </section>
+
+  <section class="doc-section section-wrap wide-page-wrap">
+   <div class="section-heading"><p class="eyebrow">Build targets</p><h2>Three Makefiles build the application entry points.</h2></div>
+   <div class="install-grid three-col">
+    <article class="install-card"><code>FEM/Makefile</code><h3>General FEM / VEM / FSI</h3><pre><code>make -C FEM
+make -C FEM run</code></pre><p>Produces <code>FEM/bin/fem</code>.</p></article>
+    <article class="install-card"><code>Multiscale/Makefile</code><h3>Macro/RVE analysis</h3><pre><code>make -C Multiscale
+make -C Multiscale run</code></pre><p>Produces <code>Multiscale/bin/multiscale</code>.</p></article>
+    <article class="install-card"><code>RVEtest/Makefile</code><h3>Standalone periodic RVE</h3><pre><code>make -C RVEtest
+make -C RVEtest run</code></pre><p>Produces <code>RVEtest/bin/single_rve</code>.</p></article>
+   </div>
+   <div class="install-model-note"><h3>Select a weak form at build time</h3><pre><code>make -C FEM \
+  MODEL_SRC=models/Elastic_Models/weak_form_hyper_elastic.cpp</code></pre><p>Changing <code>MODEL_SRC</code> updates the model stamp and rebuilds the required objects.</p></div>
+  </section>
+
+  <section class="doc-section section-wrap wide-page-wrap">
+   <div class="section-heading"><p class="eyebrow">Postprocessing</p><h2>Use interactive plotting on desktops and a file backend on headless hosts.</h2></div>
+   <div class="build-path-table">
+    <article class="install-card"><span class="tag">Desktop</span><h3>Interactive Matplotlib window</h3><pre><code>conda activate hipacs
+python scripts/plot_vtk_result.py \
+  &lt;result.vtk&gt; \
+  --post &lt;Postprocessing.txt&gt;</code></pre><p>Requires NumPy, Matplotlib, and a GUI backend. These are included in <code>environment.yml</code>.</p></article>
+    <article class="install-card"><span class="tag">Headless Ubuntu</span><h3>Non-interactive rendering</h3><pre><code>export MPLBACKEND=Agg
+python scripts/plot_multiscale_dashboard.py \
+  &lt;macro.vtk&gt; \
+  --no-show \
+  --save output/dashboard.png</code></pre><p>Use this mode over SSH, in containers, or on compute nodes without a display server.</p></article>
+   </div>
+  </section>
+
+  <section class="doc-section section-wrap wide-page-wrap">
+   <div class="section-heading"><p class="eyebrow">Diagnostics</p><h2>Inspect resolved paths before changing compiler flags.</h2></div>
+   <div class="code-window install-wide-code"><div class="window-bar"><span></span><span></span><span></span></div><pre><code>make -C FEM print-config
+make -C FEM check-trilinos
+make -C FEM check-petsc
+make -C FEM check-openmp</code></pre></div>
+   <div class="install-troubleshooting-grid">
+    <article class="detail-card"><h3>Conda is not active</h3><p>The Makefiles stop when <code>CONDA_PREFIX</code> is empty. Run <code>conda activate hipacs</code>.</p></article>
+    <article class="detail-card"><h3>Sacado is missing</h3><p>Confirm <code>SACADO_DIR=$CONDA_PREFIX/hipacs-trilinos</code> and rerun the Trilinos installer.</p></article>
+    <article class="detail-card"><h3>PETSc is not found</h3><p>Run <code>pkg-config --cflags --libs PETSc</code> or override <code>PETSC_CFLAGS</code> and <code>PETSC_LIBS</code>.</p></article>
+    <article class="detail-card"><h3>Optional Pardiso</h3><p>Set <code>USE_PARDISO=1</code> only after providing compatible platform-specific <code>MKL_LIBS</code>.</p></article>
+   </div>
+  </section>
+ </main>
+ <script defer src="assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   Built for research extensions. &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap">
+    <a class="back-button route-card" href="../framework.html">
+     &larr; Back to Framework
+    </a>
+    <p class="eyebrow">
+     Framework extensibility
+    </p>
+    <h1>
+     Built for research extensions.
+    </h1>
+    <p class="lead">
+     The framework is intended to support experiments where fields, weak forms, element technology,
+            material histories, and coupled-domain workflows evolve over time.
+    </p>
+   </section>
+   <section class="doc-section section-wrap wide-page-wrap framework-detail-wide">
+    <div class="framework-detail-grid">
+     <article class="detail-card">
+      <span class="tag">
+       Fields
+      </span>
+      <h3>
+       Flexible field registry
+      </h3>
+      <p>
+       Velocity, displacement, pressure, temperature, or future fields can be described through the field/DOF layer instead of hard-coding a single application layout.
+      </p>
+     </article>
+     <article class="detail-card">
+      <span class="tag">
+       History
+      </span>
+      <h3>
+       Local internal variables
+      </h3>
+      <p>
+       Plasticity, viscoelasticity, multiscale RVE states, and other local variables can be stored at Gauss points without becoming global DOFs.
+      </p>
+     </article>
+     <article class="detail-card">
+      <span class="tag">
+       Methods
+      </span>
+      <h3>
+       FEM, VEM, multiphysics, multiscale
+      </h3>
+      <p>
+       The same global infrastructure is prepared for classical FEM elements, polygonal VEM elements, domain coupling, and macro-micro workflows.
+      </p>
+     </article>
+    </div>
+    <div class="framework-wide-layout">
+     <article class="detail-card">
+      <h3>
+       Extension rule
+      </h3>
+      <p>
+       Prefer adding a new local model, field declaration, or postprocessing diagnostic over creating a separate solver path. This keeps the framework coherent as the project grows.
+      </p>
+     </article>
+     <article class="detail-card">
+      <h3>
+       Why this matters
+      </h3>
+      <p>
+       Research code often changes quickly. A modular framework makes it easier to compare formulations without duplicating mesh readers, assembly routines, nonlinear solvers, or output code.
+      </p>
+     </article>
+    </div>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

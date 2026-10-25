@@ -1,0 +1,23 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements gather local past dofs into."><title>gather_local_past_dofs_into() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../assembly.html?file=assembly.cpp">← core/assembly/assembly.cpp</a>
+<p class="eyebrow">Function detail</p><h1>gather_local_past_dofs_into()</h1><p class="lead">Implements gather local past dofs into.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static void gather_local_past_dofs_into(const PastDofs &amp;global_past_dofs, const std::vector&lt; int &gt; &amp;dofs, PastDofs &amp;local_past_dofs)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/assembly/assembly.cpp:175</dd></div><div><dt>Declaration</dt><dd>core/assembly/assembly.cpp:175</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/assembly/assembly.cpp#L175" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 175–184</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="175"><span class="token keyword">static</span> <span class="token keyword">void</span> gather_local_past_dofs_into(</span>
+<span class="source-line" data-line="176">    <span class="token keyword">const</span> PastDofs&amp; global_past_dofs,</span>
+<span class="source-line" data-line="177">    <span class="token keyword">const</span> std::vector&lt;<span class="token keyword">int</span>&gt;&amp; dofs,</span>
+<span class="source-line" data-line="178">    PastDofs&amp; local_past_dofs</span>
+<span class="source-line" data-line="179">){</span>
+<span class="source-line" data-line="180">    local_past_dofs.resize(global_past_dofs.size());</span>
+<span class="source-line" data-line="181">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;static_cast&lt;<span class="token keyword">int</span>&gt;(global_past_dofs.size());++i){</span>
+<span class="source-line" data-line="182">        gather_local_vector_into(global_past_dofs[i],dofs,local_past_dofs[i]);</span>
+<span class="source-line" data-line="183">    }</span>
+<span class="source-line" data-line="184">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-5412e393dc6782.html">← validate_global_dofs_size()</a><a href="fn-1f40b869063195.html">assemble_element_system_csr() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

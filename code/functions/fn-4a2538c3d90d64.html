@@ -1,0 +1,26 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements scalar weak form element system slfad."><title>scalar_weak_form_element_system_slfad() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../hpx.html?file=local_element_system_ad.h">← core/hpx/local_element_system_ad.h</a>
+<p class="eyebrow">Function detail</p><h1>scalar_weak_form_element_system_slfad()</h1><p class="lead">Implements scalar weak form element system slfad.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>ElementSystem hpx::detail::scalar_weak_form_element_system_slfad(int n, const Vector &amp;x_elem, Eval &amp;&amp;eval)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/hpx/local_element_system_ad.h:58</dd></div><div><dt>Declaration</dt><dd>core/hpx/local_element_system_ad.h:58</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/hpx/local_element_system_ad.h#L58" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 58–70</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="58"><span class="token keyword">inline</span> ElementSystem scalar_weak_form_element_system_slfad(</span>
+<span class="source-line" data-line="59">    <span class="token keyword">int</span> n,</span>
+<span class="source-line" data-line="60">    <span class="token keyword">const</span> Vector&amp; x_elem,</span>
+<span class="source-line" data-line="61">    Eval&amp;&amp; eval</span>
+<span class="source-line" data-line="62">) {</span>
+<span class="source-line" data-line="63">    <span class="token keyword">using</span> InnerFad = Sacado::Fad::SLFad&lt;<span class="token keyword">double</span>, MaxDofs&gt;;</span>
+<span class="source-line" data-line="64">    <span class="token keyword">using</span> OuterFad = Sacado::Fad::SLFad&lt;InnerFad, MaxDofs&gt;;</span>
+<span class="source-line" data-line="65">    <span class="token keyword">return</span> scalar_weak_form_element_system_impl&lt;InnerFad, OuterFad&gt;(</span>
+<span class="source-line" data-line="66">        n,</span>
+<span class="source-line" data-line="67">        x_elem,</span>
+<span class="source-line" data-line="68">        std::forward&lt;Eval&gt;(eval)</span>
+<span class="source-line" data-line="69">    );</span>
+<span class="source-line" data-line="70">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-95bb2136fe417e.html">← scalar_weak_form_element_system_impl()</a><a href="fn-def06248e056b9.html">scalar_weak_form_element_system_dfad() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

@@ -1,0 +1,31 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements parse field component target tokens."><title>parse_field_component_target_tokens() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=parameter_reader.cpp">← core/io/parameter_reader.cpp</a>
+<p class="eyebrow">Function detail</p><h1>parse_field_component_target_tokens()</h1><p class="lead">Implements parse field component target tokens.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static FieldComponentTarget parse_field_component_target_tokens(const std::string &amp;a, const std::string &amp;b, const std::string &amp;c, bool &amp;explicit_field)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/parameter_reader.cpp:137</dd></div><div><dt>Declaration</dt><dd>core/io/parameter_reader.cpp:137</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/parameter_reader.cpp#L137" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 137–154</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="137"><span class="token keyword">static</span> FieldComponentTarget parse_field_component_target_tokens(</span>
+<span class="source-line" data-line="138">    <span class="token keyword">const</span> std::string&amp; a,</span>
+<span class="source-line" data-line="139">    <span class="token keyword">const</span> std::string&amp; b,</span>
+<span class="source-line" data-line="140">    <span class="token keyword">const</span> std::string&amp; c,</span>
+<span class="source-line" data-line="141">    <span class="token keyword">bool</span>&amp; explicit_field</span>
+<span class="source-line" data-line="142">){</span>
+<span class="source-line" data-line="143">    <span class="token keyword">const</span> std::string al=lower_copy(a);</span>
+<span class="source-line" data-line="144">    explicit_field = is_known_field_name(al);</span>
+<span class="source-line" data-line="145">    <span class="token keyword">if</span>(explicit_field){</span>
+<span class="source-line" data-line="146">        FieldComponentTarget t;</span>
+<span class="source-line" data-line="147">        t.field = (al==<span class="token string">&quot;theta&quot;</span>) ? std::string(<span class="token string">&quot;temperature&quot;</span>) : al;</span>
+<span class="source-line" data-line="148">        t.group = b;</span>
+<span class="source-line" data-line="149">        t.selector = parse_bc_selector_token(b);</span>
+<span class="source-line" data-line="150">        t.component = (t.field==<span class="token string">&quot;pressure&quot;</span> || t.field==<span class="token string">&quot;temperature&quot;</span>) ? scalar_component_index_from_string(c) : component_index_from_string(c);</span>
+<span class="source-line" data-line="151">        <span class="token keyword">return</span> t;</span>
+<span class="source-line" data-line="152">    }</span>
+<span class="source-line" data-line="153">    <span class="token keyword">return</span> target_from_alias(a,b);</span>
+<span class="source-line" data-line="154">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-417f935e27bf99.html">← parse_bc_selector_token()</a><a href="fn-626ceca9793759.html">append_dirichlet_rule() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

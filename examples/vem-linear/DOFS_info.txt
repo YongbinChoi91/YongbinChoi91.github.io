@@ -1,3 +1,2 @@
-field_key displacement
-domain Solid
-VEM_ORDER 1
+# Placeholder file for DOFS_info.txt
+# Replace this with the verified HiPaCs example input/source file.

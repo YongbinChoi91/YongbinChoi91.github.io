@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   Kinematics &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap wide-page-wrap">
+    <a class="back-button route-card" href="../architecture.html">
+     &larr; Back to Code Structure
+    </a>
+    <p class="eyebrow">
+     Framework / Mechanics helpers
+    </p>
+    <h1>
+     Kinematics
+    </h1>
+    <p class="lead">
+     Header-only tensor utilities are shared by ordinary double evaluation and Sacado automatic differentiation.
+    </p>
+   </section>
+   <section class="doc-section section-wrap wide-page-wrap framework-detail-wide">
+    <article class="framework-hero-card">
+     <span class="tag">
+      Purpose
+     </span>
+     <h2>
+      Shared kinematic layer for weak forms
+     </h2>
+     <p>
+      Kinematics collects the reusable finite-element operations needed inside local weak forms.
+              It provides fast local DOF access, field interpolation support, deformation-gradient construction,
+              and small tensor utilities such as determinant, inverse, transpose, trace, symmetric part,
+              and fixed-size 3&times;3 tensor algebra.
+     </p>
+     <p>
+      The functions are header-only and templated, so weak-form files can call the same routines with
+              both ordinary
+      <code>
+       double
+      </code>
+      values and automatic-differentiation scalar types. This keeps the
+              kinematic definitions consistent across solid mechanics, fluid/FSI extensions, history-dependent
+              models, and VEM projections.
+     </p>
+    </article>
+    <div class="framework-detail-grid">
+     <article class="detail-card">
+      <h2>
+       Main files
+      </h2>
+      <ul class="clean-list code-list">
+       <li>
+        <code>
+         kinematics.h
+        </code>
+       </li>
+       <li>
+        <code>
+         fem_utils.h
+        </code>
+       </li>
+      </ul>
+     </article>
+     <article class="detail-card">
+      <h2>
+       Key structures
+      </h2>
+      <ul class="clean-list code-list">
+       <li>
+        <code>
+         LocalFieldInfo
+        </code>
+       </li>
+       <li>
+        <code>
+         LocalFieldView
+        </code>
+       </li>
+       <li>
+        <code>
+         hpx::Mat3&lt;Scalar&gt;
+        </code>
+       </li>
+      </ul>
+     </article>
+     <article class="detail-card function-groups">
+      <h2>
+       Key functions
+      </h2>
+      <p class="function-map-intro">
+       Click a function to open the implementation-oriented code view.
+      </p>
+      <h3>
+       Fast local access
+      </h3>
+      <ul class="clean-list function-link-list code-list">
+       <li>
+        <a class="function-link route-card" href="../code/space.html">
+         <code>
+          hpx::local_dof()
+         </code>
+        </a>
+       </li>
+      </ul>
+      <h3>
+       Small tensor algebra
+      </h3>
+      <ul class="clean-list code-list function-link-list">
+       <li>
+        <a class="function-link route-card" href="../code/space.html">
+         <code>
+          hpx::eye()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/space.html">
+         <code>
+          hpx::det()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/space.html">
+         <code>
+          hpx::inv()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/space.html">
+         <code>
+          hpx::transpose()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/space.html">
+         <code>
+          hpx::mul()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/space.html">
+         <code>
+          hpx::sym()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/space.html">
+         <code>
+          hpx::tr()
+         </code>
+        </a>
+       </li>
+      </ul>
+      <h3>
+       Finite-strain helpers
+      </h3>
+      <ul class="clean-list code-list function-link-list">
+       <li>
+        <a class="function-link route-card" href="../code/space.html">
+         <code>
+          hpx::zero3(), hpx::eye3(), hpx::det3(), hpx::inv3()
+         </code>
+        </a>
+       </li>
+      </ul>
+      <a class="text-link route-card inline-route-link" href="../code/space.html">
+       Open full function map &rarr;
+      </a>
+      <a class="text-link route-card inline-route-link" href="framework-autodiff.html">
+       Open HPX AutoDiff module &rarr;
+      </a>
+     </article>
+    </div>
+    <div class="framework-wide-layout">
+     <article class="detail-card">
+      <h2>
+       Data flow
+      </h2>
+      <div class="flow-stack">
+       <span>
+        Local element vector
+       </span>
+       <span>
+        Name-based field lookup
+       </span>
+       <span>
+        Gradient / deformation measure
+       </span>
+       <span>
+        Weak-form residual and tangent
+       </span>
+      </div>
+     </article>
+     <article class="detail-card">
+      <h2>
+       Design point
+      </h2>
+      <p>
+       Kinematics is not tied to one constitutive law. It is a shared layer used by
+       <code>
+        weak_form_*.cpp
+       </code>
+       implementations to build gradients, deformation measures,
+                and tensor expressions before residual and tangent evaluation. Since the functions are
+                templated, the same implementation works for both numerical evaluation and Sacado-based
+                automatic differentiation.
+      </p>
+      <ul class="clean-list">
+       <li>
+        Weak forms can reuse one consistent definition of local DOF access and tensor operations.
+       </li>
+       <li>
+        Finite-strain 2D cases can still use 3&times;3 plane-strain tensors.
+       </li>
+       <li>
+        VEM projections can call the same local field and tensor helpers as standard FEM kernels.
+       </li>
+      </ul>
+     </article>
+    </div>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

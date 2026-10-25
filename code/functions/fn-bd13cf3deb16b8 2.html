@@ -1,0 +1,27 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Returns cached geometry and projection data for a linear VEM element."><title>get_cached_linear_element() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../vem.html?file=vem.cpp">← core/vem/vem.cpp</a>
+<p class="eyebrow">Function detail</p><h1>get_cached_linear_element()</h1><p class="lead">Returns cached geometry and projection data for a linear VEM element.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>const LinearElementCache &amp; vem::get_cached_linear_element(const FieldMesh &amp;mesh, int elem_id, int q_order, const std::string &amp;field_name)</code></p><p>mesh Mesh that owns the polygonal element. elem_id Element index in the mesh. q_order Internal quadrature order. Thread-local cached linear VEM element data.</p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/vem/vem.cpp:579</dd></div><div><dt>Declaration</dt><dd>core/vem/vem.cpp:579</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/vem/vem.cpp#L579" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 579–592</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="579"><span class="token keyword">const</span> LinearElementCache&amp; get_cached_linear_element(</span>
+<span class="source-line" data-line="580">    <span class="token keyword">const</span> FieldMesh&amp; mesh,</span>
+<span class="source-line" data-line="581">    <span class="token keyword">int</span> elem_id,</span>
+<span class="source-line" data-line="582">    <span class="token keyword">int</span> q_order,</span>
+<span class="source-line" data-line="583">    <span class="token keyword">const</span> std::string&amp; field_name</span>
+<span class="source-line" data-line="584">) {</span>
+<span class="source-line" data-line="585">    <span class="token keyword">auto</span>&amp; cache = linear_element_cache_map();</span>
+<span class="source-line" data-line="586">    <span class="token keyword">const</span> CacheKey key{&amp;mesh, elem_id, q_order, field_name};</span>
+<span class="source-line" data-line="587">    <span class="token keyword">auto</span> it = cache.find(key);</span>
+<span class="source-line" data-line="588">    <span class="token keyword">if</span> (it == cache.end()) {</span>
+<span class="source-line" data-line="589">        it = cache.emplace(key, build_linear_element_cache(mesh, elem_id, q_order, field_name)).first;</span>
+<span class="source-line" data-line="590">    }</span>
+<span class="source-line" data-line="591">    <span class="token keyword">return</span> it-&gt;second;</span>
+<span class="source-line" data-line="592">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-9a1199a1a951a1.html">← vem_shape_grad_no_constant()</a><a href="fn-39ed62b04b119e.html">get_cached_quadratic_element() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

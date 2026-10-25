@@ -1,0 +1,21 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements find csr entry index."><title>find_csr_entry_index() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../assembly.html?file=assembly.cpp">← core/assembly/assembly.cpp</a>
+<p class="eyebrow">Function detail</p><h1>find_csr_entry_index()</h1><p class="lead">Implements find csr entry index.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static int find_csr_entry_index(const CSRMatrix &amp;K, int row, int col)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/assembly/assembly.cpp:75</dd></div><div><dt>Declaration</dt><dd>core/assembly/assembly.cpp:75</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/assembly/assembly.cpp#L75" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 75–82</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="75"><span class="token keyword">static</span> <span class="token keyword">int</span> find_csr_entry_index(<span class="token keyword">const</span> CSRMatrix&amp; K,<span class="token keyword">int</span> row,<span class="token keyword">int</span> col){</span>
+<span class="source-line" data-line="76">    <span class="token keyword">if</span>(row&lt;<span class="token number">0</span> || row&gt;=K.n_rows) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;CSR row out of range.&quot;</span>);</span>
+<span class="source-line" data-line="77">    <span class="token keyword">auto</span> b=K.col_idx.begin()+K.row_ptr[row];</span>
+<span class="source-line" data-line="78">    <span class="token keyword">auto</span> e=K.col_idx.begin()+K.row_ptr[row+<span class="token number">1</span>];</span>
+<span class="source-line" data-line="79">    <span class="token keyword">auto</span> it=std::lower_bound(b,e,col);</span>
+<span class="source-line" data-line="80">    <span class="token keyword">if</span>(it==e || *it!=col) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;CSR entry missing.&quot;</span>);</span>
+<span class="source-line" data-line="81">    <span class="token keyword">return</span> static_cast&lt;<span class="token keyword">int</span>&gt;(it-K.col_idx.begin());</span>
+<span class="source-line" data-line="82">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-638be653710485.html">← any_rank_reported_assembly_error()</a><a href="fn-4bbf270656bfe7.html">zero_csr_values() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

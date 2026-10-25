@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   Applications &middot; HiPaCs
+  </title>
+  <link href="assets/css/styles.css" rel="stylesheet"/>
+  <script src="assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="index.html">
+     Home
+    </a>
+    <a class="" href="main.html">
+     Main Page
+    </a>
+    <a class="" href="framework.html">
+     Framework
+    </a>
+    <a class="" href="architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="applications.html">
+     Applications
+    </a>
+    <a class="" href="gallery.html">
+     Gallery
+    </a>
+    <a class="" href="install.html">
+     Install
+    </a>
+    <a class="" href="contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap">
+    <a class="back-button route-card" href="index.html">
+     &larr; Back to home
+    </a>
+    <p class="eyebrow">
+     Applications
+    </p>
+    <h1>
+     Applications
+    </h1>
+    <p class="lead">
+     Application pages are organized by physics area, then by detailed model pages for examples, theory, simulation notes, and future results.
+    </p>
+   </section>
+   <section class="doc-section section-wrap" id="applications">
+    <div class="section-heading">
+     <p class="eyebrow">
+      Applications
+     </p>
+     <h2>
+      Application pages prepared for detailed examples.
+     </h2>
+     <p>
+      Click an application area to open a dedicated page. Each area is then divided into detailed model pages, and each model page is prepared for example figures, input settings, and implementation notes.
+     </p>
+    </div>
+    <div class="application-grid">
+     <a class="app-card route-card" href="pages/app-solid.html" id="solid-mechanics">
+      <div class="app-figure placeholder-panel">
+       <span>
+        FEM &middot; VEM
+       </span>
+      </div>
+      <div class="app-body">
+       <span class="tag">
+        FEM &middot; VEM
+       </span>
+       <h3>
+        Solid Mechanics
+       </h3>
+       <p>
+        Elasticity, plasticity, viscoelasticity, dynamics, and polygonal VEM formulations.
+       </p>
+       <span class="text-link">
+        Open Solid Mechanics &rarr;
+       </span>
+      </div>
+     </a>
+     <a class="app-card route-card" href="pages/app-fluid.html" id="fluid-mechanics">
+      <div class="app-figure placeholder-panel">
+       <span>
+        Flow &middot; Thermal
+       </span>
+      </div>
+      <div class="app-body">
+       <span class="tag">
+        Navier-Stokes &middot; Thermal
+       </span>
+       <h3>
+        Fluid Mechanics
+       </h3>
+       <p>
+        Incompressible flow, stabilization, pressure-velocity coupling, and temperature transport.
+       </p>
+       <span class="text-link">
+        Open Fluid Mechanics &rarr;
+       </span>
+      </div>
+     </a>
+     <a class="app-card route-card" href="pages/app-fsi.html" id="fsi">
+      <div class="app-figure placeholder-panel">
+       <span>
+        FEM &middot; ALE FSI
+       </span>
+      </div>
+      <div class="app-body">
+       <span class="tag">
+        FEM &middot; ALE FSI
+       </span>
+       <h3>
+        Fluid-Structure Interaction
+       </h3>
+       <p>
+        Coupled ALE fluid and Neo-Hookean solid: theory, implementation, and a 2D FEM example.
+       </p>
+       <span class="text-link">
+        Open FSI &rarr;
+       </span>
+      </div>
+     </a>
+     <a class="app-card route-card" href="pages/app-multiscale.html" id="multiscale">
+      <div class="app-figure placeholder-panel">
+       <span>
+        RVE &middot; Homogenization
+       </span>
+      </div>
+      <div class="app-body">
+       <span class="tag">
+        RVE &middot; Homogenization
+       </span>
+       <h3>
+        Multiscale Analysis
+       </h3>
+       <p>
+        Single RVE verification and macro-micro analysis with homogenized stress and tangent.
+       </p>
+       <span class="text-link">
+        Open Multiscale Analysis &rarr;
+       </span>
+      </div>
+     </a>
+    </div>
+   </section>
+   <section class="doc-section section-wrap" id="benchmarks">
+    <div class="section-heading">
+     <p class="eyebrow">
+      Benchmarks
+     </p>
+     <h2>
+      Validation cards for future benchmark results.
+     </h2>
+     <p>
+      This section currently contains empty benchmark slots. Later, each card can link to a detailed page
+              with figures, parameter settings, convergence data, and comparison values.
+     </p>
+    </div>
+    <div class="benchmark-grid">
+     <article>
+      <h3>
+       Cook's membrane
+      </h3>
+      <p>
+       Solid mechanics validation slot.
+      </p>
+     </article>
+     <article>
+      <h3>
+       Cylinder flow
+      </h3>
+      <p>
+       Fluid benchmark and drag/lift slot.
+      </p>
+     </article>
+     <article>
+      <h3>
+       FSI benchmark
+      </h3>
+      <p>
+       Coupled flow-structure validation slot.
+      </p>
+     </article>
+     <article>
+      <h3>
+       RVE homogenization
+      </h3>
+      <p>
+       Macro-micro consistency slot.
+      </p>
+     </article>
+     <article>
+      <h3>
+       VEM patch test
+      </h3>
+      <p>
+       Polygonal element validation slot.
+      </p>
+     </article>
+    </div>
+   </section>
+  </main>
+  <script defer="True" src="assets/js/main.js">
+  </script>
+ </body>
+</html>

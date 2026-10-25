@@ -1,6 +1,6 @@
 #include "weak_form.h"
-#include "fem_utils.h"
 #include "kinematics.h"
+#include "local_element_system_ad.h"
 
 #include <Sacado_Fad_DFad.hpp>
 
@@ -90,7 +90,7 @@
 // Model identity queried by the solver/logger.
 // -----------------------------------------------------------------------------
 const char* active_constitutive_model_name() {
-    return "weak_form_hyper_elastic_neohookean_newmark_gp_history_displacement_only";
+    return "Newmark_HyperElstic_2D";
 }
 
 // -----------------------------------------------------------------------------
@@ -110,28 +110,10 @@ static NewmarkLocalLayout make_newmark_layout(const FieldMesh& mesh, int elem_id
     return make_local_field_view(mesh, elem_id, {"displacement"});
 }
 
-// -----------------------------------------------------------------------------
-// Weak-scalar AD extraction types
-// -----------------------------------------------------------------------------
-using WeakInnerFad = Sacado::Fad::DFad<double>;
-using WeakOuterFad = Sacado::Fad::DFad<WeakInnerFad>;
-
-static double weak_inner_dx(const WeakInnerFad& x, int i) {
-    return (i >= 0 && i < x.size()) ? x.dx(i) : 0.0;
-}
-
-// Extract a double value from either double, inner Fad, or nested Fad.
-// This is used ONLY for writing h_trial.  The residual/tangent still see the
+// Extract a double value for writing h_trial. The residual/tangent still see the
 // full AD expression through a_newmark below.
-static double scalar_value(double x) {
-    return x;
-}
-
-static double scalar_value(const WeakInnerFad& x) {
-    return x.val();
-}
-
-static double scalar_value(const WeakOuterFad& x) {
+template <class Scalar>
+static double scalar_value(const Scalar& x) {
     return x.val().val();
 }
 
@@ -155,6 +137,19 @@ void print_active_constitutive_parameters(std::ostream& os, const ProblemParamet
     const NewmarkParameters nm = make_newmark_parameters(params);
     os << "  newmark_beta  : " << nm.newmark_beta << "\n"
        << "  newmark_gamma : " << nm.newmark_gamma << "\n";
+}
+
+std::vector<ConstitutivePostprocessOutputSpec> active_constitutive_postprocess_outputs() {
+    return {
+        {"velocity", 3},
+        {"acceleration", 3},
+        {"von_mises", 1},
+        {"J", 1}
+    };
+}
+
+static bool newmark_output_requested(const std::vector<std::string>& requested,const std::string& name){
+    return std::find(requested.begin(),requested.end(),name)!=requested.end();
 }
 
 // Validate that the assembler/solver supplied a Gauss-point history object.
@@ -192,7 +187,7 @@ static Scalar weak_scalar_hyperelastic_newmark_solid(
     if (static_cast<int>(x_elem.size()) != L.n_local()) {
         throw std::runtime_error("Bad current element vector size in Newmark hyper-elastic weak form.");
     }
-    if (static_cast<int>(state.x_n_elem.size()) != L.n_local()) {
+    if (state.past_dofs.size() < 1 || static_cast<int>(state.past_dofs[0].size()) != L.n_local()) {
         throw std::runtime_error("Bad previous element vector size in Newmark hyper-elastic weak form.");
     }
     if (test_elem.size() != x_elem.size()) {
@@ -218,7 +213,7 @@ static Scalar weak_scalar_hyperelastic_newmark_solid(
     Scalar G(0.0);
 
     // Geometry is displacement-based because this is a displacement-only solid.
-    const ElementGeometry geom = make_displacement_geometry_element(mesh, elem_id);
+    const ElementGeometry geom = make_displacement_element_geometry(mesh, elem_id);
 
     const auto gps = gauss_rule(U.element_type, params.solver.gauss_order);
     if (state.material_history->gp.size() != gps.size()) {
@@ -264,21 +259,21 @@ static Scalar weak_scalar_hyperelastic_newmark_solid(
         // u_gp   = sum_a N_a u_{a,n+1}
         // u_n_gp = sum_a N_a u_{a,n}
         //
-        // state.x_n_elem is filled by the assembler from the previous accepted
+        // state.past_dofs[0] is filled by the assembler from the previous accepted
         // global solution x_n in the same local field order as x_elem.
         // ---------------------------------------------------------------------
         const auto u_gp =
-            kinematic_field_value_as<Scalar>(L, "displacement", x_elem, su.N);
+            hpx::field_value_as<Scalar>(L, "displacement", x_elem, su.N);
 
         const auto u_n_gp =
-            kinematic_field_value_as<Scalar>(L, "displacement", state.x_n_elem, su.N);
+            hpx::field_value_as<Scalar>(L, "displacement", state.past_dofs[0], su.N);
 
         // Virtual displacement and virtual deformation gradient.
         const auto delta_u_gp =
-            kinematic_field_value_as<Scalar>(L, "displacement", test_elem, su.N);
+            hpx::field_value_as<Scalar>(L, "displacement", test_elem, su.N);
 
         const auto deltaF =
-            kinematic_field_gradient_as<Scalar>(L, "displacement", test_elem, dNu);
+            hpx::field_grad_as<Scalar>(L, "displacement", test_elem, dNu);
 
         // ---------------------------------------------------------------------
         // Elastic part:
@@ -288,9 +283,9 @@ static Scalar weak_scalar_hyperelastic_newmark_solid(
         //
         // In 2D, F is embedded into 3D as plane strain before evaluating P.
         // ---------------------------------------------------------------------
-        const auto F = kinematic_deformation_gradient_as<Scalar>(L, x_elem, dNu);
-        const auto F3 = kinematic_embed_plane_strain_3d(F, L.dim);
-        const auto P3 = kinematic_neo_hookean_first_piola_young(F3, E, nu);
+        const auto F = hpx::deformation_gradient_as<Scalar>(L, x_elem, dNu);
+        const auto F3 = hpx::embed_plane_strain_3d(F, L.dim);
+        const auto P3 = hpx::neo_hookean_first_piola_young(F3, E, nu);
 
         for (int i = 0; i < L.dim; ++i) {
             for (int A = 0; A < L.dim; ++A) {
@@ -373,53 +368,63 @@ ElementSystem compute_constitutive_element_system(
     const ProblemParameters& params,
     const ElementState& state
 ) {
-    const int n = static_cast<int>(x_elem.size());
-
-    // x_ad are current displacement unknowns u_{n+1}.
-    // Outer AD derivatives are with respect to current DOFs.
-    std::vector<WeakOuterFad> x_ad(n);
-
-    // test_ad are independent virtual displacement coefficients delta_u.
-    // Inner AD derivatives are with respect to test DOFs.
-    std::vector<WeakOuterFad> test_ad(n);
-
-    for (int j = 0; j < n; ++j) {
-        const WeakInnerFad x_value(x_elem[j]);
-        x_ad[j] = WeakOuterFad(n, j, x_value);
-    }
-
-    for (int i = 0; i < n; ++i) {
-        test_ad[i] = WeakOuterFad(WeakInnerFad(n, i, 0.0));
-    }
-
-    const WeakOuterFad G =
-        weak_scalar_hyperelastic_newmark_solid(mesh, elem_id, x_ad, test_ad, params, state);
-
-    ElementSystem sys;
-    sys.residual.assign(n, 0.0);
-    sys.tangent.assign(n * n, 0.0);
-
-    // Residual extraction:
-    //   R_i = dG / d(delta_u_i)
-    const WeakInnerFad G_value = G.val();
-
-    for (int i = 0; i < n; ++i) {
-        sys.residual[i] = weak_inner_dx(G_value, i);
-
-        // Tangent extraction:
-        //   K_ij = dR_i / d(u_j)
-        //
-        // Because x_ad uses outer derivatives and test_ad uses inner derivatives,
-        // G.dx(j) gives dG/du_j as an inner-Fad object.  Its inner derivative
-        // with respect to test_i gives d^2G/(d test_i d u_j).
-        const int row = i * n;
-        for (int j = 0; j < n; ++j) {
-            const WeakInnerFad dG_duj =
-                (j >= 0 && j < G.size()) ? G.dx(j) : WeakInnerFad(0.0);
-
-            sys.tangent[row + j] = weak_inner_dx(dG_duj, i);
+    return hpx::scalar_weak_form_element_system(
+        x_elem,
+        [&](const auto& x_ad, const auto& test_ad) {
+            return weak_scalar_hyperelastic_newmark_solid(mesh, elem_id, x_ad, test_ad, params, state);
         }
-    }
+    );
+}
 
-    return sys;
+void compute_constitutive_postprocess(
+    const FieldMesh& mesh,
+    int elem_id,
+    const Vector& x_elem,
+    const ProblemParameters& params,
+    const ElementState& state,
+    const std::vector<std::string>& requested,
+    std::vector<ConstitutivePostprocessOutputValues>& outputs
+) {
+    const bool need_v = newmark_output_requested(requested,"velocity");
+    const bool need_a = newmark_output_requested(requested,"acceleration");
+    const bool need_vm = newmark_output_requested(requested,"von_mises");
+    const bool need_j = newmark_output_requested(requested,"j");
+    if(!need_v && !need_a && !need_vm && !need_j) return;
+    require_newmark_history(state,mesh.dim);
+
+    const NewmarkLocalLayout L = make_newmark_layout(mesh, elem_id);
+    const auto& U = L.field("displacement");
+    const ElementGeometry geom = make_displacement_element_geometry(mesh, elem_id);
+    const auto gps = gauss_rule(U.element_type, params.solver.gauss_order);
+    const double E = params.material.youngs_modulus;
+    const double nu = params.material.poisson_ratio;
+
+    ConstitutivePostprocessOutputValues velocity{"velocity",3,{}};
+    ConstitutivePostprocessOutputValues acceleration{"acceleration",3,{}};
+    ConstitutivePostprocessOutputValues vm{"von_mises",1,{}};
+    ConstitutivePostprocessOutputValues jout{"j",1,{}};
+    for(int g=0; g<static_cast<int>(gps.size()); ++g){
+        const auto& gp = gps[g];
+        const ShapeData su = compute_shape(U.element_type,gp.xi,gp.eta,gp.zeta);
+        const JacobianData Jgeo = compute_jacobian_data(geom,su);
+        if(Jgeo.detJ<=0.0) throw std::runtime_error("Negative detJ while exporting Newmark Gauss data.");
+        const auto dNu = compute_dN_dx(su,Jgeo);
+        const auto F = hpx::deformation_gradient_as<double>(L,x_elem,dNu);
+        const auto F3 = hpx::embed_plane_strain_3d(F,L.dim);
+        const MaterialPointHistory& hist = state.material_history->gp[g];
+        const Vector& h = hist.h_n.empty() ? hist.h_trial : hist.h_n;
+        if(static_cast<int>(h.size()) < 2*L.dim) throw std::runtime_error("Bad Newmark history size while exporting Gauss data.");
+        if(need_v){
+            for(int i=0;i<3;++i) velocity.values.push_back(i<L.dim ? h[i] : 0.0);
+        }
+        if(need_a){
+            for(int i=0;i<3;++i) acceleration.values.push_back(i<L.dim ? h[L.dim+i] : 0.0);
+        }
+        if(need_vm) vm.values.push_back(hpx::neo_hookean_von_mises(F3,E,nu));
+        if(need_j) jout.values.push_back(hpx::det(F3));
+    }
+    if(need_v) outputs.push_back(std::move(velocity));
+    if(need_a) outputs.push_back(std::move(acceleration));
+    if(need_vm) outputs.push_back(std::move(vm));
+    if(need_j) outputs.push_back(std::move(jout));
 }

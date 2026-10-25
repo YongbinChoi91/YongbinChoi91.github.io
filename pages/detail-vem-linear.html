@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   Linear virtual element shape functions on polygonal meshes &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="example-page section-wrap cook-page vem-linear-page">
+    <a class="back-button route-card" href="app-vem.html">
+     &larr; Back to VEM
+    </a>
+    <p class="eyebrow">
+     VEM / Linear polygonal element
+    </p>
+    <h1>
+     Linear virtual element shape functions on polygonal meshes
+    </h1>
+    <p class="lead">
+     This page follows the same Theory / Simulation platform as the hyperelastic example, but the focus is different:
+            the key question is not the material model itself, but how a usable displacement interpolation is constructed on
+            an arbitrary polygon when the interior shape functions are virtual.
+    </p>
+   </section>
+   <section class="doc-section section-wrap cook-page hyperelastic-preview-section vem-linear-preview-section">
+    <div class="plasticity-figure-panel hyperelastic-figure-panel vem-linear-figure-panel">
+     <div class="plasticity-figure-media vem-figure-media">
+      <svg aria-label="Fan triangulation of an arbitrary Voronoi polygon" class="vem-triangulation-svg" role="img" viewbox="0 0 620 420">
+       <defs>
+        <marker id="vem-arrow" markerheight="6" markerwidth="6" orient="auto-start-reverse" refx="8" refy="5" viewbox="0 0 10 10">
+         <path d="M 0 0 L 10 5 L 0 10 z">
+         </path>
+        </marker>
+       </defs>
+       <polygon class="vem-poly-fill" points="120,116 236,70 363,96 480,180 452,302 320,356 190,318 92,216">
+       </polygon>
+       <g class="vem-tri-lines">
+        <line x1="282" x2="120" y1="212" y2="116">
+        </line>
+        <line x1="282" x2="236" y1="212" y2="70">
+        </line>
+        <line x1="282" x2="363" y1="212" y2="96">
+        </line>
+        <line x1="282" x2="480" y1="212" y2="180">
+        </line>
+        <line x1="282" x2="452" y1="212" y2="302">
+        </line>
+        <line x1="282" x2="320" y1="212" y2="356">
+        </line>
+        <line x1="282" x2="190" y1="212" y2="318">
+        </line>
+        <line x1="282" x2="92" y1="212" y2="216">
+        </line>
+       </g>
+       <polygon class="vem-poly-outline" points="120,116 236,70 363,96 480,180 452,302 320,356 190,318 92,216">
+       </polygon>
+       <g class="vem-node-layer">
+        <circle cx="120" cy="116" r="7">
+        </circle>
+        <text x="98" y="105">
+         1
+        </text>
+        <circle cx="236" cy="70" r="7">
+        </circle>
+        <text x="229" y="48">
+         2
+        </text>
+        <circle cx="363" cy="96" r="7">
+        </circle>
+        <text x="371" y="78">
+         3
+        </text>
+        <circle cx="480" cy="180" r="7">
+        </circle>
+        <text x="492" y="181">
+         4
+        </text>
+        <circle cx="452" cy="302" r="7">
+        </circle>
+        <text x="462" y="326">
+         5
+        </text>
+        <circle cx="320" cy="356" r="7">
+        </circle>
+        <text x="321" y="384">
+         6
+        </text>
+        <circle cx="190" cy="318" r="7">
+        </circle>
+        <text x="170" y="346">
+         7
+        </text>
+        <circle cx="92" cy="216" r="7">
+        </circle>
+        <text x="58" y="222">
+         8
+        </text>
+       </g>
+       <circle class="vem-centroid" cx="282" cy="212" r="9">
+       </circle>
+       <text class="vem-centroid-label" x="295" y="205">
+        centroid
+       </text>
+       <path class="vem-normal-arrow" d="M 120 116 L 85 88">
+       </path>
+       <text class="vem-normal-label" x="46" y="80">
+        edge normals
+       </text>
+       <text class="vem-caption-label" x="70" y="394">
+        Voronoi polygon &rarr; centroid fan triangles for internal quadrature / stabilization
+       </text>
+      </svg>
+     </div>
+     <div class="plasticity-figure-caption">
+      <span class="tag">
+       Geometry preview
+      </span>
+      <h2>
+       Polygonal VEM uses boundary DOFs and a computable projection.
+      </h2>
+      <p>
+       The actual interior basis functions are not explicitly constructed. Instead, the code computes a constant
+                projected gradient from polygon edges and uses a centroid-based fan triangulation whenever an internal
+                integration/stabilization path is needed.
+      </p>
+      <dl class="compact-facts">
+       <div>
+        <dt>
+         Element
+        </dt>
+        <dd>
+         arbitrary 2D polygon
+        </dd>
+       </div>
+       <div>
+        <dt>
+         DOFs
+        </dt>
+        <dd>
+         ux, uy at polygon vertices
+        </dd>
+       </div>
+       <div>
+        <dt>
+         Projection
+        </dt>
+        <dd>
+         boundary-normal gradient reconstruction
+        </dd>
+       </div>
+       <div>
+        <dt>
+         Triangulation
+        </dt>
+        <dd>
+         centroid + each polygon edge
+        </dd>
+       </div>
+       <div>
+        <dt>
+         Code path
+        </dt>
+        <dd>
+         <code>
+          vem::cached_linear_element
+         </code>
+        </dd>
+       </div>
+      </dl>
+     </div>
+    </div>
+   </section>
+   <section class="doc-section section-wrap cook-page hyperelastic-document-section vem-linear-document-section">
+    <div class="plasticity-document-panel hyperelastic-document-panel vem-linear-document-panel">
+     <div aria-label="Linear VEM documentation tabs" class="plasticity-tabs" role="tablist">
+      <button aria-selected="true" class="active" data-vem-linear-tab="theory" role="tab" type="button">
+       Theory
+      </button>
+      <button aria-selected="false" data-vem-linear-tab="simulation" role="tab" type="button">
+       Simulation
+      </button>
+     </div>
+     <div class="plasticity-tab-panel active" data-vem-linear-panel="theory" role="tabpanel">
+      <div class="section-heading">
+       <p class="eyebrow">
+        Theory
+       </p>
+       <h2>
+        How the linear virtual shape function is represented without writing it explicitly.
+       </h2>
+       <p>
+        In a polygonal VEM element, the shape functions are defined by their boundary values and polynomial
+                  consistency. The framework therefore stores vertex DOFs, reconstructs the polynomial part, and avoids
+                  requiring closed-form interior basis functions.
+       </p>
+      </div>
+      <div class="math-explain-grid theory-grid">
+       <article class="math-card">
+        <span class="tag">
+         1 &middot; Local space
+        </span>
+        <h3>
+         Virtual scalar space on one polygon
+        </h3>
+        <div class="formula-block">
+         \[
+                    V_h(E)=\{v_h\in H^1(E):\; \Delta v_h=0\ \text{in}\ E,\quad v_h|_e\in\mathbb{P}_1(e)\ \forall e\subset\partial E\}
+                  \]
+        </div>
+        <p>
+         The boundary trace is linear on every edge, but the interior function is not written in closed form.
+                    For displacement mechanics, the vector space is simply \([V_h(E)]^2\).
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         2 &middot; DOFs
+        </span>
+        <h3>
+         Vertex values define the interpolation
+        </h3>
+        <div class="formula-block">
+         \[
+                    \mathbf{d}_E=\{u_x(\mathbf{x}_a),u_y(\mathbf{x}_a)\}_{a=1}^{n_E}
+                  \]
+        </div>
+        <p>
+         Linear VEM does not need midside or internal DOFs. For an \(n_E\)-sided polygon, the displacement
+                    block has \(2n_E\) local unknowns in 2D.
+        </p>
+       </article>
+       <article class="math-card wide">
+        <span class="tag">
+         3 &middot; Projected gradient
+        </span>
+        <h3>
+         The computable part comes from a boundary integral
+        </h3>
+        <div class="formula-block">
+         \[
+                    \nabla \Pi^\nabla \mathbf{u}_h
+                    = \frac{1}{|E|}\int_{\partial E}\mathbf{u}_h\otimes\mathbf{n}\,ds
+                    \approx \frac{1}{|E|}\sum_{e=(a,b)} |e|\,\frac{\mathbf{u}_a+\mathbf{u}_b}{2}\otimes\mathbf{n}_e
+                  \]
+        </div>
+        <p>
+         Because the trace is linear on each edge, the edge-average value is enough. This is the main reason
+                    linear polygonal VEM can assemble a mechanical weak form without ever evaluating the unknown virtual
+                    basis function inside the polygon.
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         4 &middot; Deformation
+        </span>
+        <h3>
+         Use the projection as the polynomial strain mode
+        </h3>
+        <div class="formula-block">
+         \[
+                    \mathbf{F}_\Pi=\mathbf{I}+\nabla\Pi^\nabla\mathbf{u}_h
+                  \]
+        </div>
+        <p>
+         The hyperelastic stress can be evaluated from the projected deformation gradient. This gives the
+                    polynomial-consistent part of the nonlinear weak form.
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         5 &middot; Fan triangles
+        </span>
+        <h3>
+         Centroid triangulation supplies an internal integration path
+        </h3>
+        <div class="formula-block">
+         \[
+                    E=\bigcup_{e=(a,b)} T_e,\qquad T_e=\operatorname{conv}\{\mathbf{x}_c,\mathbf{x}_a,\mathbf{x}_b\}
+                  \]
+        </div>
+        <p>
+         The current implementation keeps a simple centroid fan. It is useful for internal quadrature,
+                    comparison against a T3-like gradient, and stabilization-style blending.
+        </p>
+       </article>
+       <article class="math-card wide">
+        <span class="tag">
+         6 &middot; Implemented scalar weak form
+        </span>
+        <h3>
+         Projection plus triangle contribution
+        </h3>
+        <div class="formula-block">
+         \[
+                    G_E = \alpha\sum_{T\subset E}|T|\,\mathbf{P}(\mathbf{F}_T):\nabla\delta\mathbf{u}_T
+                    +(1-\alpha)|E|\,\mathbf{P}(\mathbf{F}_\Pi):\nabla\Pi^\nabla\delta\mathbf{u}_h
+                  \]
+        </div>
+        <p>
+         This page presents the implemented linear polygon kernel: the projected gradient carries the VEM
+                    consistency, while the fan triangles give a concrete internal contribution. The global residual and
+                    tangent are still obtained by differentiating this scalar statement with AD.
+        </p>
+       </article>
+      </div>
+     </div>
+     <div class="plasticity-tab-panel" data-vem-linear-panel="simulation" role="tabpanel">
+      <div class="section-heading actual-code-intro">
+       <p class="eyebrow">
+        Simulation
+       </p>
+       <h2>
+        The code mirrors the theory: cache polygon geometry, compute projected gradients, then differentiate G.
+       </h2>
+       <p>
+        The simulation tab shows the relevant implementation pieces. The global solver remains unchanged:
+                  only the element-level weak form and VEM geometry cache are specialized.
+       </p>
+      </div>
+      <div class="example-grid uneven">
+       <article class="math-card">
+        <span class="tag">
+         Input
+        </span>
+        <h3>
+         Activate displacement-only polygonal VEM
+        </h3>
+        <pre class="example-code"><code>field_key displacement
+// Use this page for linear VEM:
+VEM_ORDER 1
+
+// For the quadratic page, switch to:
+// VEM_ORDER 2</code></pre>
+        <p>
+         The uploaded example currently uses the same displacement-only structure. For this linear VEM page,
+                    the order selector should be
+         <code>
+          VEM_ORDER 1
+         </code>
+         .
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         Material
+        </span>
+        <h3>
+         Reuse the hyperelastic material constants
+        </h3>
+        <pre class="example-code"><code>youngs_modulus 200.0
+poisson_ratio 0.3
+rho 1.0</code></pre>
+        <p>
+         The VEM section is about interpolation and projection; the constitutive law can reuse the same
+                    finite-strain solid parameters as the hyperelastic FEM page.
+        </p>
+       </article>
+      </div>
+      <div class="actual-code-stack">
+       <details class="code-details" open="">
+        <summary>
+         1. The active model is displacement-only linear polygonal VEM.
+        </summary>
+        <pre class="example-code"><code>const char* active_constitutive_model_name() {
+    return "weak_form_vem_linear_polygon";
+}
+
+std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
+    (void)mesh;
+    return {"displacement"};
+}</code></pre>
+       </details>
+       <details class="code-details" open="">
+        <summary>
+         2. Each polygon element is converted into a reusable linear VEM cache.
+        </summary>
+        <pre class="example-code"><code>const int q_order = (params.solver.gauss_order &gt; 0)
+    ? params.solver.gauss_order
+    : 1;
+
+const vem::LinearElementCache&amp; cache =
+    vem::cached_linear_element(mesh, elem_id, q_order);</code></pre>
+        <p>
+         The cache contains polygon area, centroid, real vertex slots, scaled edge normals, and the centroid fan
+                    triangles used by the internal integration path.
+        </p>
+       </details>
+       <details class="code-details" open="">
+        <summary>
+         3. The projected VEM gradient is built from edge averages and scaled normals.
+        </summary>
+        <pre class="example-code"><code>for (int ar = 0; ar &lt; cache.n_real; ++ar) {
+    const int br = (ar + 1) % cache.n_real;
+    const int a_slot = cache.real_slots[ar];
+    const int b_slot = cache.real_slots[br];
+
+    const Scalar u_mid = Scalar(0.5) * (ua + ub);
+    grad[i][A] += u_mid * Scalar(cache.edge_normal_scaled[ar][A] / cache.area);
+}</code></pre>
+        <p>
+         This is the code version of \( |E|^{-1}\sum_e |e|\bar{u}_e\otimes n_e \). It is the central
+                    bridge between virtual shape functions and an actual computable element matrix.
+        </p>
+       </details>
+       <details class="code-details">
+        <summary>
+         4. The centroid fan provides triangle gradients for the internal contribution.
+        </summary>
+        <pre class="example-code"><code>Scalar triangle_part(0.0);
+double fan_measure_sum = 0.0;
+
+for (const auto&amp; tri : cache.triangles) {
+    fan_measure_sum += tri.measure;
+    const auto grad_u_T  = vem::linear_triangle_gradient(cache, tri, x_elem);
+    const auto grad_du_T = vem::linear_triangle_gradient(cache, tri, test_elem);
+
+    triangle_part += Scalar(tri.measure)
+        * neo_hookean_plane_strain_density(grad_u_T, grad_du_T, params);
+}</code></pre>
+       </details>
+       <details class="code-details">
+        <summary>
+         5. The final scalar G blends projected VEM consistency with the triangle part.
+        </summary>
+        <pre class="example-code"><code>const double alpha = 0.1;
+const auto grad_u_pi  = vem::linear_projected_gradient(cache, x_elem);
+const auto grad_du_pi = vem::linear_projected_gradient(cache, test_elem);
+
+const Scalar projected_density =
+    neo_hookean_plane_strain_density(grad_u_pi, grad_du_pi, params);
+
+return Scalar(alpha) * triangle_part
+     + Scalar(1.0 - alpha) * Scalar(fan_measure_sum) * projected_density;</code></pre>
+       </details>
+       <details class="code-details">
+        <summary>
+         6. AD extracts residual and tangent from the same scalar statement.
+        </summary>
+        <pre class="example-code"><code>const WeakOuterFad G = weak_scalar_vem(
+    mesh, elem_id, x_ad, test_ad, params, state
+);
+
+for (int i = 0; i &lt; n; ++i) {
+    sys.residual[i] = weak_inner_dx(G.val(), i);
+}
+
+for (int j = 0; j &lt; n; ++j) {
+    const WeakInnerFad dG_dxj = G.dx(j);
+    for (int i = 0; i &lt; n; ++i)
+        sys.tangent[i * n + j] = weak_inner_dx(dG_dxj, i);
+}</code></pre>
+       </details>
+      </div>
+      <div class="download-section compact-download-section">
+       <div class="math-explain-grid theory-grid"><article class="math-card wide"><span class="tag">Strong form</span><div class="formula-block">\[-\operatorname{Div}\mathbf P(\mathbf F)=\mathbf0\quad\text{in }\Omega_0.\]</div></article><article class="math-card wide"><span class="tag">Boundary conditions</span><div class="formula-block">\[\mathbf u=\bar{\mathbf u}\text{ on }\Gamma_D,\qquad \mathbf P\mathbf N=\bar{\mathbf t}\text{ on }\Gamma_N.\]</div><p>The polygon boundary groups are defined in <code>input/BC.txt</code>.</p></article><article class="math-card wide"><span class="tag">Weak form</span><div class="formula-block">\[G_E=\alpha G_E^{fan}+(1-\alpha)|E|\,G_E^{projection}.\]</div></article></div>
+       <div class="section-heading compact-heading"><p class="eyebrow">Equation-to-code mapping</p><h2>Projected quantities in the linear polygonal weak form.</h2></div>
+       <div class="equation-code-table-wrap"><table class="equation-code-table"><thead><tr><th>Mathematical quantity</th><th>Meaning</th><th>Code identifier</th><th>Source function</th></tr></thead><tbody><tr><td>\(\Pi^\nabla\mathbf u\)</td><td>Projected displacement</td><td><code>grad_u_pi</code></td><td><code>weak_scalar_vem</code></td></tr><tr><td>\(\nabla\Pi\mathbf u\)</td><td>Projected gradient</td><td><code>grad_du_pi</code></td><td><code>weak_scalar_vem</code></td></tr><tr><td>\(\mathbf P\)</td><td>Projected constitutive contribution</td><td><code>neo_hookean_plane_strain_density</code></td><td><code>weak_scalar_vem</code></td></tr><tr><td>\(S_E\)</td><td>Fan-triangle contribution</td><td><code>triangle_part</code></td><td><code>weak_scalar_vem</code></td></tr><tr><td>\(G_E\)</td><td>Element weak form</td><td><code>return expression</code></td><td><code>weak_scalar_vem</code></td></tr></tbody></table></div>
+       <div class="example-run-panel">
+        <p class="eyebrow">Build and run</p><h2>Copy the verified linear VEM example into the FEM slots.</h2>
+        <pre><code>cp FEM/models/weak_form.cpp FEM/models/weak_form.cpp.bak
+cp -R FEM/input FEM/input.bak
+cp Web/examples/vem-linear/weak_form.cpp FEM/models/weak_form.cpp
+cp Web/examples/vem-linear/input/*.txt FEM/input/
+make -C FEM MODEL_SRC=models/weak_form.cpp USE_VEM=1 run</code></pre>
+       </div>
+       <div class="section-heading compact-heading">
+        <p class="eyebrow">
+         Download input files
+        </p>
+        <h2>
+         Files for the linear VEM documentation example.
+        </h2>
+        <p>
+         These files are included in the website package under
+         <code>
+          examples/vem-linear/input/
+         </code>
+         .
+        </p>
+       </div>
+       <div class="download-grid">
+        <a class="download-card" download="" href="../examples/vem-linear/input/ProblemMesh.txt">
+         <span class="tag">
+          mesh
+         </span>
+         <h3>
+          ProblemMesh.txt
+         </h3>
+         <p>
+          Voronoi-style polygonal displacement mesh and boundary groups.
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/vem-linear/input/DOFS_info.txt">
+         <span class="tag">
+          dofs
+         </span>
+         <h3>
+          DOFS_info.txt
+         </h3>
+         <p>
+          Declares
+          <code>
+           field_key displacement
+          </code>
+          and
+          <code>
+           VEM_ORDER 1
+          </code>
+          .
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/vem-linear/input/BC.txt">
+         <span class="tag">
+          bc
+         </span>
+         <h3>
+          BC.txt
+         </h3>
+         <p>
+          Fixes the left boundary and applies a vertical traction on the right boundary.
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/vem-linear/input/Material.txt">
+         <span class="tag">
+          material
+         </span>
+         <h3>
+          Material.txt
+         </h3>
+         <p>
+          Elastic constants used by the finite-strain VEM weak form.
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/vem-linear/input/Solver.txt">
+         <span class="tag">
+          solver
+         </span>
+         <h3>
+          Solver.txt
+         </h3>
+         <p>
+          Newton, time-step, linear backend, and timing settings.
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/vem-linear/input/Postprocessing.txt">
+         <span class="tag">
+          output
+         </span>
+         <h3>
+          Postprocessing.txt
+         </h3>
+         <p>
+          VTK, SVG, final DOF, and plotting settings.
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/vem-linear/weak_form.cpp">
+         <span class="tag">
+          model
+         </span>
+         <h3>
+          weak_form.cpp
+         </h3>
+         <p>
+          Verified first-order polygonal VEM weak form synchronized from the runnable model.
+         </p>
+        </a>
+       </div>
+       <button class="example-zip-button" disabled type="button">Download complete example (.zip) — coming after final validation</button>
+      </div>
+     </div>
+    </div>
+   </section>
+   <section class="doc-section section-wrap cook-page example-result-pending">
+    <p class="eyebrow">Result</p><h2>Result pending validation</h2><p>The final polygonal displacement image will be added after the full solid verification run.</p>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

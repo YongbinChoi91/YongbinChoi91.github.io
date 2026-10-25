@@ -1,0 +1,5 @@
+# Fluid
+rho 1
+mu 1e-3
+
+u_bar 2.0

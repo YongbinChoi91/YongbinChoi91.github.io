@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   Code Structure &middot; HiPaCs
+  </title>
+  <link href="assets/css/styles.css" rel="stylesheet"/>
+  <script src="assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="index.html">
+     Home
+    </a>
+    <a class="" href="main.html">
+     Main Page
+    </a>
+    <a class="" href="framework.html">
+     Framework
+    </a>
+    <a class="" href="architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="applications.html">
+     Applications
+    </a>
+    <a class="" href="gallery.html">
+     Gallery
+    </a>
+    <a class="" href="install.html">
+     Install
+    </a>
+    <a class="" href="contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap">
+    <a class="back-button route-card" href="index.html">
+     &larr; Back to home
+    </a>
+    <p class="eyebrow">
+     Code Structure
+    </p>
+    <h1>
+     Code Structure
+    </h1>
+    <p class="lead">
+     Follow the implementation flow, then browse the source through the real core directory structure.
+    </p>
+   </section>
+   <section class="doc-section section-wrap wide-page-wrap" id="code-structure">
+    <div class="section-heading clean-framework-heading">
+     <p class="eyebrow">
+      Code Structure
+     </p>
+     <h2>
+      Implementation modules at a glance.
+     </h2>
+     <p>
+      This section is about the code organization: which module owns input parsing, mesh/DOF layout, finite-element utilities, weak forms, assembly, nonlinear solve, linear algebra, and output.
+     </p>
+    </div>
+    <!-- GENERATED:CODE_FLOW:START -->
+<div aria-label="Code structure flow" class="code-flow-map">
+  <article class="code-flow-group setup-flow-group">
+    <span class="group-label">Setup</span>
+    <a class="flow-folder-card flow-setup-card" href="code/setup.html"><strong>setup</strong><small>Application entry points, mesh input, and runtime text configuration.</small></a>
+  </article>
+  <article class="code-flow-group finite-element-flow-group">
+    <span class="group-label">Finite Element Core</span>
+    <div class="flow-folder-grid"><a class="flow-folder-card" href="code/assembly.html"><strong>assembly</strong><small>Global sparsity construction and residual/tangent assembly.</small></a><a class="flow-folder-card" href="code/boundary.html"><strong>boundary</strong><small>Dirichlet and Neumann boundary-condition evaluation.</small></a><a class="flow-folder-card" href="code/hpx.html"><strong>hpx</strong><small>Automatic differentiation and local element-system utilities.</small></a><a class="flow-folder-card" href="code/mesh.html"><strong>mesh</strong><small>Mesh topology, readers, domains, and element connectivity.</small></a><a class="flow-folder-card" href="code/space.html"><strong>space</strong><small>Field layouts, shape functions, kinematics, and weak forms.</small></a></div>
+  </article>
+  <article class="code-flow-group solver-flow-group">
+    <span class="group-label">Solver</span>
+    <a class="flow-folder-card" href="code/solver.html"><strong>solver</strong><small>Nonlinear time stepping and linear solver backends.</small></a>
+  </article>
+  <article class="code-flow-group extensions-flow-group">
+    <span class="group-label">Output &amp; Extensions</span>
+    <div class="flow-folder-grid"><a class="flow-folder-card" href="code/io.html"><strong>io</strong><small>Input parsing, VTK/HDF5 output, and postprocessing.</small></a><a class="flow-folder-card" href="code/vem.html"><strong>vem</strong><small>Virtual element geometry, projection, and stabilization.</small></a><a class="flow-folder-card" href="code/multiscale.html"><strong>multiscale</strong><small>RVE constraints, solves, homogenization, and output.</small></a></div>
+  </article>
+</div>
+<!-- GENERATED:CODE_FLOW:END -->
+</section>
+  </main>
+  <script defer="True" src="assets/js/main.js">
+  </script>
+ </body>
+</html>

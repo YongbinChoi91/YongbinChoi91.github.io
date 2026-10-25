@@ -1,0 +1,4 @@
+# Boundary conditions only
+DIRICHLET LEFT 0 0.0
+DIRICHLET LEFT 1 0.0
+NEUMANN RIGHT 1 sin(pi*t)/(1.0+exp(80.0*(t-2.0))) 

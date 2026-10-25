@@ -76,8 +76,10 @@ Tangent convention
 ================================================================================
 */
 #include "weak_form.h"
-#include "fem_utils.h"
 #include "kinematics.h"
+#include "autodiff.h"
+#include "local_element_system_ad.h"
+#include "local_dense_solve.h"
 
 #include <Sacado_Fad_DFad.hpp>
 
@@ -91,7 +93,7 @@ Tangent convention
 #include <vector>
 
 const char* active_constitutive_model_name() {
-    return "viscoelastic_solid_displacement_history";
+    return "Finite_Strain_Visco_Elastic";
 }
 
 std::vector<std::string> active_constitutive_field_names(const FieldMesh& mesh) {
@@ -123,10 +125,7 @@ static VEMaterial make_ve_material(const ProblemParameters& params) {
     return m;
 }
 
-using VEAD = Sacado::Fad::DFad<double>;
-using WeakInnerFad = Sacado::Fad::DFad<double>;
-using WeakOuterFad = Sacado::Fad::DFad<WeakInnerFad>;
-using Matrix = std::vector<Vector>;
+using Matrix = hpx::LocalDenseMatrix;
 
 // -----------------------------------------------------------------------------
 // Non-kinematic local helpers kept in weak_form.cpp.
@@ -139,46 +138,6 @@ static double norm_vec(const Vector& v) {
     return std::sqrt(s);
 }
 
-static Vector solve_dense(Matrix A, Vector b) {
-    const int n = static_cast<int>(b.size());
-    if (static_cast<int>(A.size()) != n) {
-        throw std::runtime_error("Dense local solve received incompatible matrix/vector size.");
-    }
-    for (int i = 0; i < n; ++i) {
-        if (static_cast<int>(A[i].size()) != n) {
-            throw std::runtime_error("Dense local solve expects a square matrix.");
-        }
-    }
-
-    for (int k = 0; k < n; ++k) {
-        int piv = k;
-        double best = std::abs(A[k][k]);
-        for (int i = k + 1; i < n; ++i) {
-            const double v = std::abs(A[i][k]);
-            if (v > best) { best = v; piv = i; }
-        }
-        if (best < 1.0e-20) {
-            throw std::runtime_error("Singular local viscoelastic Jacobian.");
-        }
-        if (piv != k) {
-            std::swap(A[piv], A[k]);
-            std::swap(b[piv], b[k]);
-        }
-
-        const double akk = A[k][k];
-        for (int j = k; j < n; ++j) A[k][j] /= akk;
-        b[k] /= akk;
-
-        for (int i = 0; i < n; ++i) {
-            if (i == k) continue;
-            const double f = A[i][k];
-            for (int j = k; j < n; ++j) A[i][j] -= f * A[k][j];
-            b[i] -= f * b[k];
-        }
-    }
-    return b;
-}
-
 template <typename T>
 static double val(const T& x) {
     return static_cast<double>(x);
@@ -189,19 +148,25 @@ static double val(const Sacado::Fad::DFad<T>& x) {
     return val(x.val());
 }
 
-static double weak_inner_dx(const WeakInnerFad& x, int i) {
-    return (i >= 0 && i < x.size()) ? x.dx(i) : 0.0;
+template <typename T, int N>
+static double val(const Sacado::Fad::SLFad<T,N>& x) {
+    return val(x.val());
+}
+
+template <typename T, std::size_t N>
+static double val(const hpx::AD1<T,N>& x) {
+    return val(x.val);
 }
 
 template <typename T>
-using Mat3T = KinematicMat3<T>;
+using Mat3T = hpx::Mat3<T>;
 
 template <typename T> static Mat3T<T> Cv_from_hT(const std::vector<T>& h, int dim) {
     const int required = (dim == 2) ? 4 : 6;
     if (static_cast<int>(h.size()) < required) {
         throw std::runtime_error("Viscoelastic history vector has too few variables for the current dimension.");
     }
-    auto C = kinematic_eye3<T>();
+    auto C = hpx::eye3<T>();
     C[0][0] += h[0];
     C[1][1] += h[1];
     C[2][2] += h[2];
@@ -214,15 +179,15 @@ template <typename T> static Mat3T<T> Cv_from_hT(const std::vector<T>& h, int di
 }
 
 template <typename T> static Mat3T<T> tau_from_beT(const Mat3T<T>& be, const VEMaterial& mat) {
-    const T Jbe = kinematic_det3<T>(be);
+    const T Jbe = hpx::det3<T>(be);
     if (val(Jbe) <= 0.0) throw std::runtime_error("Non-positive det(be) in viscoelastic model.");
     const double mu = mat.E / (2.0 * (1.0 + mat.nu));
     const double kappa = mat.E / (3.0 * (1.0 - 2.0 * mat.nu));
-    const T trbe = kinematic_trace3<T>(be);
-    auto I = kinematic_eye3<T>();
-    auto tau = kinematic_zero3<T>();
+    const T trbe = hpx::tr3<T>(be);
+    auto I = hpx::eye3<T>();
+    auto tau = hpx::zero3<T>();
     using std::pow;
-    const T Jm13 = pow(Jbe, T(-1.0 / 3.0));
+    const T Jm13 = pow(Jbe, -1.0 / 3.0);
     const T p = T(0.5 * kappa) * (Jbe - T(1.0));
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
@@ -245,31 +210,31 @@ static std::vector<T> local_Q_viscoelastic_T(
 
     const auto Cv = Cv_from_hT<T>(h, dim);
     const auto Cv_n = Cv_from_hT<T>(h_n, dim);
-    const auto Ft = kinematic_transpose3<T>(F);
-    const auto C = kinematic_right_cauchy_green3<T>(F);
-    const auto invC = kinematic_inv3<T>(C);
-    const auto invCv = kinematic_inv3<T>(Cv);
+    const auto Ft = hpx::transpose3<T>(F);
+    const auto C = hpx::right_cauchy_green3<T>(F);
+    const auto invC = hpx::inv3<T>(C);
+    const auto invCv = hpx::inv3<T>(Cv);
 
     // dCdt = (Cv - Cv_n)/dt, exactly as Python uses backward Euler.
-    const auto dCdt = kinematic_scale3<T>(kinematic_sub3<T>(Cv, Cv_n), T(1.0 / dt));
+    const auto dCdt = hpx::scale3<T>(hpx::sub3<T>(Cv, Cv_n), T(1.0 / dt));
 
     // be = F Cv^{-1} F^T and Tau = 2 be d psi(be)/dbe.
-    const auto be = kinematic_mul3<T>(kinematic_mul3<T>(F, invCv), Ft);
+    const auto be = hpx::mul3<T>(hpx::mul3<T>(F, invCv), Ft);
     const auto tau = tau_from_beT<T>(be, mat);
 
     // dv = sym( 1/2 F^{-T} dCdt C^{-1} F^T ).
-    const auto dv1 = kinematic_scale3<T>(kinematic_mul3<T>(kinematic_mul3<T>(kinematic_mul3<T>(kinematic_inv_transpose3<T>(F), dCdt), invC), Ft), T(0.5));
-    const auto dv = kinematic_sym3<T>(dv1);
+    const auto dv1 = hpx::scale3<T>(hpx::mul3<T>(hpx::mul3<T>(hpx::mul3<T>(hpx::inv_transpose3<T>(F), dCdt), invC), Ft), T(0.5));
+    const auto dv = hpx::sym3<T>(dv1);
 
     // Q = -dev(Tau - eta*dv) with det(Cv)-1 as the incompressibility constraint.
-    const auto ed = kinematic_sub3<T>(tau, kinematic_scale3<T>(dv, T(mat.eta)));
-    const auto Z = kinematic_scale3<T>(kinematic_dev3<T>(ed), T(-1.0));
+    const auto ed = hpx::sub3<T>(tau, hpx::scale3<T>(dv, T(mat.eta)));
+    const auto Z = hpx::scale3<T>(hpx::dev3<T>(ed), T(-1.0));
 
     if (dim == 2) {
-        return {Z[0][0], Z[1][1], kinematic_det3<T>(Cv) - T(1.0), Z[0][1]};
+        return {Z[0][0], Z[1][1], hpx::det3<T>(Cv) - T(1.0), Z[0][1]};
     }
     if (dim == 3) {
-        return {Z[0][0], Z[1][1], kinematic_det3<T>(Cv) - T(1.0), Z[0][1], Z[2][0], Z[2][1]};
+        return {Z[0][0], Z[1][1], hpx::det3<T>(Cv) - T(1.0), Z[0][1], Z[2][0], Z[2][1]};
     }
     throw std::runtime_error("Viscoelastic local residual supports only 2D and 3D.");
 }
@@ -285,7 +250,11 @@ static Vector local_Q_viscoelastic(
     return local_Q_viscoelastic_T<double>(F, h_n, h, dim, dt, mat);
 }
 
-static Matrix local_Q_h_sacado(
+template <std::size_t N>
+using VEHpxAD = hpx::AD1<double, N>;
+
+template <std::size_t N>
+static Matrix local_Q_h_hpx_impl(
     const Mat3T<double>& Fd,
     const Vector& h_n,
     const Vector& h,
@@ -294,17 +263,31 @@ static Matrix local_Q_h_sacado(
     const VEMaterial& mat
 ) {
     const int nh = (dim == 2) ? 4 : 6;
-    std::vector<VEAD> had(nh), hnad(nh);
+    using AD = VEHpxAD<N>;
+    std::vector<AD> had(nh), hnad(nh);
     for (int i = 0; i < nh; ++i) {
-        had[i] = VEAD(nh, i, h[i]);
-        hnad[i] = VEAD(nh, h_n[i]);
+        had[i] = AD::variable(h[i], i);
+        hnad[i] = AD(h_n[i]);
     }
-    Mat3T<VEAD> F = kinematic_zero3<VEAD>();
-    for (int i = 0; i < 3; ++i) for (int A = 0; A < 3; ++A) F[i][A] = VEAD(nh, Fd[i][A]);
-    const auto Q = local_Q_viscoelastic_T<VEAD>(F, hnad, had, dim, dt, mat);
+    Mat3T<AD> F = hpx::zero3<AD>();
+    for (int i = 0; i < 3; ++i) for (int A = 0; A < 3; ++A) F[i][A] = AD(Fd[i][A]);
+    const auto Q = local_Q_viscoelastic_T<AD>(F, hnad, had, dim, dt, mat);
     Matrix J(nh, Vector(nh, 0.0));
-    for (int i = 0; i < nh; ++i) for (int j = 0; j < nh; ++j) J[i][j] = Q[i].dx(j);
+    for (int i = 0; i < nh; ++i) for (int j = 0; j < nh; ++j) J[i][j] = Q[i].grad[j];
     return J;
+}
+
+static Matrix local_Q_h_hpx(
+    const Mat3T<double>& Fd,
+    const Vector& h_n,
+    const Vector& h,
+    int dim,
+    double dt,
+    const VEMaterial& mat
+) {
+    if (dim == 2) return local_Q_h_hpx_impl<4>(Fd, h_n, h, dim, dt, mat);
+    if (dim == 3) return local_Q_h_hpx_impl<6>(Fd, h_n, h, dim, dt, mat);
+    throw std::runtime_error("Viscoelastic local residual supports only 2D and 3D.");
 }
 
 struct VEUpdateResult {
@@ -330,10 +313,10 @@ static VEUpdateResult update_viscoelastic_gp(
 
     for (int it = 0; it < std::max(1, mat.local_max_iter); ++it) {
         const Vector Q = local_Q_viscoelastic(F, h_n, h, dim, dt, mat);
-        const Matrix J = local_Q_h_sacado(F, h_n, h, dim, dt, mat);
+        const Matrix J = local_Q_h_hpx(F, h_n, h, dim, dt, mat);
         Vector rhs(Q.size(), 0.0);
         for (int i = 0; i < static_cast<int>(Q.size()); ++i) rhs[i] = -Q[i];
-        const Vector dh = solve_dense(J, rhs);
+        const Vector dh = hpx::solve_local_dense_lu(J, rhs, "local viscoelastic Jacobian");
 
         double alpha = 1.0;
         const double q0 = norm_vec(Q);
@@ -341,7 +324,7 @@ static VEUpdateResult update_viscoelastic_gp(
             Vector ht = h;
             for (int i = 0; i < nh; ++i) ht[i] += alpha * dh[i];
             const auto Cv_t = Cv_from_hT<double>(std::vector<double>(ht.begin(), ht.end()), dim);
-            if (kinematic_det3<double>(Cv_t) > 0.0) {
+            if (hpx::det3<double>(Cv_t) > 0.0) {
                 const Vector Qt = local_Q_viscoelastic(F, h_n, ht, dim, dt, mat);
                 if (norm_vec(Qt) <= q0 || alpha < 1.0e-3) { h = ht; break; }
             }
@@ -365,7 +348,8 @@ static int f_index(int dim, int i, int A) {
     return i * dim + A;
 }
 
-static Matrix implicit_dh_dF_sacado(
+template <std::size_t N>
+static Matrix implicit_dh_dF_hpx_impl(
     const Mat3T<double>& Fd,
     const Vector& h_n,
     const Vector& h,
@@ -375,38 +359,52 @@ static Matrix implicit_dh_dF_sacado(
 ) {
     const int nf = dim * dim;
     const int nh = (dim == 2) ? 4 : 6;
-    const int nvar = nf + nh;
 
-    Mat3T<VEAD> F = kinematic_zero3<VEAD>();
-    for (int i = 0; i < 3; ++i) for (int A = 0; A < 3; ++A) F[i][A] = VEAD(nvar, Fd[i][A]);
+    using AD = VEHpxAD<N>;
+    Mat3T<AD> F = hpx::zero3<AD>();
+    for (int i = 0; i < 3; ++i) for (int A = 0; A < 3; ++A) F[i][A] = AD(Fd[i][A]);
     for (int i = 0; i < dim; ++i) {
         for (int A = 0; A < dim; ++A) {
-            F[i][A] = VEAD(nvar, f_index(dim, i, A), Fd[i][A]);
+            F[i][A] = AD::variable(Fd[i][A], f_index(dim, i, A));
         }
     }
 
-    std::vector<VEAD> had(nh), hnad(nh);
+    std::vector<AD> had(nh), hnad(nh);
     for (int i = 0; i < nh; ++i) {
-        had[i] = VEAD(nvar, nf + i, h[i]);
-        hnad[i] = VEAD(nvar, h_n[i]);
+        had[i] = AD::variable(h[i], nf + i);
+        hnad[i] = AD(h_n[i]);
     }
 
-    const auto Q = local_Q_viscoelastic_T<VEAD>(F, hnad, had, dim, dt, mat);
+    const auto Q = local_Q_viscoelastic_T<AD>(F, hnad, had, dim, dt, mat);
     Matrix Q_F(nh, Vector(nf, 0.0));
     Matrix Q_h(nh, Vector(nh, 0.0));
     for (int i = 0; i < nh; ++i) {
-        for (int j = 0; j < nf; ++j) Q_F[i][j] = Q[i].dx(j);
-        for (int j = 0; j < nh; ++j) Q_h[i][j] = Q[i].dx(nf + j);
+        for (int j = 0; j < nf; ++j) Q_F[i][j] = Q[i].grad[j];
+        for (int j = 0; j < nh; ++j) Q_h[i][j] = Q[i].grad[nf + j];
     }
 
     Matrix dh_dF(nh, Vector(nf, 0.0));
+    const auto Q_h_lu = hpx::factorize_local_dense_lu(Q_h, "local viscoelastic implicit derivative Jacobian");
     for (int jf = 0; jf < nf; ++jf) {
         Vector rhs(nh, 0.0);
         for (int i = 0; i < nh; ++i) rhs[i] = -Q_F[i][jf];
-        const Vector col = solve_dense(Q_h, rhs);
+        const Vector col = hpx::solve_local_dense_lu(Q_h_lu, rhs);
         for (int ih = 0; ih < nh; ++ih) dh_dF[ih][jf] = col[ih];
     }
     return dh_dF;
+}
+
+static Matrix implicit_dh_dF_hpx(
+    const Mat3T<double>& Fd,
+    const Vector& h_n,
+    const Vector& h,
+    int dim,
+    double dt,
+    const VEMaterial& mat
+) {
+    if (dim == 2) return implicit_dh_dF_hpx_impl<8>(Fd, h_n, h, dim, dt, mat);
+    if (dim == 3) return implicit_dh_dF_hpx_impl<15>(Fd, h_n, h, dim, dt, mat);
+    throw std::runtime_error("Viscoelastic local residual supports only 2D and 3D.");
 }
 
 template <class Scalar>
@@ -434,14 +432,14 @@ static std::vector<Scalar> make_algorithmic_h_ad(
     double dt,
     const VEMaterial& mat
 ) {
-    const int nf = dim * dim;
     const int nh = (dim == 2) ? 4 : 6;
     const int n_outer = F_ad[0][0].size();
-    const Matrix dh_dF = implicit_dh_dF_sacado(F_double, h_n, h_trial, dim, dt, mat);
+    const Matrix dh_dF = implicit_dh_dF_hpx(F_double, h_n, h_trial, dim, dt, mat);
+    using InnerScalar = typename Scalar::value_type;
 
     std::vector<Scalar> h_ad(nh);
     for (int ih = 0; ih < nh; ++ih) {
-        h_ad[ih] = Scalar(WeakInnerFad(h_trial[ih]));
+        h_ad[ih] = Scalar(InnerScalar(h_trial[ih]));
         h_ad[ih].resize(n_outer);
         for (int j = 0; j < n_outer; ++j) {
             double dh_dx = 0.0;
@@ -451,7 +449,7 @@ static std::vector<Scalar> make_algorithmic_h_ad(
                     dh_dx += dh_dF[ih][f] * val(F_ad[i][A].dx(j));
                 }
             }
-            h_ad[ih].fastAccessDx(j) = WeakInnerFad(dh_dx);
+            h_ad[ih].fastAccessDx(j) = InnerScalar(dh_dx);
         }
     }
     return h_ad;
@@ -476,13 +474,13 @@ static Scalar weak_scalar_viscoelastic_solid(
     const int required_history = (dim == 2) ? 4 : 6;
     const VEMaterial mat = make_ve_material(params);
 
-    const LocalFieldView L = make_local_field_view(mesh, elem_id, active_constitutive_field_names(mesh));
+    const LocalFieldView L = make_local_field_view(mesh, elem_id, {"displacement"});
     const auto& U = L.field("displacement");
     if (U.components != dim) throw std::runtime_error("Viscoelastic displacement field must have dim components.");
     if (static_cast<int>(x_elem.size()) != L.n_local()) throw std::runtime_error("Bad local vector size in viscoelastic weak form.");
     if (test_elem.size() != x_elem.size()) throw std::runtime_error("Bad test vector size in viscoelastic weak form.");
 
-    const ElementGeometry geom = make_displacement_geometry_element(mesh, elem_id);
+    const ElementGeometry geom = make_displacement_element_geometry(mesh, elem_id);
     const auto gps = gauss_rule(U.element_type, params.solver.gauss_order);
     if (state.material_history->gp.size() != gps.size()) state.material_history->gp.resize(gps.size());
 
@@ -509,7 +507,7 @@ static Scalar weak_scalar_viscoelastic_solid(
             gh.state_trial = 0.0;
         }
 
-        const Mat3T<double> F_double = kinematic_deformation_gradient_array<double>(dim, dN, u_double);
+        const Mat3T<double> F_double = hpx::deformation_gradient_array<double>(dim, dN, u_double);
         VEUpdateResult upd;
         try {
             upd = update_viscoelastic_gp(F_double, gh.h_n, dim, state.dt, mat);
@@ -525,14 +523,14 @@ static Scalar weak_scalar_viscoelastic_solid(
                                                true, state.domain_id, elem_id, g);
         }
 
-        const Mat3T<Scalar> F_ad = kinematic_deformation_gradient_array<Scalar>(dim, dN, u_ad);
+        const Mat3T<Scalar> F_ad = hpx::deformation_gradient_array<Scalar>(dim, dN, u_ad);
         const std::vector<Scalar> h_ad = make_algorithmic_h_ad(F_ad, F_double, gh.h_n, upd.h, dim, state.dt, mat);
         const auto Cv_ad = Cv_from_hT<Scalar>(h_ad, dim);
-        const auto be = kinematic_mul3<Scalar>(kinematic_mul3<Scalar>(F_ad, kinematic_inv3<Scalar>(Cv_ad)), kinematic_transpose3<Scalar>(F_ad));
+        const auto be = hpx::mul3<Scalar>(hpx::mul3<Scalar>(F_ad, hpx::inv3<Scalar>(Cv_ad)), hpx::transpose3<Scalar>(F_ad));
         const auto tau = tau_from_beT<Scalar>(be, mat);
-        const auto P_ad = kinematic_mul3<Scalar>(tau, kinematic_inv_transpose3<Scalar>(F_ad));
+        const auto P_ad = hpx::mul3<Scalar>(tau, hpx::inv_transpose3<Scalar>(F_ad));
 
-        Mat3T<Scalar> grad_test = kinematic_zero3<Scalar>();
+        Mat3T<Scalar> grad_test = hpx::zero3<Scalar>();
         for (int a = 0; a < U.n_nodes; ++a) {
             for (int i = 0; i < dim; ++i) {
                 const Scalar ti = du_test[dim * a + i];
@@ -568,35 +566,134 @@ ElementSystem compute_constitutive_element_system(
     const ProblemParameters& params,
     const ElementState& state
 ) {
-    const LocalFieldView L = make_local_field_view(mesh, elem_id, active_constitutive_field_names(mesh));
+    const LocalFieldView L = make_local_field_view(mesh, elem_id, {"displacement"});
     const int n = L.n_local();
     if (static_cast<int>(x_elem.size()) != n) {
         throw std::runtime_error("Bad local vector size in viscoelastic weak-scalar element system.");
     }
 
-    std::vector<WeakOuterFad> x_ad(n);
-    std::vector<WeakOuterFad> test_ad(n);
-    for (int j = 0; j < n; ++j) {
-        x_ad[j] = WeakOuterFad(n, j, WeakInnerFad(x_elem[j]));
+    return hpx::scalar_weak_form_element_system(
+        x_elem,
+        [&](const auto& x_ad, const auto& test_ad) {
+            return weak_scalar_viscoelastic_solid(mesh, elem_id, x_ad, test_ad, params, state);
+        }
+    );
+}
+
+ConstitutiveMultiscaleResponse compute_constitutive_multiscale_response(
+    const FieldMesh& mesh,
+    const Vector& displacement,
+    const ProblemParameters& params,
+    const MaterialHistoryStore* history,
+    const ElementState& response_state
+) {
+    using Fad = Sacado::Fad::DFad<double>;
+
+    if (mesh.dim != 2 && mesh.dim != 3) {
+        throw std::runtime_error("Viscoelastic multiscale response supports only 2D or 3D.");
     }
-    for (int i = 0; i < n; ++i) {
-        test_ad[i] = WeakOuterFad(WeakInnerFad(n, i, 0.0));
+    if (!history || history->domains.empty()) {
+        throw std::runtime_error("Viscoelastic multiscale response requires RVE material history.");
     }
 
-    const WeakOuterFad G = weak_scalar_viscoelastic_solid(mesh, elem_id, x_ad, test_ad, params, state);
+    const int dim = mesh.dim;
+    const int required_history = (dim == 2) ? 4 : 6;
+    const int ndofs = total_dof_count(mesh);
+    if (static_cast<int>(displacement.size()) < ndofs) {
+        throw std::runtime_error("Viscoelastic multiscale response received a displacement vector shorter than mesh DOFs.");
+    }
 
-    ElementSystem sys;
-    sys.residual.assign(n, 0.0);
-    sys.tangent.assign(n * n, 0.0);
+    std::vector<Fad> u_global_ad(ndofs);
+    for (int a = 0; a < ndofs; ++a) u_global_ad[a] = Fad(ndofs, a, displacement[a]);
 
-    const WeakInnerFad G_value = G.val();
-    for (int i = 0; i < n; ++i) {
-        sys.residual[i] = weak_inner_dx(G_value, i);
-        const int row = i * n;
-        for (int j = 0; j < n; ++j) {
-            const WeakInnerFad dG_dxj = (j >= 0 && j < G.size()) ? G.dx(j) : WeakInnerFad(0.0);
-            sys.tangent[row + j] = weak_inner_dx(dG_dxj, i);
+    std::array<std::array<Fad,3>,3> intP_ad{};
+    for (auto& row : intP_ad) {
+        for (auto& v : row) v = Fad(ndofs, 0.0);
+    }
+
+    if (response_state.dt <= 0.0) {
+        throw std::runtime_error("Viscoelastic multiscale response requires positive state.dt.");
+    }
+    const VEMaterial mat = make_ve_material(params);
+    const double dt = response_state.dt;
+    const DofLayout& layout = get_cached_dof_layout(mesh);
+    DomainMaterialHistory& domain_history = const_cast<DomainMaterialHistory&>(history->domains.front());
+    if (static_cast<int>(domain_history.elements.size()) < static_cast<int>(mesh.displacement_elements.size())) {
+        throw std::runtime_error("Viscoelastic multiscale response history has fewer elements than the RVE mesh.");
+    }
+
+    double volume = 0.0;
+    for (int e = 0; e < static_cast<int>(mesh.displacement_elements.size()); ++e) {
+        const LocalFieldView L = make_local_field_view(mesh, e, {"displacement"});
+        const auto& U = L.field("displacement");
+        const auto dofs = make_element_dofs_for_fields(layout, e, {"displacement"});
+
+        std::vector<Fad> ue_ad(dofs.size());
+        std::vector<double> u_double(dofs.size(), 0.0);
+        for (int a = 0; a < static_cast<int>(dofs.size()); ++a) {
+            const int I = dofs[a];
+            ue_ad[a] = u_global_ad[I];
+            u_double[a] = displacement[I];
+        }
+
+        ElementMaterialHistory& element_history = domain_history.elements[e];
+        const ElementGeometry geom = make_displacement_element_geometry(mesh, e);
+        const auto gps = gauss_rule(U.element_type, params.solver.gauss_order);
+        if (element_history.gp.size() != gps.size()) element_history.gp.resize(gps.size());
+
+        for (int g = 0; g < static_cast<int>(gps.size()); ++g) {
+            const auto& gp = gps[g];
+            const ShapeData shape = compute_shape(U.element_type, gp.xi, gp.eta, gp.zeta);
+            const JacobianData J0 = compute_jacobian_data(geom, shape);
+            if (J0.detJ <= 0.0) throw std::runtime_error("Negative detJ in viscoelastic multiscale response.");
+            const auto dN = compute_dN_dx(shape, J0);
+            const double dV = J0.detJ * gp.weight;
+
+            MaterialPointHistory& gh = element_history.gp[g];
+            if (static_cast<int>(gh.h_n.size()) < required_history) {
+                gh.h_n.assign(required_history, 0.0);
+                gh.h_trial.assign(required_history, 0.0);
+                gh.state_n = 0.0;
+                gh.state_trial = 0.0;
+            }
+
+            const Mat3T<double> F_double = hpx::deformation_gradient_array<double>(dim, dN, u_double);
+            const VEUpdateResult upd = update_viscoelastic_gp(F_double, gh.h_n, dim, dt, mat);
+            gh.h_trial = upd.h;
+            gh.state_trial = upd.state_trial;
+
+            const Mat3T<Fad> F_ad = hpx::deformation_gradient_array<Fad>(dim, dN, ue_ad);
+            const std::vector<Fad> h_ad = make_algorithmic_h_ad(F_ad, F_double, gh.h_n, upd.h, dim, dt, mat);
+            const auto Cv_ad = Cv_from_hT<Fad>(h_ad, dim);
+            const auto be = hpx::mul3<Fad>(hpx::mul3<Fad>(F_ad, hpx::inv3<Fad>(Cv_ad)), hpx::transpose3<Fad>(F_ad));
+            const auto tau = tau_from_beT<Fad>(be, mat);
+            const auto P_ad = hpx::mul3<Fad>(tau, hpx::inv_transpose3<Fad>(F_ad));
+
+            volume += dV;
+            for (int i = 0; i < 3; ++i) {
+                for (int A = 0; A < 3; ++A) {
+                    intP_ad[i][A] += P_ad[i][A] * Fad(dV);
+                }
+            }
         }
     }
-    return sys;
+
+    if (volume <= 0.0) {
+        throw std::runtime_error("Viscoelastic multiscale response volume is non-positive.");
+    }
+
+    ConstitutiveMultiscaleResponse out;
+    out.volume = volume;
+    out.dIntPdu.assign(9, std::vector<double>(ndofs, 0.0));
+    for (int i = 0; i < 3; ++i) {
+        for (int A = 0; A < 3; ++A) {
+            const int row = 3 * i + A;
+            const Fad Pint = intP_ad[i][A];
+            out.intP[i][A] = Pint.val();
+            for (int a = 0; a < ndofs; ++a) {
+                out.dIntPdu[row][a] = (a < Pint.size()) ? Pint.dx(a) : 0.0;
+            }
+        }
+    }
+    return out;
 }

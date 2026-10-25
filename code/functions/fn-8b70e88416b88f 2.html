@@ -1,0 +1,57 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements compute boundary traction from constitutive."><title>compute_boundary_traction_from_constitutive() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=postprocess_utils.cpp">← core/io/postprocess_utils.cpp</a>
+<p class="eyebrow">Function detail</p><h1>compute_boundary_traction_from_constitutive()</h1><p class="lead">Implements compute boundary traction from constitutive.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static bool compute_boundary_traction_from_constitutive(const FieldMesh &amp;mesh, const Vector &amp;x, const ProblemParameters &amp;params, const ResolvedBoundaryEdge &amp;owner, const std::array&lt; double, 3 &gt; &amp;reference_point, const std::array&lt; double, 3 &gt; &amp;physical_point, const std::array&lt; double, 3 &gt; &amp;normal_measure, DomainType domain_type, std::array&lt; double, 3 &gt; &amp;traction)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/postprocess_utils.cpp:977</dd></div><div><dt>Declaration</dt><dd>core/io/postprocess_utils.cpp:977</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/postprocess_utils.cpp#L977" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 977–1020</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="977"><span class="token keyword">static</span> <span class="token keyword">bool</span> compute_boundary_traction_from_constitutive(</span>
+<span class="source-line" data-line="978">    <span class="token keyword">const</span> FieldMesh&amp; mesh,</span>
+<span class="source-line" data-line="979">    <span class="token keyword">const</span> Vector&amp; x,</span>
+<span class="source-line" data-line="980">    <span class="token keyword">const</span> ProblemParameters&amp; params,</span>
+<span class="source-line" data-line="981">    <span class="token keyword">const</span> ResolvedBoundaryEdge&amp; owner,</span>
+<span class="source-line" data-line="982">    <span class="token keyword">const</span> std::array&lt;<span class="token keyword">double</span>,<span class="token number">3</span>&gt;&amp; reference_point,</span>
+<span class="source-line" data-line="983">    <span class="token keyword">const</span> std::array&lt;<span class="token keyword">double</span>,<span class="token number">3</span>&gt;&amp; physical_point,</span>
+<span class="source-line" data-line="984">    <span class="token keyword">const</span> std::array&lt;<span class="token keyword">double</span>,<span class="token number">3</span>&gt;&amp; normal_measure,</span>
+<span class="source-line" data-line="985">    DomainType domain_type,</span>
+<span class="source-line" data-line="986">    std::array&lt;<span class="token keyword">double</span>,<span class="token number">3</span>&gt;&amp; traction</span>
+<span class="source-line" data-line="987">){</span>
+<span class="source-line" data-line="988">    <span class="token keyword">if</span>(owner.use_total_elements) <span class="token keyword">return</span> <span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="989">    <span class="token keyword">bool</span> supported=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="990">    <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; spec:active_constitutive_postprocess_outputs()){</span>
+<span class="source-line" data-line="991">        <span class="token keyword">if</span>(spec.location == ConstitutivePostprocessLocation::Boundary &amp;&amp; spec.name == <span class="token string">&quot;traction&quot;</span>){</span>
+<span class="source-line" data-line="992">            supported=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="993">            <span class="token keyword">break</span>;</span>
+<span class="source-line" data-line="994">        }</span>
+<span class="source-line" data-line="995">    }</span>
+<span class="source-line" data-line="996">    <span class="token keyword">if</span>(!supported) <span class="token keyword">return</span> <span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="997"> </span>
+<span class="source-line" data-line="998">    <span class="token keyword">const</span> <span class="token keyword">auto</span> field_names = active_constitutive_field_names(mesh);</span>
+<span class="source-line" data-line="999">    <span class="token keyword">const</span> DofLayout&amp; layout = get_cached_dof_layout(mesh);</span>
+<span class="source-line" data-line="1000">    <span class="token keyword">const</span> <span class="token keyword">auto</span> dofs = make_element_dofs_for_fields(layout,owner.elem_id,field_names);</span>
+<span class="source-line" data-line="1001">    <span class="token keyword">const</span> Vector x_elem = gather_local_vector(x,dofs);</span>
+<span class="source-line" data-line="1002">    <span class="token keyword">const</span> LocalFieldView local_view = make_local_field_view(mesh,owner.elem_id,field_names);</span>
+<span class="source-line" data-line="1003"> </span>
+<span class="source-line" data-line="1004">    ElementState state;</span>
+<span class="source-line" data-line="1005">    state.domain_type = domain_type;</span>
+<span class="source-line" data-line="1006">    state.postprocess_location = ConstitutivePostprocessLocation::Boundary;</span>
+<span class="source-line" data-line="1007">    state.postprocess_reference_point = reference_point;</span>
+<span class="source-line" data-line="1008">    state.postprocess_physical_point = physical_point;</span>
+<span class="source-line" data-line="1009">    state.postprocess_normal_measure = normal_measure;</span>
+<span class="source-line" data-line="1010"> </span>
+<span class="source-line" data-line="1011">    std::vector&lt;ConstitutivePostprocessOutputValues&gt; outputs;</span>
+<span class="source-line" data-line="1012">    compute_constitutive_postprocess(mesh,owner.elem_id,x_elem,params,state,{<span class="token string">&quot;traction&quot;</span>},outputs);</span>
+<span class="source-line" data-line="1013">    <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; out:outputs){</span>
+<span class="source-line" data-line="1014">        <span class="token keyword">if</span>(out.location != ConstitutivePostprocessLocation::Boundary) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="1015">        <span class="token keyword">if</span>(out.name != <span class="token string">&quot;traction&quot;</span> || out.components &lt; <span class="token number">3</span> || out.values.size() &lt; <span class="token number">3</span>) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="1016">        traction = {{out.values[<span class="token number">0</span>],out.values[<span class="token number">1</span>],out.values[<span class="token number">2</span>]}};</span>
+<span class="source-line" data-line="1017">        <span class="token keyword">return</span> <span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="1018">    }</span>
+<span class="source-line" data-line="1019">    <span class="token keyword">return</span> <span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="1020">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-e24caa41ac1711.html">← evaluate_velocity_gradient_and_pressure()</a><a href="fn-d38a48748c4ef9.html">boundary_group_center_from_velocity_nodes() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

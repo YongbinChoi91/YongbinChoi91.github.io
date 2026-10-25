@@ -1,0 +1,73 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="LocalFieldView construction"><title>append_local_field_from_mixed() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../space.html?file=field_layout.cpp">← core/space/field_layout.cpp</a>
+<p class="eyebrow">Function detail</p><h1>append_local_field_from_mixed()</h1><p class="lead">LocalFieldView construction</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>void append_local_field_from_mixed(LocalFieldView &amp;view, const FieldMesh &amp;mesh, int elem_id, const std::string &amp;name)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/space/field_layout.cpp:404</dd></div><div><dt>Declaration</dt><dd>core/space/field_layout.h:152</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/space/field_layout.cpp#L404" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 404–463</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="404"><span class="token keyword">void</span> append_local_field_from_mixed(</span>
+<span class="source-line" data-line="405">    LocalFieldView&amp; view,</span>
+<span class="source-line" data-line="406">    <span class="token keyword">const</span> FieldMesh&amp; mesh,</span>
+<span class="source-line" data-line="407">    <span class="token keyword">int</span> elem_id,</span>
+<span class="source-line" data-line="408">    <span class="token keyword">const</span> std::string&amp; name</span>
+<span class="source-line" data-line="409">) {</span>
+<span class="source-line" data-line="410">    LocalFieldInfo f;</span>
+<span class="source-line" data-line="411">    f.name = name;</span>
+<span class="source-line" data-line="412">    f.local_offset = view.n_local();</span>
+<span class="source-line" data-line="413"> </span>
+<span class="source-line" data-line="414">    <span class="token keyword">if</span> (name == <span class="token string">&quot;velocity&quot;</span>) {</span>
+<span class="source-line" data-line="415">        <span class="token keyword">if</span> (elem_id &lt; <span class="token number">0</span> || elem_id &gt;= static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.velocity_elements.size()))</span>
+<span class="source-line" data-line="416">            <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Element id out of range for velocity local field.&quot;</span>);</span>
+<span class="source-line" data-line="417">        f.components = mesh.dim;</span>
+<span class="source-line" data-line="418">        f.n_nodes = static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.velocity_elements[elem_id].size());</span>
+<span class="source-line" data-line="419">        f.element_type = mesh.velocity_type;</span>
+<span class="source-line" data-line="420">    } <span class="token keyword">else</span> <span class="token keyword">if</span> (name == <span class="token string">&quot;displacement&quot;</span>) {</span>
+<span class="source-line" data-line="421">        <span class="token keyword">if</span> (!has_displacement_field(mesh)) <span class="token keyword">return</span>;</span>
+<span class="source-line" data-line="422">        <span class="token keyword">if</span> (elem_id &lt; <span class="token number">0</span> || elem_id &gt;= static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.displacement_elements.size()))</span>
+<span class="source-line" data-line="423">            <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Element id out of range for displacement local field.&quot;</span>);</span>
+<span class="source-line" data-line="424">        f.components = mesh.dim;</span>
+<span class="source-line" data-line="425">        f.n_nodes = static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.displacement_elements[elem_id].size());</span>
+<span class="source-line" data-line="426">        f.element_type = mesh.displacement_type;</span>
+<span class="source-line" data-line="427">    } <span class="token keyword">else</span> <span class="token keyword">if</span> (name == <span class="token string">&quot;pressure&quot;</span>) {</span>
+<span class="source-line" data-line="428">        <span class="token keyword">if</span> (elem_id &lt; <span class="token number">0</span> || elem_id &gt;= static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.pressure_elements.size()))</span>
+<span class="source-line" data-line="429">            <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Element id out of range for pressure local field.&quot;</span>);</span>
+<span class="source-line" data-line="430">        f.components = <span class="token number">1</span>;</span>
+<span class="source-line" data-line="431">        f.n_nodes = static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.pressure_elements[elem_id].size());</span>
+<span class="source-line" data-line="432">        f.element_type = mesh.pressure_type;</span>
+<span class="source-line" data-line="433">    } <span class="token keyword">else</span> <span class="token keyword">if</span> (name == <span class="token string">&quot;temperature&quot;</span>) {</span>
+<span class="source-line" data-line="434">        <span class="token keyword">const</span> FieldInfo* extra = <span class="token keyword">nullptr</span>;</span>
+<span class="source-line" data-line="435">        <span class="token keyword">for</span> (<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; ef : mesh.extra_fields) {</span>
+<span class="source-line" data-line="436">            <span class="token keyword">if</span> (ef.name == name) { extra = &amp;ef; <span class="token keyword">break</span>; }</span>
+<span class="source-line" data-line="437">        }</span>
+<span class="source-line" data-line="438">        <span class="token keyword">if</span> (extra) {</span>
+<span class="source-line" data-line="439">            <span class="token keyword">if</span> (elem_id &lt; <span class="token number">0</span> || elem_id &gt;= static_cast&lt;<span class="token keyword">int</span>&gt;(extra-&gt;elements.size()))</span>
+<span class="source-line" data-line="440">                <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Element id out of range for temperature local field.&quot;</span>);</span>
+<span class="source-line" data-line="441">            f.components = extra-&gt;components;</span>
+<span class="source-line" data-line="442">            f.n_nodes = static_cast&lt;<span class="token keyword">int</span>&gt;(extra-&gt;elements[elem_id].size());</span>
+<span class="source-line" data-line="443">            f.element_type = extra-&gt;element_type;</span>
+<span class="source-line" data-line="444">        } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="445">            <span class="token keyword">if</span> (elem_id &lt; <span class="token number">0</span> || elem_id &gt;= static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.velocity_elements.size()))</span>
+<span class="source-line" data-line="446">                <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Element id out of range for temperature local field.&quot;</span>);</span>
+<span class="source-line" data-line="447">            f.components = <span class="token number">1</span>;</span>
+<span class="source-line" data-line="448">            f.n_nodes = static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.velocity_elements[elem_id].size());</span>
+<span class="source-line" data-line="449">            f.element_type = mesh.velocity_type;</span>
+<span class="source-line" data-line="450">        }</span>
+<span class="source-line" data-line="451">    } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="452">        <span class="token keyword">const</span> DofLayout&amp; gmesh = get_cached_dof_layout(mesh);</span>
+<span class="source-line" data-line="453">        <span class="token keyword">const</span> <span class="token keyword">int</span> fid = find_field_index(gmesh, name, <span class="token keyword">true</span>);</span>
+<span class="source-line" data-line="454">        <span class="token keyword">const</span> FieldInfo&amp; gf = gmesh.fields[fid];</span>
+<span class="source-line" data-line="455">        <span class="token keyword">if</span> (elem_id &lt; <span class="token number">0</span> || elem_id &gt;= static_cast&lt;<span class="token keyword">int</span>&gt;(gf.elements.size()))</span>
+<span class="source-line" data-line="456">            <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Element id out of range for local field &quot;</span> + name + <span class="token string">&quot;.&quot;</span>);</span>
+<span class="source-line" data-line="457">        f.components = gf.components;</span>
+<span class="source-line" data-line="458">        f.n_nodes = static_cast&lt;<span class="token keyword">int</span>&gt;(gf.elements[elem_id].size());</span>
+<span class="source-line" data-line="459">        f.element_type = gf.element_type;</span>
+<span class="source-line" data-line="460">    }</span>
+<span class="source-line" data-line="461"> </span>
+<span class="source-line" data-line="462">    view.fields.push_back(f);</span>
+<span class="source-line" data-line="463">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-08aad089865b3a.html">← print_dof_layout_summary()</a><a href="fn-7dc1acbee7de1b.html">make_local_field_view() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

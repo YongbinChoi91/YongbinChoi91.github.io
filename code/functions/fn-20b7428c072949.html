@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements gauss rule quad face assembly."><title>gauss_rule_quad_face_assembly() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../boundary.html?file=boundary_neumann.cpp">← core/boundary/boundary_neumann.cpp</a>
+<p class="eyebrow">Function detail</p><h1>gauss_rule_quad_face_assembly()</h1><p class="lead">Implements gauss rule quad face assembly.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static std::vector&lt; GaussPoint &gt; gauss_rule_quad_face_assembly(int order)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/boundary/boundary_neumann.cpp:263</dd></div><div><dt>Declaration</dt><dd>core/boundary/boundary_neumann.cpp:263</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/boundary/boundary_neumann.cpp#L263" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 263–273</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="263"><span class="token keyword">static</span> std::vector&lt;GaussPoint&gt; gauss_rule_quad_face_assembly(<span class="token keyword">int</span> order){</span>
+<span class="source-line" data-line="264">    <span class="token keyword">const</span> <span class="token keyword">auto</span> qline = gauss_rule_line(order);</span>
+<span class="source-line" data-line="265">    std::vector&lt;GaussPoint&gt; gps;</span>
+<span class="source-line" data-line="266">    gps.reserve(qline.size()*qline.size());</span>
+<span class="source-line" data-line="267">    <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; a: qline){</span>
+<span class="source-line" data-line="268">        <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; b: qline){</span>
+<span class="source-line" data-line="269">            gps.push_back({a.xi,b.xi,<span class="token number">0.0</span>,a.weight*b.weight});</span>
+<span class="source-line" data-line="270">        }</span>
+<span class="source-line" data-line="271">    }</span>
+<span class="source-line" data-line="272">    <span class="token keyword">return</span> gps;</span>
+<span class="source-line" data-line="273">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-155d44df8954b0.html">← surface_measure_from_J_3d()</a><a href="fn-71334a2ea649dd.html">make_field_geometry_element() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

@@ -1,0 +1,8 @@
+# Global unknown/element-local field order used by assembly and constitutive LocalFieldView.
+# These fields are global Newton unknowns.
+field_key displacement
+
+# Gauss-point local material history.  This is NOT a global DOF.
+# Elasto-plastic 2D plane-strain weak_form_elasto_plastic.cpp requires 5 variables:
+#   {h11, h22, h33, h12, gamma}
+history viscoelastic 4

@@ -1,0 +1,137 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements resolve boundary edge."><title>resolve_boundary_edge() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=postprocess_utils.cpp">← core/io/postprocess_utils.cpp</a>
+<p class="eyebrow">Function detail</p><h1>resolve_boundary_edge()</h1><p class="lead">Implements resolve boundary edge.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static ResolvedBoundaryEdge resolve_boundary_edge(const FieldMesh &amp;mesh, const BoundaryEntity &amp;ent, const std::array&lt; double, 3 &gt; *boundary_group_center=nullptr)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/postprocess_utils.cpp:781</dd></div><div><dt>Declaration</dt><dd>core/io/postprocess_utils.cpp:781</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/postprocess_utils.cpp#L781" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 781–904</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="781"><span class="token keyword">static</span> ResolvedBoundaryEdge resolve_boundary_edge(</span>
+<span class="source-line" data-line="782">    <span class="token keyword">const</span> FieldMesh&amp; mesh,</span>
+<span class="source-line" data-line="783">    <span class="token keyword">const</span> BoundaryEntity&amp; ent,</span>
+<span class="source-line" data-line="784">    <span class="token keyword">const</span> std::array&lt;<span class="token keyword">double</span>,<span class="token number">3</span>&gt;* boundary_group_center=<span class="token keyword">nullptr</span></span>
+<span class="source-line" data-line="785">){</span>
+<span class="source-line" data-line="786">    <span class="token comment">// Python-compatible logic:</span></span>
+<span class="source-line" data-line="787">    <span class="token comment">//   1. use the surface-node ids from the boundary row,</span></span>
+<span class="source-line" data-line="788">    <span class="token comment">//   2. scan the global TOTAL_ELEMENTS table when available, otherwise the</span></span>
+<span class="source-line" data-line="789">    <span class="token comment">//      mesh velocity connectivity table,</span></span>
+<span class="source-line" data-line="790">    <span class="token comment">//   3. recover the row whose connectivity contains the surface nodes,</span></span>
+<span class="source-line" data-line="791">    <span class="token comment">//   4. classify the local edge from THAT recovered row.</span></span>
+<span class="source-line" data-line="792">    <span class="token comment">// We deliberately DO NOT trust ent.element_id here.  In shared multi-domain meshes it</span></span>
+<span class="source-line" data-line="793">    <span class="token comment">// can be a boundary-row id; the real owner is obtained from surface-node</span></span>
+<span class="source-line" data-line="794">    <span class="token comment">// containment, just like Python&#x27;s Drag_Lift_connectivity_mask workflow.</span></span>
+<span class="source-line" data-line="795">    <span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; candidates = force_owner_table(mesh);</span>
+<span class="source-line" data-line="796">    <span class="token keyword">const</span> <span class="token keyword">bool</span> using_total = (&amp;candidates == &amp;mesh.total_velocity_elements);</span>
+<span class="source-line" data-line="797"> </span>
+<span class="source-line" data-line="798">    <span class="token keyword">auto</span> push_best_edge_by_local_overlap = [&amp;](<span class="token keyword">int</span> e,</span>
+<span class="source-line" data-line="799">                                               <span class="token keyword">const</span> std::vector&lt;<span class="token keyword">int</span>&gt;&amp; local_nodes,</span>
+<span class="source-line" data-line="800">                                               <span class="token keyword">bool</span> by_coords,</span>
+<span class="source-line" data-line="801">                                               std::vector&lt;ResolvedBoundaryEdge&gt;&amp; matches)-&gt;<span class="token keyword">void</span>{</span>
+<span class="source-line" data-line="802">        <span class="token keyword">if</span>(e&lt;<span class="token number">0</span> || e&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(candidates.size())) <span class="token keyword">return</span>;</span>
+<span class="source-line" data-line="803">        <span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; conn=candidates[e];</span>
+<span class="source-line" data-line="804">        <span class="token keyword">if</span>(conn.empty()) <span class="token keyword">return</span>;</span>
+<span class="source-line" data-line="805">        <span class="token keyword">const</span> ElementType etype = element_type_from_connectivity(mesh,conn);</span>
+<span class="source-line" data-line="806">        <span class="token keyword">const</span> <span class="token keyword">auto</span> edges = reference_boundary_entities(etype,mesh.dim);</span>
+<span class="source-line" data-line="807"> </span>
+<span class="source-line" data-line="808">        <span class="token comment">// First try the strict Python-style classification: all boundary local</span></span>
+<span class="source-line" data-line="809">        <span class="token comment">// nodes are exactly on one reference edge/face.</span></span>
+<span class="source-line" data-line="810">        <span class="token keyword">for</span>(<span class="token keyword">int</span> edge=<span class="token number">0</span>; edge&lt;static_cast&lt;<span class="token keyword">int</span>&gt;(edges.size()); ++edge){</span>
+<span class="source-line" data-line="811">            <span class="token keyword">if</span>(contains_all_nodes(edges[edge],local_nodes)){</span>
+<span class="source-line" data-line="812">                ResolvedBoundaryEdge r;</span>
+<span class="source-line" data-line="813">                r.elem_id=e;</span>
+<span class="source-line" data-line="814">                r.edge=edge;</span>
+<span class="source-line" data-line="815">                r.by_coordinate_fallback=by_coords;</span>
+<span class="source-line" data-line="816">                r.use_total_elements=using_total;</span>
+<span class="source-line" data-line="817">                matches.push_back(r);</span>
+<span class="source-line" data-line="818">                <span class="token keyword">return</span>;</span>
+<span class="source-line" data-line="819">            }</span>
+<span class="source-line" data-line="820">        }</span>
+<span class="source-line" data-line="821"> </span>
+<span class="source-line" data-line="822">        <span class="token comment">// Robust fallback for mixed exporters: sometimes the boundary row has</span></span>
+<span class="source-line" data-line="823">        <span class="token comment">// corner nodes plus a high-order midside node whose local ordering is not</span></span>
+<span class="source-line" data-line="824">        <span class="token comment">// exactly the current C++ reference order.  The recovered ELEMENT ROW is</span></span>
+<span class="source-line" data-line="825">        <span class="token comment">// still correct; choose the reference edge with the largest overlap.</span></span>
+<span class="source-line" data-line="826">        <span class="token keyword">int</span> best_edge=-<span class="token number">1</span>;</span>
+<span class="source-line" data-line="827">        <span class="token keyword">int</span> best_count=-<span class="token number">1</span>;</span>
+<span class="source-line" data-line="828">        <span class="token keyword">for</span>(<span class="token keyword">int</span> edge=<span class="token number">0</span>; edge&lt;static_cast&lt;<span class="token keyword">int</span>&gt;(edges.size()); ++edge){</span>
+<span class="source-line" data-line="829">            <span class="token keyword">int</span> count=<span class="token number">0</span>;</span>
+<span class="source-line" data-line="830">            <span class="token keyword">for</span>(<span class="token keyword">int</span> ln:local_nodes){</span>
+<span class="source-line" data-line="831">                <span class="token keyword">if</span>(std::find(edges[edge].begin(),edges[edge].end(),ln)!=edges[edge].end()) ++count;</span>
+<span class="source-line" data-line="832">            }</span>
+<span class="source-line" data-line="833">            <span class="token keyword">if</span>(count&gt;best_count){ best_count=count; best_edge=edge; }</span>
+<span class="source-line" data-line="834">        }</span>
+<span class="source-line" data-line="835">        <span class="token keyword">const</span> <span class="token keyword">int</span> required = std::min&lt;<span class="token keyword">int</span>&gt;(<span class="token number">2</span>, static_cast&lt;<span class="token keyword">int</span>&gt;(local_nodes.size()));</span>
+<span class="source-line" data-line="836">        <span class="token keyword">if</span>(best_edge&gt;=<span class="token number">0</span> &amp;&amp; best_count&gt;=required){</span>
+<span class="source-line" data-line="837">            ResolvedBoundaryEdge r;</span>
+<span class="source-line" data-line="838">            r.elem_id=e;</span>
+<span class="source-line" data-line="839">            r.edge=best_edge;</span>
+<span class="source-line" data-line="840">            r.by_coordinate_fallback=by_coords;</span>
+<span class="source-line" data-line="841">            r.use_total_elements=using_total;</span>
+<span class="source-line" data-line="842">            matches.push_back(r);</span>
+<span class="source-line" data-line="843">        }</span>
+<span class="source-line" data-line="844">    };</span>
+<span class="source-line" data-line="845"> </span>
+<span class="source-line" data-line="846">    <span class="token keyword">auto</span> collect_by_ids=[&amp;](<span class="token keyword">int</span> e,std::vector&lt;ResolvedBoundaryEdge&gt;&amp; matches)-&gt;<span class="token keyword">void</span>{</span>
+<span class="source-line" data-line="847">        <span class="token keyword">if</span>(e&lt;<span class="token number">0</span> || e&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(candidates.size())) <span class="token keyword">return</span>;</span>
+<span class="source-line" data-line="848">        <span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; conn=candidates[e];</span>
+<span class="source-line" data-line="849">        <span class="token keyword">if</span>(conn.empty()) <span class="token keyword">return</span>;</span>
+<span class="source-line" data-line="850">        std::vector&lt;<span class="token keyword">int</span>&gt; local_nodes;</span>
+<span class="source-line" data-line="851">        local_nodes.reserve(ent.node_ids.size());</span>
+<span class="source-line" data-line="852">        <span class="token keyword">for</span>(<span class="token keyword">int</span> gnode:ent.node_ids){</span>
+<span class="source-line" data-line="853">            <span class="token keyword">auto</span> it=std::find(conn.begin(),conn.end(),gnode);</span>
+<span class="source-line" data-line="854">            <span class="token keyword">if</span>(it==conn.end()) <span class="token keyword">return</span>;</span>
+<span class="source-line" data-line="855">            local_nodes.push_back(static_cast&lt;<span class="token keyword">int</span>&gt;(it-conn.begin()));</span>
+<span class="source-line" data-line="856">        }</span>
+<span class="source-line" data-line="857">        push_best_edge_by_local_overlap(e,local_nodes,<span class="token keyword">false</span>,matches);</span>
+<span class="source-line" data-line="858">    };</span>
+<span class="source-line" data-line="859"> </span>
+<span class="source-line" data-line="860">    std::vector&lt;ResolvedBoundaryEdge&gt; matches;</span>
+<span class="source-line" data-line="861">    <span class="token keyword">const</span> std::vector&lt;<span class="token keyword">int</span>&gt; id_candidates = candidate_owner_elements_by_node_ids(mesh,ent);</span>
+<span class="source-line" data-line="862">    <span class="token keyword">for</span>(<span class="token keyword">int</span> e:id_candidates) collect_by_ids(e,matches);</span>
+<span class="source-line" data-line="863">    <span class="token keyword">if</span>(!matches.empty()) <span class="token keyword">return</span> choose_boundary_owner_candidate(mesh,matches,boundary_group_center);</span>
+<span class="source-line" data-line="864"> </span>
+<span class="source-line" data-line="865">    <span class="token comment">// Coordinate fallback: still scan the domain element table only, then use</span></span>
+<span class="source-line" data-line="866">    <span class="token comment">// the recovered domain row.  This covers exports where surface-node ids and</span></span>
+<span class="source-line" data-line="867">    <span class="token comment">// element-node ids differ but coordinates coincide.</span></span>
+<span class="source-line" data-line="868">    <span class="token keyword">double</span> h2=<span class="token number">0.0</span>;</span>
+<span class="source-line" data-line="869">    <span class="token keyword">for</span>(<span class="token keyword">int</span> n:ent.node_ids){</span>
+<span class="source-line" data-line="870">        <span class="token keyword">if</span>(n&gt;=<span class="token number">0</span> &amp;&amp; n&lt;static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.velocity_nodes.size())){</span>
+<span class="source-line" data-line="871">            <span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; X=mesh.velocity_nodes[n].x;</span>
+<span class="source-line" data-line="872">            h2=std::max(h2,X[<span class="token number">0</span>]*X[<span class="token number">0</span>]+X[<span class="token number">1</span>]*X[<span class="token number">1</span>]+X[<span class="token number">2</span>]*X[<span class="token number">2</span>]);</span>
+<span class="source-line" data-line="873">        }</span>
+<span class="source-line" data-line="874">    }</span>
+<span class="source-line" data-line="875">    <span class="token keyword">const</span> <span class="token keyword">double</span> tol2=std::max(<span class="token number">1.0e-24</span>,<span class="token number">1.0e-20</span>*std::max(<span class="token number">1.0</span>,h2));</span>
+<span class="source-line" data-line="876"> </span>
+<span class="source-line" data-line="877">    <span class="token keyword">auto</span> collect_by_coords=[&amp;](<span class="token keyword">int</span> e,std::vector&lt;ResolvedBoundaryEdge&gt;&amp; matches)-&gt;<span class="token keyword">void</span>{</span>
+<span class="source-line" data-line="878">        <span class="token keyword">if</span>(e&lt;<span class="token number">0</span> || e&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(candidates.size())) <span class="token keyword">return</span>;</span>
+<span class="source-line" data-line="879">        <span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; conn=candidates[e];</span>
+<span class="source-line" data-line="880">        <span class="token keyword">if</span>(conn.empty()) <span class="token keyword">return</span>;</span>
+<span class="source-line" data-line="881">        <span class="token keyword">const</span> ElementType etype = element_type_from_connectivity(mesh,conn);</span>
+<span class="source-line" data-line="882">        <span class="token keyword">const</span> <span class="token keyword">auto</span> edges=reference_boundary_entities(etype,mesh.dim);</span>
+<span class="source-line" data-line="883">        <span class="token keyword">for</span>(<span class="token keyword">int</span> edge=<span class="token number">0</span>; edge&lt;static_cast&lt;<span class="token keyword">int</span>&gt;(edges.size()); ++edge){</span>
+<span class="source-line" data-line="884">            <span class="token keyword">if</span>(edge_coordinates_match_boundary(mesh,conn,edges[edge],ent,tol2)){</span>
+<span class="source-line" data-line="885">                ResolvedBoundaryEdge r;</span>
+<span class="source-line" data-line="886">                r.elem_id=e;</span>
+<span class="source-line" data-line="887">                r.edge=edge;</span>
+<span class="source-line" data-line="888">                r.by_coordinate_fallback=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="889">                r.use_total_elements=using_total;</span>
+<span class="source-line" data-line="890">                matches.push_back(r);</span>
+<span class="source-line" data-line="891">                <span class="token keyword">return</span>;</span>
+<span class="source-line" data-line="892">            }</span>
+<span class="source-line" data-line="893">        }</span>
+<span class="source-line" data-line="894">    };</span>
+<span class="source-line" data-line="895"> </span>
+<span class="source-line" data-line="896">    <span class="token keyword">for</span>(<span class="token keyword">int</span> e=<span class="token number">0</span>;e&lt;static_cast&lt;<span class="token keyword">int</span>&gt;(candidates.size());++e) collect_by_coords(e,matches);</span>
+<span class="source-line" data-line="897">    <span class="token keyword">if</span>(!matches.empty()) <span class="token keyword">return</span> choose_boundary_owner_candidate(mesh,matches,boundary_group_center);</span>
+<span class="source-line" data-line="898"> </span>
+<span class="source-line" data-line="899">    <span class="token comment">// Not every named boundary row is necessarily in contact with the fluid in</span></span>
+<span class="source-line" data-line="900">    <span class="token comment">// a shared multi-domain mesh.  For example, CIRCLE can include solid-only/internal</span></span>
+<span class="source-line" data-line="901">    <span class="token comment">// segments.  Those must be excluded from hydrodynamic drag/lift, so an</span></span>
+<span class="source-line" data-line="902">    <span class="token comment">// unresolved owner is represented by elem_id=-1 and skipped by the caller.</span></span>
+<span class="source-line" data-line="903">    <span class="token keyword">return</span> ResolvedBoundaryEdge{};</span>
+<span class="source-line" data-line="904">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-14290d117dcfb7.html">← candidate_owner_elements_by_node_ids()</a><a href="fn-65a03bfe1611f2.html">pressure_connectivity_for_owner() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

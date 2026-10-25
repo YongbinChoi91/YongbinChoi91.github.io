@@ -1,0 +1,84 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements initialize boundary force postprocess."><title>initialize_boundary_force_postprocess() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=postprocess_utils.cpp">← core/io/postprocess_utils.cpp</a>
+<p class="eyebrow">Function detail</p><h1>initialize_boundary_force_postprocess()</h1><p class="lead">Implements initialize boundary force postprocess.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>BoundaryForcePostprocessState initialize_boundary_force_postprocess(const Problem &amp;problem, const ProblemParameters &amp;params, const Vector &amp;initial_solution)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/postprocess_utils.cpp:1583</dd></div><div><dt>Declaration</dt><dd>core/io/postprocess.h:283</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/postprocess_utils.cpp#L1583" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 1583–1653</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="1583">BoundaryForcePostprocessState initialize_boundary_force_postprocess(</span>
+<span class="source-line" data-line="1584">    <span class="token keyword">const</span> Problem&amp; problem,</span>
+<span class="source-line" data-line="1585">    <span class="token keyword">const</span> ProblemParameters&amp; params,</span>
+<span class="source-line" data-line="1586">    <span class="token keyword">const</span> Vector&amp; initial_solution</span>
+<span class="source-line" data-line="1587">){</span>
+<span class="source-line" data-line="1588">    BoundaryForcePostprocessState state;</span>
+<span class="source-line" data-line="1589">    state.boundary_names = params.solver.force_boundaries.empty()</span>
+<span class="source-line" data-line="1590">        ? std::vector&lt;std::string&gt;{params.solver.force_boundary}</span>
+<span class="source-line" data-line="1591">        : params.solver.force_boundaries;</span>
+<span class="source-line" data-line="1592">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;static_cast&lt;<span class="token keyword">int</span>&gt;(state.boundary_names.size());++i){</span>
+<span class="source-line" data-line="1593">        <span class="token keyword">if</span>(i) state.boundary_name += <span class="token string">&quot;+&quot;</span>;</span>
+<span class="source-line" data-line="1594">        state.boundary_name += state.boundary_names[i];</span>
+<span class="source-line" data-line="1595">    }</span>
+<span class="source-line" data-line="1596">    state.force_csv = resolve_force_output_path(params.solver.force_csv, make_force_csv_path(params));</span>
+<span class="source-line" data-line="1597">    state.force_svg = resolve_force_output_path(params.solver.force_svg, make_force_svg_path(params));</span>
+<span class="source-line" data-line="1598">    state.csv_enabled = params.solver.debug_csv_output &amp;&amp; !force_output_path_disabled(params.solver.force_csv);</span>
+<span class="source-line" data-line="1599">    state.hdf5_enabled = params.solver.hdf5_output &amp;&amp; params.solver.force_output;</span>
+<span class="source-line" data-line="1600">    state.svg_enabled = params.solver.svg_output;</span>
+<span class="source-line" data-line="1601">    state.deferred = params.solver.postprocess_deferred;</span>
+<span class="source-line" data-line="1602"> </span>
+<span class="source-line" data-line="1603">    <span class="token keyword">if</span>(!params.solver.force_output){</span>
+<span class="source-line" data-line="1604">        <span class="token keyword">return</span> state;</span>
+<span class="source-line" data-line="1605">    }</span>
+<span class="source-line" data-line="1606"> </span>
+<span class="source-line" data-line="1607">    <span class="token keyword">for</span>(<span class="token keyword">const</span> std::string&amp; boundary:state.boundary_names){</span>
+<span class="source-line" data-line="1608">        <span class="token keyword">const</span> <span class="token keyword">auto</span> ids=multidomain_force_domain_ids(problem,boundary);</span>
+<span class="source-line" data-line="1609">        <span class="token keyword">if</span>(ids.empty() &amp;&amp; state.boundary_names.size()&gt;<span class="token number">1</span>){</span>
+<span class="source-line" data-line="1610">            <span class="token keyword">throw</span> std::runtime_error(</span>
+<span class="source-line" data-line="1611">                <span class="token string">&quot;Composite drag/lift boundary &#x27;&quot;</span>+boundary+<span class="token string">&quot;&#x27; was not found on a fluid domain.&quot;</span></span>
+<span class="source-line" data-line="1612">            );</span>
+<span class="source-line" data-line="1613">        }</span>
+<span class="source-line" data-line="1614">        <span class="token keyword">for</span>(<span class="token keyword">int</span> id:ids){</span>
+<span class="source-line" data-line="1615">            state.domain_ids.push_back(id);</span>
+<span class="source-line" data-line="1616">            state.domain_precompute.push_back(</span>
+<span class="source-line" data-line="1617">                precompute_boundary_force(problem.domains[id].mesh,boundary)</span>
+<span class="source-line" data-line="1618">            );</span>
+<span class="source-line" data-line="1619">        }</span>
+<span class="source-line" data-line="1620">    }</span>
+<span class="source-line" data-line="1621">    state.enabled = !state.domain_ids.empty();</span>
+<span class="source-line" data-line="1622">    <span class="token keyword">if</span>(!state.enabled){</span>
+<span class="source-line" data-line="1623">        std::cout &lt;&lt; <span class="token string">&quot;  drag/lift output   : skipped; boundary &#x27;&quot;</span> &lt;&lt; state.boundary_name</span>
+<span class="source-line" data-line="1624">                  &lt;&lt; <span class="token string">&quot;&#x27; was not found on any fluid domain.\n&quot;</span>;</span>
+<span class="source-line" data-line="1625">        <span class="token keyword">return</span> state;</span>
+<span class="source-line" data-line="1626">    }</span>
+<span class="source-line" data-line="1627"> </span>
+<span class="source-line" data-line="1628">    validate_multidomain_boundary_integral_or_throw(</span>
+<span class="source-line" data-line="1629">        problem,state.domain_ids,state.domain_precompute,state.boundary_name,</span>
+<span class="source-line" data-line="1630">        params.solver.force_boundary_check_tol</span>
+<span class="source-line" data-line="1631">    );</span>
+<span class="source-line" data-line="1632">    state.summed_check = summed_multidomain_boundary_check(</span>
+<span class="source-line" data-line="1633">        state.domain_ids,state.domain_precompute,state.boundary_name</span>
+<span class="source-line" data-line="1634">    );</span>
+<span class="source-line" data-line="1635"> </span>
+<span class="source-line" data-line="1636">    <span class="token keyword">if</span>(state.csv_enabled){</span>
+<span class="source-line" data-line="1637">        ensure_output_parent_directory(state.force_csv);</span>
+<span class="source-line" data-line="1638">        reset_force_csv(state.force_csv);</span>
+<span class="source-line" data-line="1639">    }</span>
+<span class="source-line" data-line="1640">    <span class="token keyword">if</span>(state.hdf5_enabled){</span>
+<span class="source-line" data-line="1641">        reset_hdf5_table(params,<span class="token string">&quot;/history/force&quot;</span>,{<span class="token string">&quot;time&quot;</span>,<span class="token string">&quot;Drag&quot;</span>,<span class="token string">&quot;Lift&quot;</span>});</span>
+<span class="source-line" data-line="1642">    }</span>
+<span class="source-line" data-line="1643"> </span>
+<span class="source-line" data-line="1644">    BoundaryForceResult force0 = append_force_sample(problem,initial_solution,params,state,<span class="token number">0.0</span>);</span>
+<span class="source-line" data-line="1645">    (<span class="token keyword">void</span>)force0;</span>
+<span class="source-line" data-line="1646"> </span>
+<span class="source-line" data-line="1647">    std::cout &lt;&lt; <span class="token string">&quot;  drag/lift mode     : weak-form boundary traction integral with legacy stress fallback\n&quot;</span>;</span>
+<span class="source-line" data-line="1648">    std::cout &lt;&lt; <span class="token string">&quot;  drag/lift boundary : &quot;</span> &lt;&lt; state.boundary_name</span>
+<span class="source-line" data-line="1649">              &lt;&lt; <span class="token string">&quot; on &quot;</span> &lt;&lt; state.domain_ids.size() &lt;&lt; <span class="token string">&quot; domain piece(s)\n&quot;</span>;</span>
+<span class="source-line" data-line="1650">    std::cout &lt;&lt; <span class="token string">&quot;  drag/lift output   : &quot;</span></span>
+<span class="source-line" data-line="1651">              &lt;&lt; (state.hdf5_enabled ? params.solver.hdf5_file + <span class="token string">&quot;:/history/force&quot;</span> : state.force_csv) &lt;&lt; <span class="token string">&quot;\n&quot;</span>;</span>
+<span class="source-line" data-line="1652">    <span class="token keyword">return</span> state;</span>
+<span class="source-line" data-line="1653">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-849fce427ca1b5.html">← compute_boundary_force_precomputed()</a><a href="fn-3fbcf6004b44f6.html">append_force_sample() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

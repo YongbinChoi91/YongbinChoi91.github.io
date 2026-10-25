@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   Elastoplasticity with local history variables &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap wide-page-wrap">
+    <a class="back-button route-card" href="app-solid-inelastic.html">
+     &larr; Back to Inelastic Solids
+    </a>
+    <p class="eyebrow">
+     Solid Mechanics / Inelastic / Elastoplasticity
+    </p>
+    <h1>
+     Elastoplasticity with local history variables
+    </h1>
+    <p class="lead">
+     This page explains the finite-strain elastoplastic update used by the solid weak form.
+            The global problem remains displacement-based, while plastic variables are solved locally at each Gauss point.
+    </p>
+   </section>
+   <section class="doc-section section-wrap wide-page-wrap framework-detail-wide">
+    <article class="framework-hero-card">
+     <span class="tag">
+      Core idea
+     </span>
+     <h2>
+      Global displacement solve, local plastic return mapping.
+     </h2>
+     <p>
+      Hyperelasticity is state-based: once the deformation gradient \(\mathbf{F}\) is known,
+              the stress follows directly. Elastoplasticity is path-dependent. The current stress depends on
+              the accepted Gauss-point history from the previous load step and on a local constitutive update
+              performed during the weak-form evaluation.
+     </p>
+    </article>
+    <div class="framework-flow-strip">
+     <span>
+      Flow
+     </span>
+     <p>
+      displacement DOFs &rarr; \(\mathbf{F}\) &rarr; local solve \(\mathbf{Q}(\mathbf{F},\mathbf{h})=0\) &rarr; stress \(\mathbf{P}\) &rarr; consistent tangent &rarr; global Newton assembly
+     </p>
+    </div>
+   </section>
+   <section class="doc-section section-wrap wide-page-wrap framework-detail-wide plasticity-document-section" id="plasticity-model">
+    <div class="plasticity-document-panel">
+     <div aria-label="Elastoplasticity documentation tabs" class="plasticity-tabs" role="tablist">
+      <button aria-selected="true" class="active" data-plasticity-tab="theory" role="tab" type="button">
+       Theory
+      </button>
+      <button aria-selected="false" data-plasticity-tab="simulation" role="tab" type="button">
+       Simulation
+      </button>
+     </div>
+     <div class="plasticity-tab-panel active" data-plasticity-panel="theory" role="tabpanel">
+      <div class="section-heading">
+       <p class="eyebrow">
+        Input declaration
+       </p>
+       <h2>
+        The history declaration defines the local state used by the theory.
+       </h2>
+       <p>
+        The global finite element problem contains only displacement DOFs. Plasticity enters through
+                  Gauss-point history variables, which are updated locally and committed only after a converged step.
+       </p>
+      </div>
+      <div class="example-grid two-col">
+       <article class="detail-card">
+        <h2>
+         History vector
+        </h2>
+        <p>
+         The local history vector is written as
+        </p>
+        \[
+                  \mathbf{h}
+                  =
+                  \begin{bmatrix}
+                  h_{11} &amp; h_{22} &amp; h_{33} &amp; h_{12} &amp; \gamma
+                  \end{bmatrix}^{T}.
+                  \]
+        <ul class="clean-list code-list">
+         <li>
+          <code>
+           h11, h22, h33, h12
+          </code>
+          define the plastic metric-like internal tensor.
+         </li>
+         <li>
+          <code>
+           gamma
+          </code>
+          is the accumulated plastic variable used by the hardening law.
+         </li>
+         <li>
+          <code>
+           h_n
+          </code>
+          is the last accepted state;
+          <code>
+           h_trial
+          </code>
+          is the current Newton trial state.
+         </li>
+        </ul>
+       </article>
+       <article class="detail-card">
+        <h2>
+         Plastic metric from history
+        </h2>
+        \[
+                  \mathbf{C}_{gp}^{-1}(\mathbf{h})
+                  =
+                  \begin{bmatrix}
+                  1+h_{11} &amp; h_{12} &amp; 0 \\
+                  h_{12} &amp; 1+h_{22} &amp; 0 \\
+                  0 &amp; 0 &amp; 1+h_{33}
+                  \end{bmatrix}.
+                  \]
+        <p>
+         For a two-dimensional plane-strain formulation, the out-of-plane component is still retained so that
+                    the constitutive update is performed in a three-dimensional tensor setting.
+        </p>
+       </article>
+      </div>
+      <div class="example-grid two-col theory-grid">
+       <article class="detail-card">
+        <span class="tag">
+         Kinematics
+        </span>
+        <h2>
+         Elastic tensor
+        </h2>
+        <p>
+         The global displacement field gives the deformation gradient
+        </p>
+        \[
+                  \mathbf{F}=\mathbf{I}+\nabla_{0}\mathbf{u}.
+                  \]
+        <p>
+         The elastic tensor used by the stress model is
+        </p>
+        \[
+                  \mathbf{b}_{e}
+                  =
+                  \mathbf{F}\mathbf{C}_{gp}^{-1}\mathbf{F}^{T}.
+                  \]
+        <p>
+         This is the first point where the local history affects the current stress. If
+                    \(\mathbf{h}=\mathbf{0}\), then \(\mathbf{C}_{gp}^{-1}=\mathbf{I}\) and the update reduces to the elastic trial state.
+        </p>
+       </article>
+       <article class="detail-card">
+        <span class="tag">
+         Stress check
+        </span>
+        <h2>
+         Kirchhoff stress and yield function
+        </h2>
+        \[
+                  \boldsymbol{\tau}=\boldsymbol{\tau}(\mathbf{b}_{e}),
+                  \qquad
+                  \Phi(\boldsymbol{\tau},\gamma)
+                  =
+                  q(\boldsymbol{\tau})-\sigma_{y}(\gamma).
+                  \]
+        <p>
+         If \(\Phi_{trial}\leq 0\), the step is elastic and the accepted history is copied to the trial state.
+                    If \(\Phi_{trial}&gt;0\), the local plastic residual must be solved.
+        </p>
+        \[
+                  \sigma_{y}(\gamma)
+                  =
+                  \sigma_{y0}
+                  +K_f\left(1-\exp(-\delta\gamma)\right)
+                  +Y_{\infty}\gamma.
+                  \]
+       </article>
+      </div>
+      <article class="detail-card formula-card">
+       <span class="tag">
+        Exponential mapping
+       </span>
+       <h2>
+        The plastic update is written as a local tensor equation.
+       </h2>
+       <p>
+        Let \(\mathbf{h}_{n}\) be the accepted history from the previous converged step and
+                  \(\mathbf{h}\) be the unknown trial history at the current Gauss point. The plastic increment is
+                  \(\Delta\gamma=\gamma-\gamma_{n}\), and the flow direction is evaluated from the current stress as
+                  \(\mathbf{A}=\mathbf{A}(\boldsymbol{\tau})\).
+       </p>
+       <p>
+        The exponential map evolves the plastic metric through
+       </p>
+       \[
+                \exp(-2\Delta\gamma\mathbf{A}).
+                \]
+       <p>
+        The tensor residual is defined as
+       </p>
+       \[
+                \mathbf{Z}(\mathbf{F},\mathbf{h})
+                =
+                \mathbf{F}\mathbf{C}_{gp}^{-1}(\mathbf{h})
+                -
+                \exp(-2\Delta\gamma\mathbf{A})
+                \mathbf{F}\mathbf{C}_{gp,n}^{-1}.
+                \]
+       <p>
+        The five-component local residual is
+       </p>
+       \[
+                \mathbf{Q}(\mathbf{F},\mathbf{h})
+                =
+                \begin{bmatrix}
+                Z_{11} \\
+                Z_{22} \\
+                Z_{33} \\
+                Z_{12} \\
+                \Phi
+                \end{bmatrix}
+                =
+                \mathbf{0}.
+                \]
+      </article>
+      <div class="example-grid two-col">
+       <article class="detail-card">
+        <span class="tag">
+         Local Newton
+        </span>
+        <h2>
+         The material point is solved before element assembly.
+        </h2>
+        \[
+                  \mathbf{J}_{h}
+                  =
+                  \frac{\partial\mathbf{Q}}{\partial\mathbf{h}},
+                  \qquad
+                  \mathbf{J}_{h}\Delta\mathbf{h}
+                  =
+                  -\mathbf{Q}.
+                  \]
+                  \[
+                  \mathbf{h}^{k+1}
+                  =
+                  \mathbf{h}^{k}+\alpha\Delta\mathbf{h}.
+                  \]
+        <p>
+         A line-search factor \(\alpha\) can be used to keep the local update stable, for example by avoiding
+                    nonphysical plastic metric states.
+        </p>
+       </article>
+       <article class="detail-card">
+        <span class="tag">
+         Consistent tangent
+        </span>
+        <h2>
+         The global tangent includes the sensitivity of the local solve.
+        </h2>
+        \[
+                  \frac{d\mathbf{h}}{d\mathbf{F}}
+                  =
+                  -
+                  \mathbf{Q}_{,\mathbf{h}}^{-1}
+                  \mathbf{Q}_{,\mathbf{F}}.
+                  \]
+                  \[
+                  \mathbb{A}_{ep}
+                  =
+                  \frac{d\mathbf{P}}{d\mathbf{F}}
+                  =
+                  \mathbf{P}_{,\mathbf{F}}
+                  -
+                  \mathbf{P}_{,\mathbf{h}}
+                  \mathbf{Q}_{,\mathbf{h}}^{-1}
+                  \mathbf{Q}_{,\mathbf{F}}.
+                  \]
+        <p>
+         This is the key difference between a secant-like plastic update and a consistent Newton update.
+        </p>
+       </article>
+      </div>
+      <article class="detail-card formula-card">
+       <span class="tag">
+        Weak form
+       </span>
+       <h2>
+        The global solver still sees only residual and tangent.
+       </h2>
+       \[
+                G(\mathbf{u},\delta\mathbf{u})
+                =
+                \int_{\Omega_0}
+                \mathbf{P}(\mathbf{F},\mathbf{h}(\mathbf{F}))
+                :\nabla_{0}\delta\mathbf{u}\,dV
+                -
+                \int_{\Gamma_N}
+                \bar{\mathbf{t}}\cdot\delta\mathbf{u}\,dA.
+                \]
+                \[
+                \mathbf{R}_{e}
+                =
+                \frac{\partial G_e}{\partial\delta\mathbf{u}},
+                \qquad
+                \mathbf{K}_{e}
+                =
+                \frac{\partial\mathbf{R}_{e}}{\partial\mathbf{u}}.
+                \]
+      </article>
+     </div>
+     <div class="plasticity-tab-panel" data-plasticity-panel="simulation" role="tabpanel">
+      <div class="section-heading">
+       <p class="eyebrow">
+        Input declaration
+       </p>
+       <h2>
+        Simulation files declare one global field and one local history block.
+       </h2>
+       <p>
+        This tab is practical: it shows which text files are needed, how the local update is called from the element routine,
+                  and how trial history is committed after global convergence.
+       </p>
+      </div>
+      <div class="example-grid two-col">
+       <article class="detail-card">
+        <h2>
+         <code>
+          DOFS_info.txt
+         </code>
+        </h2>
+        <pre class="example-code"><code># Global Newton unknown
+field_key displacement
+
+# Local Gauss-point history
+# {h11, h22, h33, h12, gamma}
+history plasticity 5</code></pre>
+       </article>
+       <article class="detail-card">
+        <h2>
+         <code>
+          Material.txt
+         </code>
+        </h2>
+        <pre class="example-code"><code>YOUNGS_MODULUS 100.0
+POISSON_RATIO 0.3
+YIELD_STRESS 0.45
+HARDENING_KF 0.12924
+HARDENING_YINF 0.715
+HARDENING_DELTA 16.93
+LOCAL_RESIDUAL_TOL 1.0e-10
+LOCAL_MAX_ITER 25</code></pre>
+       </article>
+      </div>
+      <article class="detail-card formula-card actual-code-intro">
+       <span class="tag">
+        Actual implementation excerpts
+       </span>
+       <h2>
+        Only the kernel-level code is shown here.
+       </h2>
+       <p>
+        The full weak form is longer, so this page shows the important executable fragments only:
+                  model registration, local residual, Gauss-point Newton update, implicit tangent injection,
+                  weak-form accumulation, history commit, and final CSR scatter.
+       </p>
+      </article>
+      <div class="actual-code-stack">
+       <details class="code-details" open="">
+        <summary>
+         1. The linked model declares displacement as the only global field.
+        </summary>
+        <pre class="example-code"><code>const char* active_constitutive_model_name() {
+    return "elasto_plastic_solid_displacement_history";
+}
+
+std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
+    (void)mesh;
+    return {"displacement"};
+}
+
+struct EPMaterial {
+    double E = 1.0;
+    double nu = 0.3;
+    double sigma_y = 0.45;
+    double Kf = 0.12924;
+    double Yinf = 0.715;
+    double delta = 16.93;
+    double local_tol = 1.0e-10;
+    int local_max_iter = 25;
+};</code></pre>
+       </details>
+       <details class="code-details">
+        <summary>
+         2. The five history variables are converted into the plastic metric.
+        </summary>
+        <pre class="example-code"><code>static Mat3 Cgpi_from_h(const Vector&amp; h){
+    if(static_cast&lt;int&gt;(h.size())&lt;5)
+        throw std::runtime_error("Plasticity history requires at least 5 variables in 2D.");
+    Mat3 C=hpx::eye3&lt;double&gt;();
+    C[0][0]+=h[0]; C[1][1]+=h[1]; C[2][2]+=h[2];
+    C[0][1]+=h[3]; C[1][0]+=h[3];
+    return C;
+}
+static double gamma_from_h(const Vector&amp; h){ return h[4]; }</code></pre>
+       </details>
+       <details class="code-details">
+        <summary>
+         3. Local residual Q(F,h)=0 used by the material-point Newton solve.
+        </summary>
+        <pre class="example-code"><code>static Vector local_Qg_residual(const Mat3&amp; F,const Vector&amp; h_n,
+                                const Vector&amp; h,const EPMaterial&amp; mat){
+    const Mat3 Cgpi=Cgpi_from_h(h);
+    const Mat3 Cgpin=Cgpi_from_h(h_n);
+    const Mat3 be=hpx::mul3&lt;double&gt;(
+        hpx::mul3&lt;double&gt;(F,Cgpi), hpx::transpose3&lt;double&gt;(F));
+    const Mat3 tau=tau_from_be(be,mat);
+    const double Phi=yield_q(tau)-sigma_y(gamma_from_h(h),mat);
+    const Mat3 A=yield_A(tau);
+    const double dgam=gamma_from_h(h)-gamma_from_h(h_n);
+    const Mat3 M=hpx::scale3&lt;double&gt;(A,-2.0*dgam);
+    const Mat3 Z=hpx::sub3&lt;double&gt;(
+        hpx::mul3&lt;double&gt;(F,Cgpi),
+        hpx::mul3&lt;double&gt;(hpx::mul3&lt;double&gt;(expm3(M),F),Cgpin));
+    return {Z[0][0],Z[1][1],Z[2][2],Z[0][1],Phi};
+}</code></pre>
+       </details>
+       <details class="code-details">
+        <summary>
+         4. Local return mapping: double-valued Newton solve at one Gauss point.
+        </summary>
+        <pre class="example-code"><code>static PlasticUpdateResult update_plastic_gp(const Mat3&amp; F,const Vector&amp; h_n,
+                                             double state_n,const EPMaterial&amp; mat){
+    (void)state_n;
+    PlasticUpdateResult out; out.h=h_n;
+    const double Ftrial=yield_function(F,h_n,mat);
+    const double tol=std::max(mat.local_tol,1e-12);
+    if(Ftrial&lt;=tol){
+        out.plastic=false; out.final_local_residual=0.0;
+        out.local_newton_iterations=0; out.state_trial=0.0;
+        return out;
+    }
+    out.plastic=true;
+    Vector h=h_n;
+    for(int it=0; it&lt;std::max(1,mat.local_max_iter); ++it){
+        Vector Q=local_Qg_residual(F,h_n,h,mat);
+        Matrix J=local_Jh_sacado(F,h_n,h,mat);
+        Vector rhs(Q.size());
+        for(int i=0;i&lt;static_cast&lt;int&gt;(Q.size());++i) rhs[i]=-Q[i];
+        Vector dh=solve_dense(J,rhs);
+
+        double alpha=1.0;
+        const double q0=norm_vec(Q);
+        for(int ls=0; ls&lt;8; ++ls){
+            Vector ht=h;
+            for(int i=0;i&lt;5;++i) ht[i]+=alpha*dh[i];
+            if(hpx::det3&lt;double&gt;(Cgpi_from_h(ht))&gt;0.0){
+                Vector Qt=local_Qg_residual(F,h_n,ht,mat);
+                if(norm_vec(Qt)&lt;=q0 || alpha&lt;1e-3){ h=ht; break; }
+            }
+            alpha*=0.5;
+        }
+        Vector Qnew=local_Qg_residual(F,h_n,h,mat);
+        const double qn=norm_vec(Qnew);
+        if(qn&lt;tol || norm_vec(dh)&lt;tol){
+            out.h=h; out.final_local_residual=qn;
+            out.local_newton_iterations=it+1;
+            out.state_trial=1000.0+qn;
+            return out;
+        }
+    }
+    throw std::runtime_error("Local elasto-plastic Newton did not converge.");
+}</code></pre>
+       </details>
+       <details class="code-details">
+        <summary>
+         5. Consistent tangent: implicit differentiation of Q(F,h)=0.
+        </summary>
+        <pre class="example-code"><code>static Matrix implicit_dh_dF_sacado(const Mat3&amp; Fd,const Vector&amp; h_n,
+                                    const Vector&amp; h,bool plastic,const EPMaterial&amp; mat) {
+    const int nf = 4;
+    const int nh = 5;
+    Matrix dh_dF(nh, Vector(nf, 0.0));
+    if (!plastic) return dh_dF;
+
+    const int nvar = nf + nh;
+    Mat3T&lt;EPAD&gt; F = hpx::zero3&lt;EPAD&gt;();
+    F[0][0] = EPAD(nvar, 0, Fd[0][0]);
+    F[0][1] = EPAD(nvar, 1, Fd[0][1]);
+    F[1][0] = EPAD(nvar, 2, Fd[1][0]);
+    F[1][1] = EPAD(nvar, 3, Fd[1][1]);
+
+    std::vector&lt;EPAD&gt; had(nh);
+    for (int i = 0; i &lt; nh; ++i) had[i] = EPAD(nvar, nf + i, h[i]);
+
+    const auto Q = local_Qg_sacado_full(F, had, h_n, mat);
+    Matrix Q_F(nh, Vector(nf, 0.0));
+    Matrix Q_h(nh, Vector(nh, 0.0));
+    for (int i = 0; i &lt; nh; ++i) {
+        for (int j = 0; j &lt; nf; ++j) Q_F[i][j] = Q[i].dx(j);
+        for (int j = 0; j &lt; nh; ++j) Q_h[i][j] = Q[i].dx(nf + j);
+    }
+    for (int jf = 0; jf &lt; nf; ++jf) {
+        Vector rhs(nh, 0.0);
+        for (int i = 0; i &lt; nh; ++i) rhs[i] = -Q_F[i][jf];
+        Vector col = solve_dense(Q_h, rhs);
+        for (int ih = 0; ih &lt; nh; ++ih) dh_dF[ih][jf] = col[ih];
+    }
+    return dh_dF;
+}</code></pre>
+       </details>
+       <details class="code-details">
+        <summary>
+         6. The weak form updates trial history, injects dh/dF, and accumulates G.
+        </summary>
+        <pre class="example-code"><code>Scalar G(0.0);
+for (int g = 0; g &lt; static_cast&lt;int&gt;(gps.size()); ++g) {
+    const auto&amp; gp = gps[g];
+    const ShapeData shape = compute_shape(U.element_type, gp.xi, gp.eta, gp.zeta);
+    const JacobianData J0 = compute_jacobian_data(geom, shape);
+    const auto dN = compute_dN_dx(shape, J0);
+    const double dV = J0.detJ * gp.weight;
+
+    const Mat3 F_double =
+        hpx::deformation_gradient_2d_plane_strain_array&lt;double&gt;(dN, u_double);
+    auto&amp; gh = state.material_history-&gt;gp[g];
+    PlasticUpdateResult upd = update_plastic_gp(F_double, gh.h_n, gh.state_n, mat);
+    gh.h_trial = upd.h;
+    gh.state_trial = upd.state_trial;
+
+    const Mat3T&lt;Scalar&gt; F_ad =
+        hpx::deformation_gradient_2d_plane_strain_array&lt;Scalar&gt;(dN, u_ad);
+    const Mat3T&lt;Scalar&gt; Cgpi_ad =
+        make_algorithmic_h_ad(F_ad, F_double, gh.h_n, upd.h, upd.plastic, mat);
+
+    const auto be = hpx::mul3&lt;Scalar&gt;(
+        hpx::mul3&lt;Scalar&gt;(F_ad, Cgpi_ad), hpx::transpose3&lt;Scalar&gt;(F_ad));
+    const auto tau = tau_from_beT&lt;Scalar&gt;(be, mat);
+    const auto P_ad = hpx::mul3&lt;Scalar&gt;(
+        tau, hpx::transpose3&lt;Scalar&gt;(hpx::inv3&lt;Scalar&gt;(F_ad)));
+
+    for (int i = 0; i &lt; 2; ++i)
+        for (int A = 0; A &lt; 2; ++A)
+            G += P_ad[i][A] * grad_test[i][A] * Scalar(dV);
+}
+return G;</code></pre>
+       </details>
+       <details class="code-details">
+        <summary>
+         7. Trial history is committed only after global convergence.
+        </summary>
+        <pre class="example-code"><code>inline void commit_material_history_store(MaterialHistoryStore&amp; history) {
+    for (auto&amp; dh : history.domains)
+        for (auto&amp; eh : dh.elements)
+            for (auto&amp; gh : eh.gp) {
+                if (!gh.h_trial.empty()) gh.h_n = gh.h_trial;
+                gh.state_n = gh.state_trial;
+            }
+}
+
+inline void clear_trial_material_history_store(MaterialHistoryStore&amp; history) {
+    for (auto&amp; dh : history.domains)
+        for (auto&amp; eh : dh.elements)
+            for (auto&amp; gh : eh.gp) {
+                gh.h_trial = gh.h_n;
+                gh.state_trial = gh.state_n;
+            }
+}</code></pre>
+       </details>
+       <details class="code-details">
+        <summary>
+         8. After the weak form returns the element system, assembly is generic.
+        </summary>
+        <pre class="example-code"><code>void assemble_element_system_csr(const ElementSystem&amp; es,const std::vector&lt;int&gt;&amp; dofs,
+                                 const std::vector&lt;int&gt;&amp; idx,Vector&amp; R,CSRMatrix&amp; K){
+    const int n=static_cast&lt;int&gt;(dofs.size());
+    if(static_cast&lt;int&gt;(es.residual.size())!=n ||
+       static_cast&lt;int&gt;(es.tangent.size())!=n*n ||
+       static_cast&lt;int&gt;(idx.size())!=n*n)
+        throw std::runtime_error("Bad element system size.");
+
+    for(int a=0;a&lt;n;++a){
+        R[dofs[a]] += es.residual[a];
+        const int row = a*n;
+        for(int b=0;b&lt;n;++b) K.values[idx[row+b]] += es.tangent[row+b];
+    }
+}</code></pre>
+       </details>
+      </div>
+      <div class="example-grid two-col">
+       <article class="detail-card">
+        <h2>
+         Useful diagnostics
+        </h2>
+        <pre class="example-code"><code>history_diagnostics on</code></pre>
+        <p>
+         For plasticity, the most useful diagnostic quantities are:
+        </p>
+        <ul class="clean-list code-list">
+         <li>
+          number of yielded Gauss points,
+         </li>
+         <li>
+          maximum local residual,
+         </li>
+         <li>
+          maximum local Newton iterations,
+         </li>
+         <li>
+          worst element and Gauss-point id.
+         </li>
+        </ul>
+       </article>
+       <article class="detail-card">
+        <h2>
+         Why this stays readable
+        </h2>
+        <p>
+         The page does not paste the whole source file. Instead, each collapsible block corresponds to one concept
+                    from the Theory tab, so readers can connect the math to the implementation without being overwhelmed.
+        </p>
+       </article>
+      </div>
+     </div>
+    </div>
+   </section>
+   <section class="doc-section section-wrap cook-page">
+    <div class="section-heading"><p class="eyebrow">Runnable example summary</p><h2>Strong form, boundary conditions, and implementation mapping.</h2></div>
+    <div class="math-explain-grid theory-grid">
+     <article class="math-card wide"><span class="tag">Strong form</span><div class="formula-block">\[-\operatorname{Div}\mathbf P(\mathbf F,\mathbf h)=\mathbf0\quad\text{in }\Omega_0.\]</div></article>
+     <article class="math-card wide"><span class="tag">Boundary conditions</span><div class="formula-block">\[\mathbf u=\bar{\mathbf u}\text{ on }\Gamma_D,\qquad \mathbf P\mathbf N=\bar{\mathbf t}\text{ on }\Gamma_N.\]</div><p>The L-shape support and loading values are defined in <code>input/BC.txt</code>.</p></article>
+     <article class="math-card wide"><span class="tag">Weak form</span><div class="formula-block">\[G_e=\int_{\Omega_0^e}\mathbf P(\mathbf F,\mathbf h):\nabla_0\delta\mathbf u\,dV,\qquad \mathbf Q(\mathbf F,\mathbf h)=\mathbf0.\]</div></article>
+    </div>
+    <div class="equation-code-table-wrap"><table class="equation-code-table">
+     <thead><tr><th>Mathematical quantity</th><th>Meaning</th><th>Code identifier</th><th>Source function</th></tr></thead>
+     <tbody>
+      <tr><td>\(\mathbf F\)</td><td>Deformation gradient</td><td><code>F</code></td><td><code>weak_scalar_elastoplastic_solid</code></td></tr>
+      <tr><td>\(\mathbf h\)</td><td>Plastic history variables</td><td><code>h</code>, <code>h_n</code></td><td><code>local_Qg_residual</code></td></tr>
+      <tr><td>\(\mathbf Q\)</td><td>Local plastic residual</td><td><code>Q</code></td><td><code>local_Qg_residual</code></td></tr>
+      <tr><td>\(\mathbf P\)</td><td>First Piola stress</td><td><code>P</code></td><td><code>weak_scalar_elastoplastic_solid</code></td></tr>
+      <tr><td>\(G_e\)</td><td>Element weak form</td><td><code>G</code></td><td><code>weak_scalar_elastoplastic_solid</code></td></tr>
+     </tbody>
+    </table></div>
+    <div class="example-run-panel"><p class="eyebrow">Build and run</p><h2>Copy the verified elastoplastic example into the FEM slots.</h2>
+     <pre><code>cp FEM/models/weak_form.cpp FEM/models/weak_form.cpp.bak
+cp -R FEM/input FEM/input.bak
+cp Web/examples/elastoplastic/weak_form.cpp FEM/models/weak_form.cpp
+cp Web/examples/elastoplastic/input/*.txt FEM/input/
+make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
+    </div>
+    <div class="section-heading compact-heading"><p class="eyebrow">Download input files</p><h2>Files synchronized from the runnable 2D L-shape case.</h2></div>
+    <div class="download-grid">
+     <a class="download-card" download href="../examples/elastoplastic/input/ProblemMesh.txt"><span class="tag">mesh</span><h3>ProblemMesh.txt</h3></a>
+     <a class="download-card" download href="../examples/elastoplastic/input/DOFS_info.txt"><span class="tag">dofs</span><h3>DOFS_info.txt</h3></a>
+     <a class="download-card" download href="../examples/elastoplastic/input/BC.txt"><span class="tag">bc</span><h3>BC.txt</h3></a>
+     <a class="download-card" download href="../examples/elastoplastic/input/Material.txt"><span class="tag">material</span><h3>Material.txt</h3></a>
+     <a class="download-card" download href="../examples/elastoplastic/input/Solver.txt"><span class="tag">solver</span><h3>Solver.txt</h3></a>
+     <a class="download-card" download href="../examples/elastoplastic/input/Postprocessing.txt"><span class="tag">output</span><h3>Postprocessing.txt</h3></a>
+     <a class="download-card" download href="../examples/elastoplastic/weak_form.cpp"><span class="tag">model</span><h3>weak_form.cpp</h3></a>
+    </div>
+    <button class="example-zip-button" disabled type="button">Download complete example (.zip) — coming after final validation</button>
+   </section>
+   <section class="doc-section section-wrap cook-page example-result-pending"><p class="eyebrow">Result</p><h2>Result pending validation</h2><p>The final plastic strain or deformation figure will be added after the full solid verification run.</p></section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

@@ -1,0 +1,13 @@
+# Results are written relative to the directory from which run.sh is called.
+output_directory ./output/homogenization
+model_output_subdir on
+output_name linear_macro_quadratic_micro
+output_every 1
+hdf5_output on
+vtk_output on
+debug_csv_output off
+force_output off
+minJ_output on
+plot_window off
+plot_each_step off
+multiscale_plot_show off

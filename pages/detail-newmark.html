@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   Dynamic Newmark solid with Gauss-point velocity and acceleration history &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap wide-page-wrap newmark-page">
+    <a class="back-button route-card" href="app-solid-dynamic.html">
+     &larr; Back to Solid Dynamics
+    </a>
+    <p class="eyebrow">
+     Solid Mechanics / Dynamic / Newmark
+    </p>
+    <h1>
+     Dynamic Newmark solid with Gauss-point velocity and acceleration history
+    </h1>
+    <p class="lead">
+     This page uses the same Theory / Simulation platform as the nonlinear elastic and inelastic examples.
+            The global finite element unknown is still the displacement field, while velocity and acceleration are
+            reconstructed and stored locally at Gauss points through the Newmark update.
+    </p>
+   </section>
+   <section class="doc-section section-wrap plasticity-document-section newmark-document-section">
+    <div class="plasticity-document-panel newmark-document-panel">
+     <div aria-label="Newmark documentation tabs" class="plasticity-tabs" role="tablist">
+      <button aria-selected="true" class="active" data-newmark-tab="theory" role="tab" type="button">
+       Theory
+      </button>
+      <button aria-selected="false" data-newmark-tab="simulation" role="tab" type="button">
+       Simulation
+      </button>
+     </div>
+     <div class="plasticity-tab-panel active" data-newmark-panel="theory" role="tabpanel">
+      <div class="section-heading">
+       <p class="eyebrow">
+        Theory
+       </p>
+       <h2>
+        Newmark discretization inside a displacement-only nonlinear solid.
+       </h2>
+       <p>
+        The dynamic problem should not be documented as if velocity and acceleration were extra global DOFs.
+                  In this implementation, the global vector contains only displacement. Velocity and acceleration are
+                  Gauss-point history values used to reconstruct the inertial residual during each Newton trial.
+       </p>
+      </div>
+      <div class="math-explain-grid theory-grid">
+       <article class="math-card">
+        <span class="tag">
+         1 &middot; Global unknown
+        </span>
+        <h3>
+         Displacement remains the only assembled field
+        </h3>
+        <div class="formula-block">
+         \[
+                    \mathbf{x}_{n+1} \equiv \mathbf{u}_{n+1}
+                  \]
+        </div>
+        <p>
+         The assembly asks the weak form for only the
+         <code>
+          displacement
+         </code>
+         field. This keeps the global CSR
+                    system identical in structure to static hyperelasticity: the additional dynamic quantities are not
+                    numbered as nodal unknowns.
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         2 &middot; Local history
+        </span>
+        <h3>
+         Velocity and acceleration live at Gauss points
+        </h3>
+        <div class="formula-block">
+         \[
+                    \mathbf{h}_{n}^{gp}
+                    =
+                    \begin{bmatrix}
+                    \mathbf{v}_{n}^{gp} \\
+                    \mathbf{a}_{n}^{gp}
+                    \end{bmatrix}
+                  \]
+        </div>
+        <p>
+         In 2D,
+         <code>
+          history newmark 4
+         </code>
+         means
+                    \([v_x^{gp}, v_y^{gp}, a_x^{gp}, a_y^{gp}]\) at every integration point. These values are local
+                    material-point states, not global field values.
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         3 &middot; Newmark acceleration
+        </span>
+        <h3>
+         Acceleration is reconstructed from the current displacement iterate
+        </h3>
+        <div class="formula-block">
+         \[
+                    \mathbf{a}_{n+1}^{gp}
+                    =
+                    \frac{1}{\beta \Delta t^2}
+                    \left(\mathbf{u}_{n+1}^{gp}-\mathbf{u}_{n}^{gp}-\Delta t\,\mathbf{v}_{n}^{gp}\right)
+                    -
+                    \left(\frac{1}{2\beta}-1\right)\mathbf{a}_{n}^{gp}
+                  \]
+        </div>
+        <p>
+         Because \(\mathbf{u}_{n+1}^{gp}\) comes from the current Newton iterate, the inertial term contributes
+                    directly to the residual and to the AD tangent.
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         4 &middot; Newmark velocity
+        </span>
+        <h3>
+         Velocity is a candidate history value
+        </h3>
+        <div class="formula-block">
+         \[
+                    \mathbf{v}_{n+1}^{gp}
+                    =
+                    \mathbf{v}_{n}^{gp}
+                    + \Delta t\left((1-\gamma)\mathbf{a}_{n}^{gp}+\gamma\mathbf{a}_{n+1}^{gp}\right)
+                  \]
+        </div>
+        <p>
+         The computed \(\mathbf{v}_{n+1}^{gp}\) and \(\mathbf{a}_{n+1}^{gp}\) are first written to
+         <code>
+          h_trial
+         </code>
+         . They are committed only when the time step is accepted.
+        </p>
+       </article>
+       <article class="math-card wide">
+        <span class="tag">
+         5 &middot; Scalar weak form
+        </span>
+        <h3>
+         Elastic and inertial virtual work in one AD expression
+        </h3>
+        <div class="formula-block">
+         \[
+                    G(\mathbf{u}_{n+1},\delta\mathbf{u})
+                    =
+                    \int_{\Omega_0}
+                    \mathbf{P}(\mathbf{F}(\mathbf{u}_{n+1})) : \nabla_0\delta\mathbf{u}\,dV
+                    +
+                    \int_{\Omega_0}
+                    \rho\,\mathbf{a}_{n+1}(\mathbf{u}_{n+1})\cdot\delta\mathbf{u}\,dV
+                  \]
+        </div>
+        <p>
+         The residual is obtained from \(\partial G/\partial\delta\mathbf{u}\), and the tangent is obtained by
+                    differentiating that residual with respect to \(\mathbf{u}_{n+1}\). Therefore the mass/inertia
+                    contribution is consistent with the Newmark discretization.
+        </p>
+       </article>
+       <article class="math-card wide">
+        <span class="tag">
+         6 &middot; Commit rule
+        </span>
+        <h3>
+         Rejected steps must not overwrite local states
+        </h3>
+        <div class="formula-block">
+         \[
+                    \mathbf{h}_{trial}^{gp}
+                    =
+                    \begin{bmatrix}
+                    \mathbf{v}_{n+1}^{gp} \\
+                    \mathbf{a}_{n+1}^{gp}
+                    \end{bmatrix},
+                    \qquad
+                    \mathbf{h}_{n+1}^{gp} \leftarrow \mathbf{h}_{trial}^{gp}
+                    \quad\text{only after convergence.}
+                  \]
+        </div>
+        <p>
+         This is the same history-management logic used by plasticity and viscoelasticity: local trial states
+                    are allowed during Newton iterations, but the previous accepted history remains intact if adaptive
+                    stepping rejects the trial.
+        </p>
+       </article>
+      </div>
+     </div>
+     <div class="plasticity-tab-panel" data-newmark-panel="simulation" role="tabpanel">
+      <div class="section-heading actual-code-intro">
+       <p class="eyebrow">
+        Simulation
+       </p>
+       <h2>
+        Input files and implementation flow for the Newmark example.
+       </h2>
+       <p>
+        The simulation setup exposes the dynamic model through the same input-file style as the other solid
+                  examples: field declaration, local history declaration, material/time-integration parameters, boundary
+                  loading, solver controls, and output settings.
+       </p>
+      </div>
+      <div class="example-grid two-col">
+       <article class="detail-card">
+        <span class="tag">
+         DOFS_info.txt
+        </span>
+        <h2>
+         Separate global DOFs from local history variables.
+        </h2>
+        <pre class="example-code"><code>field_key displacement
+history newmark 4</code></pre>
+        <p>
+         The first line creates the global displacement unknowns. The second line creates four local values per
+                    Gauss point in 2D: two velocity components and two acceleration components.
+        </p>
+       </article>
+       <article class="detail-card">
+        <span class="tag">
+         Material.txt
+        </span>
+        <h2>
+         Elastic constants plus Newmark parameters.
+        </h2>
+        <pre class="example-code"><code>youngs_modulus 200
+poisson_ratio 0.3
+
+newmark_beta 0.25
+newmark_gamma 0.5</code></pre>
+        <p>
+         The average-acceleration choice \(\beta=0.25\), \(\gamma=0.5\) is a common baseline for implicit
+                    structural dynamics. Density is read through the solid material parameter path when specified.
+        </p>
+       </article>
+      </div>
+      <div class="example-grid two-col">
+       <article class="detail-card">
+        <span class="tag">
+         BC.txt
+        </span>
+        <h2>
+         Time-dependent traction loading.
+        </h2>
+        <pre class="example-code"><code>DIRICHLET LEFT 0 0.0
+DIRICHLET LEFT 1 0.0
+NEUMANN RIGHT 1 sin(pi*t)/(1.0+exp(80.0*(t-2.0)))</code></pre>
+        <p>
+         The left side is fixed in both displacement components. The right boundary receives a transient
+                    vertical traction that is smoothly damped after the loading interval.
+        </p>
+       </article>
+       <article class="detail-card">
+        <span class="tag">
+         Solver.txt
+        </span>
+        <h2>
+         Transient solve with adaptive time stepping.
+        </h2>
+        <pre class="example-code"><code>dt 0.1
+total_time 12.0
+adaptive_dt on
+dt_max 0.02
+max_iter 20
+tol 1e-8
+history_diagnostics on</code></pre>
+        <p>
+         The global Newton solve advances displacement. During each accepted step, the local Newmark history is
+                    advanced consistently with the converged displacement state.
+        </p>
+       </article>
+      </div>
+      <div class="code-accordion">
+       <details class="code-details" open="">
+        <summary>
+         1. The active model assembles only displacement DOFs.
+        </summary>
+        <pre class="example-code"><code>std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
+    (void)mesh;
+    return {"displacement"};
+}</code></pre>
+        <p>
+         This is the key difference from a mixed displacement-velocity formulation. Newmark velocity and
+                    acceleration do not enlarge the global linear system.
+        </p>
+       </details>
+       <details class="code-details">
+        <summary>
+         2. The weak form requires Gauss-point Newmark history.
+        </summary>
+        <pre class="example-code"><code>if (!state.material_history) {
+    throw std::runtime_error(
+        "Add 'history newmark 2*dim' to DOFS_info.txt"
+    );
+}</code></pre>
+        <p>
+         The local history object is attached to the element/Gauss-point state by the generic history store.
+                    Its size is checked as
+         <code>
+          2*dim
+         </code>
+         .
+        </p>
+       </details>
+       <details class="code-details">
+        <summary>
+         3. Previous accepted displacement is read from the assembler state.
+        </summary>
+        <pre class="example-code"><code>u_gp   = interpolate(u_{n+1}, N)
+u_n_gp = interpolate(u_n, N)</code></pre>
+        <p>
+         The current displacement is the Newton variable, while the previous accepted displacement is supplied
+                    through
+         <code>
+          state.x_n_elem
+         </code>
+         . This makes the update local but still consistent with the global step.
+        </p>
+       </details>
+       <details class="code-details">
+        <summary>
+         4. Candidate history is written during weak-form evaluation.
+        </summary>
+        <pre class="example-code"><code>hist.h_trial[i]       = v_{n+1,i}^{gp};
+hist.h_trial[dim + i] = a_{n+1,i}^{gp};</code></pre>
+        <p>
+         This candidate state is useful for output and diagnostics, but it becomes the new accepted history only
+                    after the solver accepts the time step.
+        </p>
+       </details>
+       <details class="code-details">
+        <summary>
+         5. The inertial term is part of the same scalar AD weak form.
+        </summary>
+        <pre class="example-code"><code>G += rho * a_newmark_gp[i] * delta_u_gp[i] * dV;</code></pre>
+        <p>
+         Since
+         <code>
+          a_newmark_gp
+         </code>
+         depends on the current displacement iterate, the AD tangent automatically
+                    contains the dynamic mass contribution for the Newmark step.
+        </p>
+       </details>
+      </div>
+      <div class="download-section compact-download-section">
+       <div class="math-explain-grid theory-grid"><article class="math-card wide"><span class="tag">Strong form</span><div class="formula-block">\[\rho\,\ddot{\mathbf u}-\operatorname{Div}\mathbf P(\mathbf F)=\mathbf0\quad\text{in }\Omega_0.\]</div></article><article class="math-card wide"><span class="tag">Boundary conditions</span><div class="formula-block">\[\mathbf u=\bar{\mathbf u}\text{ on }\Gamma_D,\qquad \mathbf P\mathbf N=\bar{\mathbf t}(t)\text{ on }\Gamma_N.\]</div><p>The actual support and transient traction are defined in <code>input/BC.txt</code>.</p></article><article class="math-card wide"><span class="tag">Weak form</span><div class="formula-block">\[G_e=\int_{\Omega_0^e}\rho\mathbf a_{n+1}\cdot\delta\mathbf u+\mathbf P:\nabla_0\delta\mathbf u\,dV.\]</div></article></div>
+       <div class="section-heading compact-heading"><p class="eyebrow">Equation-to-code mapping</p><h2>Newmark quantities in the dynamic weak form.</h2></div>
+       <div class="equation-code-table-wrap"><table class="equation-code-table"><thead><tr><th>Mathematical quantity</th><th>Meaning</th><th>Code identifier</th><th>Source function</th></tr></thead><tbody><tr><td>\(\mathbf u_{n+1}\)</td><td>Current displacement</td><td><code>u_gp</code></td><td><code>weak_scalar_hyperelastic_newmark_solid</code></td></tr><tr><td>\(\mathbf v_{n+1}\)</td><td>Updated velocity</td><td><code>v_np1_gp</code></td><td><code>weak_scalar_hyperelastic_newmark_solid</code></td></tr><tr><td>\(\mathbf a_{n+1}\)</td><td>Updated acceleration</td><td><code>a_np1_gp</code></td><td><code>weak_scalar_hyperelastic_newmark_solid</code></td></tr><tr><td>\(\beta,\gamma\)</td><td>Newmark parameters</td><td><code>nm.newmark_beta</code>, <code>nm.newmark_gamma</code></td><td><code>weak_scalar_hyperelastic_newmark_solid</code></td></tr><tr><td>\(G_e\)</td><td>Dynamic weak form</td><td><code>G</code></td><td><code>weak_scalar_hyperelastic_newmark_solid</code></td></tr></tbody></table></div>
+       <div class="example-run-panel">
+        <p class="eyebrow">Build and run</p><h2>Copy the verified dynamic example into the FEM slots.</h2>
+        <pre><code>cp FEM/models/weak_form.cpp FEM/models/weak_form.cpp.bak
+cp -R FEM/input FEM/input.bak
+cp Web/examples/newmark/weak_form.cpp FEM/models/weak_form.cpp
+cp Web/examples/newmark/input/*.txt FEM/input/
+make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
+       </div>
+       <div class="section-heading compact-heading">
+        <p class="eyebrow">
+         Download input files
+        </p>
+        <h2>
+         All text files used by this Newmark example.
+        </h2>
+        <p>
+         These files are included in the website package under
+         <code>
+          examples/newmark/input/
+         </code>
+         .
+        </p>
+       </div>
+       <div class="download-grid">
+        <a class="download-card" download="" href="../examples/newmark/input/ProblemMesh.txt">
+         <span class="tag">
+          mesh
+         </span>
+         <h3>
+          ProblemMesh.txt
+         </h3>
+         <p>
+          Displacement mesh and boundary groups for the dynamic solid example.
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/newmark/input/DOFS_info.txt">
+         <span class="tag">
+          dofs
+         </span>
+         <h3>
+          DOFS_info.txt
+         </h3>
+         <p>
+          Declares
+          <code>
+           field_key displacement
+          </code>
+          and
+          <code>
+           history newmark 4
+          </code>
+          .
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/newmark/input/BC.txt">
+         <span class="tag">
+          bc
+         </span>
+         <h3>
+          BC.txt
+         </h3>
+         <p>
+          Fixes the left boundary and applies transient traction on the right boundary.
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/newmark/input/Material.txt">
+         <span class="tag">
+          material
+         </span>
+         <h3>
+          Material.txt
+         </h3>
+         <p>
+          Defines elastic constants and Newmark
+          <code>
+           &beta;
+          </code>
+          /
+          <code>
+           &gamma;
+          </code>
+          parameters.
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/newmark/input/Solver.txt">
+         <span class="tag">
+          solver
+         </span>
+         <h3>
+          Solver.txt
+         </h3>
+         <p>
+          Controls time step, adaptive stepping, Newton tolerance, and diagnostics.
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/newmark/input/Postprocessing.txt">
+         <span class="tag">
+          output
+         </span>
+         <h3>
+          Postprocessing.txt
+         </h3>
+         <p>
+          Configures VTK, CSV, final DOF, timing, and hysteresis-style output paths.
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/newmark/weak_form.cpp">
+         <span class="tag">
+          model
+         </span>
+         <h3>
+          weak_form.cpp
+         </h3>
+         <p>
+          Verified Newmark weak form synchronized from the runnable dynamic model.
+         </p>
+        </a>
+       </div>
+       <button class="example-zip-button" disabled type="button">Download complete example (.zip) — coming after final validation</button>
+      </div>
+     </div>
+    </div>
+   </section>
+   <section class="doc-section section-wrap cook-page example-result-pending">
+    <p class="eyebrow">Result</p><h2>Result pending validation</h2><p>The final displacement or time-history figure will be added after the full solid verification run.</p>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

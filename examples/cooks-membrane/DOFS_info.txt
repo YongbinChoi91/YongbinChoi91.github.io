@@ -1,6 +1,2 @@
-# Global unknown/element-local field order used by assembly and constitutive LocalFieldView.
-# Use physical field names directly.  Reorder this line to change the global DOF order.
-field_key displacement
-
-# Thermo-coupled example:
-# field_key velocity displacement temperature pressure
+# Placeholder file for DOFS_info.txt
+# Replace this with the verified HiPaCs example input/source file.

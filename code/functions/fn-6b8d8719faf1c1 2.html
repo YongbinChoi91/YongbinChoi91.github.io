@@ -1,0 +1,19 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="============================================================================ Reduced-system construction and linear solves ============================================================================"><title>pressure_full_dofs_for_mesh() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../solver.html?file=solver.cpp">← core/solver/solver.cpp</a>
+<p class="eyebrow">Function detail</p><h1>pressure_full_dofs_for_mesh()</h1><p class="lead">============================================================================ Reduced-system construction and linear solves ============================================================================</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static std::vector&lt; int &gt; pressure_full_dofs_for_mesh(const FieldMesh &amp;mesh)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/solver/solver.cpp:586</dd></div><div><dt>Declaration</dt><dd>core/solver/solver.cpp:586</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/solver/solver.cpp#L586" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 586–591</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="586"><span class="token keyword">static</span> std::vector&lt;<span class="token keyword">int</span>&gt; pressure_full_dofs_for_mesh(<span class="token keyword">const</span> FieldMesh&amp; mesh){</span>
+<span class="source-line" data-line="587">    std::vector&lt;<span class="token keyword">int</span>&gt; ids;</span>
+<span class="source-line" data-line="588">    ids.reserve(n_pressure_dofs(mesh));</span>
+<span class="source-line" data-line="589">    <span class="token keyword">for</span>(<span class="token keyword">int</span> p=<span class="token number">0</span>;p&lt;n_pressure_dofs(mesh);++p) ids.push_back(pressure_dof(mesh,p));</span>
+<span class="source-line" data-line="590">    <span class="token keyword">return</span> ids;</span>
+<span class="source-line" data-line="591">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-8d2780feef4431.html">← update_pressure_pcd_data_cached()</a><a href="fn-90c8da0ce3d5ba.html">make_linear_settings_for_problem() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

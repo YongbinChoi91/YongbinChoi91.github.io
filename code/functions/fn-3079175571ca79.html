@@ -1,0 +1,23 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements choose pressure pin node."><title>choose_pressure_pin_node() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../boundary.html?file=boundary_dirichlet.cpp">← core/boundary/boundary_dirichlet.cpp</a>
+<p class="eyebrow">Function detail</p><h1>choose_pressure_pin_node()</h1><p class="lead">Implements choose pressure pin node.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>int choose_pressure_pin_node(const FieldMesh &amp;mesh)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/boundary/boundary_dirichlet.cpp:108</dd></div><div><dt>Declaration</dt><dd>core/boundary/boundary_condition.h:24</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/boundary/boundary_dirichlet.cpp#L108" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 108–117</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="108"><span class="token keyword">int</span> choose_pressure_pin_node(<span class="token keyword">const</span> FieldMesh&amp; mesh){</span>
+<span class="source-line" data-line="109">    <span class="token keyword">if</span>(mesh.pressure_nodes.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;No pressure nodes for pressure pin.&quot;</span>);</span>
+<span class="source-line" data-line="110">    <span class="token keyword">int</span> best=<span class="token number">0</span>; <span class="token keyword">double</span> bx=mesh.pressure_nodes[<span class="token number">0</span>].x[<span class="token number">0</span>], by=mesh.pressure_nodes[<span class="token number">0</span>].x[<span class="token number">1</span>];</span>
+<span class="source-line" data-line="111">    <span class="token keyword">const</span> <span class="token keyword">double</span> eps=<span class="token number">1.0e-12</span>;</span>
+<span class="source-line" data-line="112">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">1</span>;i&lt;static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.pressure_nodes.size());++i){</span>
+<span class="source-line" data-line="113">        <span class="token keyword">const</span> <span class="token keyword">double</span> x=mesh.pressure_nodes[i].x[<span class="token number">0</span>], y=mesh.pressure_nodes[i].x[<span class="token number">1</span>];</span>
+<span class="source-line" data-line="114">        <span class="token keyword">if</span>(x&gt;bx+eps || (std::abs(x-bx)&lt;=eps &amp;&amp; y&lt;by)){ best=i; bx=x; by=y; }</span>
+<span class="source-line" data-line="115">    }</span>
+<span class="source-line" data-line="116">    <span class="token keyword">return</span> best;</span>
+<span class="source-line" data-line="117">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-e5e52fade5a768.html">← constrain_inactive_constitutive_dofs()</a><a href="fn-715299a74ff42b.html">constrain_unused_mesh_dofs() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

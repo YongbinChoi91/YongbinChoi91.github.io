@@ -1,0 +1,87 @@
+# ============================================================
+# Postprocessing / output-path settings
+# ============================================================
+
+# ------------------------------------------------------------
+# Output folder structure
+# ------------------------------------------------------------
+# HDF5 is the default result database:
+#   <output_root>/<sanitized_weakform_model_name>/<sanitized_weakform_model_name>.h5
+# It stores /time, /solution/dofs, /solution/final_raw_dofs, and enabled
+# /history or /diagnostics tables.  CSV/TXT debug exports are off by default.
+output_root ./output
+hdf5_output on
+debug_csv_output off
+model_output_subdir on
+
+# ------------------------------------------------------------
+# Main output switches
+# ------------------------------------------------------------
+# vtk_output controls accepted-step VTK writing.
+# vtk_interval is mapped to solver output_every.
+# svg_output controls generated SVG figures.
+# final_dofs_output writes /solution/final_raw_dofs in HDF5.  Legacy TXT dumps
+# are written only when debug_csv_output is on.
+vtk_output on
+vtk_interval 1
+svg_output on
+svg_interval 1
+final_dofs_output on
+
+# ------------------------------------------------------------
+# Deferred postprocessing
+# ------------------------------------------------------------
+# off: write VTK/HDF5/SVG during accepted steps.
+# on : store accepted snapshots and write heavier outputs after time stepping.
+postprocess_deferred off
+
+# ------------------------------------------------------------
+# Force / drag-lift output
+# ------------------------------------------------------------
+# force_output on stores drag/lift in HDF5 /history/force.  CSV force output
+# is written only when debug_csv_output is on.
+force_output off
+force_boundary CIRCLE
+force_boundary_check_tol 1e-8
+force_attack_angle_deg 0.0
+force_csv auto
+force_svg auto
+
+# ------------------------------------------------------------
+# Mesh-quality output
+# ------------------------------------------------------------
+# minJ_output on stores samples in HDF5 /diagnostics/minJ.  CSV minJ output is
+# written only when debug_csv_output is on.
+# minJ_only_fsi on keeps minJ focused on ALE/FSI/solid-style runs.
+minJ_output off
+minJ_only_fsi on
+minJ_csv auto
+
+# ------------------------------------------------------------
+# Hysteresis output
+# ------------------------------------------------------------
+# hysteresis_output on stores the curve in HDF5 /history/hysteresis.  CSV is
+# written only when debug_csv_output is on, except svg_output on may create
+# debug_csv/hysteresis.csv for SVG generation.
+hysteresis_output on
+hysteresis_csv auto
+hysteresis_svg auto
+
+# x-axis: prescribed uy value on TOP, no sign flip here.
+hysteresis_x_axis time
+
+# y-axis: reaction force sum on BOTTOM uy, normal reaction convention.
+hysteresis_y_axis value displacement point 48,60 1 1.0
+
+# Alternative examples:
+# 1) Use raw residual instead of reaction:
+# hysteresis_y_axis residual BOTTOM uy 1.0
+#
+# 2) Plot a single point displacement on x-axis using node id 120, uy, with sign flip:
+# hysteresis_x_axis value displacement node 120 uy -1.0
+#
+# 3) Plot mean boundary displacement on x-axis:
+# hysteresis_x_axis value displacement boundary TOP uy mean -1.0
+#
+# 4) Plot time on x-axis:
+# hysteresis_x_axis time 1.0

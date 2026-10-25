@@ -1,0 +1,41 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements print progress bar."><title>print_progress_bar() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../solver.html?file=solver.cpp">← core/solver/solver.cpp</a>
+<p class="eyebrow">Function detail</p><h1>print_progress_bar()</h1><p class="lead">Implements print progress bar.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static void print_progress_bar(double progress, const std::string &amp;label, double final_residual, int newton_iterations, const HistoryLocalDiagnostics &amp;history_diagnostics, bool show_history_diagnostics)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/solver/solver.cpp:850</dd></div><div><dt>Declaration</dt><dd>core/solver/solver.cpp:850</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/solver/solver.cpp#L850" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 850–877</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="850"><span class="token keyword">static</span> <span class="token keyword">void</span> print_progress_bar(<span class="token keyword">double</span> progress,</span>
+<span class="source-line" data-line="851">                               <span class="token keyword">const</span> std::string&amp; label,</span>
+<span class="source-line" data-line="852">                               <span class="token keyword">double</span> final_residual,</span>
+<span class="source-line" data-line="853">                               <span class="token keyword">int</span> newton_iterations,</span>
+<span class="source-line" data-line="854">                               <span class="token keyword">const</span> HistoryLocalDiagnostics&amp; history_diagnostics,</span>
+<span class="source-line" data-line="855">                               <span class="token keyword">bool</span> show_history_diagnostics){</span>
+<span class="source-line" data-line="856">    progress=std::max(<span class="token number">0.0</span>,std::min(<span class="token number">1.0</span>,progress));</span>
+<span class="source-line" data-line="857">    <span class="token keyword">const</span> <span class="token keyword">int</span> width=<span class="token number">50</span>;</span>
+<span class="source-line" data-line="858">    <span class="token keyword">const</span> <span class="token keyword">int</span> filled=static_cast&lt;<span class="token keyword">int</span>&gt;(std::round(progress*width));</span>
+<span class="source-line" data-line="859">    <span class="token keyword">const</span> <span class="token keyword">int</span> percent=static_cast&lt;<span class="token keyword">int</span>&gt;(std::round(progress*<span class="token number">100.0</span>));</span>
+<span class="source-line" data-line="860"> </span>
+<span class="source-line" data-line="861">    std::ostringstream os;</span>
+<span class="source-line" data-line="862">    os &lt;&lt; <span class="token string">&quot;\r\033[K&quot;</span> &lt;&lt; label &lt;&lt; <span class="token string">&quot; [&quot;</span>;</span>
+<span class="source-line" data-line="863">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;width;++i){</span>
+<span class="source-line" data-line="864">        os &lt;&lt; (i&lt;filled ? <span class="token string">&quot;█&quot;</span> : <span class="token string">&quot;░&quot;</span>);</span>
+<span class="source-line" data-line="865">    }</span>
+<span class="source-line" data-line="866">    os &lt;&lt; <span class="token string">&quot;] &quot;</span> &lt;&lt; std::setw(<span class="token number">3</span>) &lt;&lt; percent &lt;&lt; <span class="token string">&quot;%&quot;</span></span>
+<span class="source-line" data-line="867">       &lt;&lt; <span class="token string">&quot;  Residual=&quot;</span> &lt;&lt; std::scientific &lt;&lt; std::setprecision(<span class="token number">3</span>) &lt;&lt; final_residual</span>
+<span class="source-line" data-line="868">       &lt;&lt; <span class="token string">&quot;  Newton Iter=&quot;</span> &lt;&lt; newton_iterations;</span>
+<span class="source-line" data-line="869"> </span>
+<span class="source-line" data-line="870">    <span class="token keyword">if</span>(show_history_diagnostics &amp;&amp; history_diagnostics.active){</span>
+<span class="source-line" data-line="871">        os &lt;&lt; <span class="token string">&quot;  Local Res=&quot;</span> &lt;&lt; std::scientific &lt;&lt; std::setprecision(<span class="token number">3</span>) &lt;&lt; history_diagnostics.max_residual</span>
+<span class="source-line" data-line="872">           &lt;&lt; <span class="token string">&quot;  Local Iter=&quot;</span> &lt;&lt; history_diagnostics.max_iterations;</span>
+<span class="source-line" data-line="873">    }</span>
+<span class="source-line" data-line="874"> </span>
+<span class="source-line" data-line="875">    std::cout &lt;&lt; os.str() &lt;&lt; std::flush;</span>
+<span class="source-line" data-line="876">    <span class="token keyword">if</span>(progress&gt;=<span class="token number">1.0</span>-<span class="token number">1.0e-14</span>) std::cout &lt;&lt; <span class="token string">&quot;\n&quot;</span>;</span>
+<span class="source-line" data-line="877">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-9aeb3bb9a6b17c.html">← print_progress_newton_monitor()</a><a href="fn-ee1741b2d33b31.html">compact_log_number() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

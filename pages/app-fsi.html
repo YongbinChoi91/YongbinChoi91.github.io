@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="description" content="Coupled FEM fluid-structure interaction: ALE fluid, Neo-Hookean solid, weak forms, and the current 2D implementation."/>
+  <title>Fluid-Structure Interaction · HiPaCs</title>
+  <link rel="canonical" href="https://yongbinchoi91.github.io/pages/app-fsi.html"/>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap">
+    <a class="back-button route-card" href="../applications.html">&larr; Back to applications</a>
+    <p class="eyebrow">Application / FEM / Fluid-Structure Interaction</p>
+    <h1>Fluid-Structure Interaction</h1>
+    <p class="lead">One coupled ALE formulation for an incompressible fluid and a Neo-Hookean solid. Follow the theory, then the actual mixed finite-element implementation and its 2D input files.</p>
+   </section>
+   <section class="doc-section section-wrap cook-page plasticity-document-section fsi-document-section">
+    <div class="plasticity-document-panel">
+     <div class="plasticity-tabs" role="tablist" aria-label="FSI documentation">
+      <button id="fsi-theory-tab" class="active" type="button" role="tab" aria-selected="true" aria-controls="fsi-theory-panel" data-fsi-tab="theory">Theory</button>
+      <button id="fsi-code-tab" type="button" role="tab" aria-selected="false" aria-controls="fsi-code-panel" data-fsi-tab="code">Code</button>
+     </div>
+     <div id="fsi-theory-panel" class="plasticity-tab-panel active" role="tabpanel" aria-labelledby="fsi-theory-tab" data-fsi-panel="theory">
+      <div class="section-heading"><p class="eyebrow">Theory</p><h2>From domain balances to one coupled residual.</h2><p>The unknowns are velocity \(\mathbf v\), displacement \(\mathbf u\), and pressure \(p\). Displacement moves the fluid mesh in \(\Omega_f^0\) and describes the physical solid in \(\Omega_s^0\); velocity is active in both domains.</p></div>
+      <div class="math-explain-grid theory-grid">
+       <article class="math-card wide"><span class="tag">1 &middot; ALE kinematics</span><h3>Reference and current configurations</h3>
+        <div class="formula-block">\[\mathbf x=\mathbf X+\mathbf u(\mathbf X,t),\qquad \mathbf F=\mathbf I+\nabla_0\mathbf u,\qquad J=\det\mathbf F>0,\qquad \mathbf w=\partial_t\mathbf u.\]</div>
+        <p>All integrals below use the reference domains. In the fluid, \(\mathbf w\) is the mesh velocity and \(\nabla_x\mathbf v=\nabla_0\mathbf v\,\mathbf F^{-1}\). The example uses two in-plane components; the solid constitutive law embeds \(\mathbf F\) in 3D with \(F_{33}=1\) for plane strain.</p>
+       </article>
+       <article class="math-card wide"><span class="tag">2 &middot; Fluid strong form</span><h3>Incompressible Navier&ndash;Stokes in ALE coordinates</h3>
+        <div class="formula-block">\[\rho_f J\left[\left.\partial_t\mathbf v\right|_{\mathbf X}+\nabla_0\mathbf v\,\mathbf F^{-1}(\mathbf v-\mathbf w)\right]-\operatorname{Div}\mathbf P_f=\mathbf0,\qquad J\mathbf F^{-T}:\nabla_0\mathbf v=0.\]</div>
+        <div class="formula-block">\[\mathbf P_f=J\boldsymbol\sigma_f\mathbf F^{-T},\qquad \boldsymbol\sigma_f=-p\mathbf I+\eta_f\left(\nabla_0\mathbf v\,\mathbf F^{-1}+\mathbf F^{-T}(\nabla_0\mathbf v)^T\right).\]</div>
+        <p>In this implementation \(\rho_f=\texttt{rho}\) and the dynamic viscosity is \(\eta_f=\texttt{rho}\,\texttt{mu}\). Thus the input <code>mu</code> acts as kinematic viscosity.</p>
+       </article>
+       <article class="math-card wide"><span class="tag">3 &middot; Solid strong form</span><h3>Momentum and the velocity&ndash;displacement relation</h3>
+        <div class="formula-block">\[\rho_s\partial_t\mathbf v-\operatorname{Div}\mathbf P_s=\mathbf0,\qquad \partial_t\mathbf u-\mathbf v=\mathbf0\quad\text{in }\Omega_s^0.\]</div>
+        <p>The solid uses the same velocity and displacement fields as the fluid-side interface. Its pressure variable is removed by a local pressure-mass equation \(\int_{\Omega_s^0}p\,\delta p\,dV=0\); it is not a solid incompressibility multiplier.</p>
+       </article>
+       <article class="math-card wide"><span class="tag">4 &middot; Solid material</span><h3>The Neo-Hookean law used by the code</h3>
+        <div class="formula-block">\[W(\mathbf F)=\frac{\mu_s}{2}\left(\operatorname{tr}(\mathbf F^T\mathbf F)-3\right)-\mu_s\ln J+\frac{\lambda_s}{4}\left(J^2-1-2\ln J\right).\]</div>
+        <div class="formula-block">\[\mathbf P_s=\frac{\partial W}{\partial\mathbf F}=\mu_s(\mathbf F-\mathbf F^{-T})+\frac{\lambda_s}{2}(J^2-1)\mathbf F^{-T},\qquad \mu_s=\frac{E}{2(1+\nu)},\quad \lambda_s=\frac{E\nu}{(1+\nu)(1-2\nu)}.\]</div>
+        <p>This is the volumetric law in <code>neo_hookean_first_piola_lame</code>. <code>youngs_modulus</code>, <code>poisson_ratio</code>, and <code>structure_rho</code> supply the solid parameters.</p>
+       </article>
+       <article class="math-card wide"><span class="tag">5 &middot; Interface conditions</span><h3>Shared motion and balanced traction</h3>
+        <div class="formula-block">\[\mathbf u_f=\mathbf u_s,\qquad \mathbf v_f=\mathbf v_s=\partial_t\mathbf u_s,\qquad \mathbf P_f\mathbf N_f+\mathbf P_s\mathbf N_s=\mathbf0\quad\text{on }\Gamma_{fs}^0.\]</div>
+        <p>Conforming interface nodes share velocity and displacement DOFs. The coupled assembly sums both domain contributions, so interface traction balance is enforced through the common weak form. Pressure connectivity is domain-specific.</p>
+       </article>
+       <article class="math-card wide"><span class="tag">6 &middot; Boundary conditions</span><h3>Conditions in the 2D input</h3>
+        <div class="formula-block">\[v_x|_{\mathrm{INLET}}=\bar u\,\mathrm{parabolic\_profile}\,\sin\!\left(\frac{\pi\min(t,2)}4\right),\qquad v_y|_{\mathrm{INLET}}=0.\]</div>
+        <div class="equation-code-table-wrap"><table class="equation-code-table"><thead><tr><th>Boundary</th><th>Velocity</th><th>Displacement</th></tr></thead><tbody>
+         <tr><td>INLET</td><td>Ramped parabolic inflow</td><td>\(u_x=u_y=0\)</td></tr>
+         <tr><td>WALLS</td><td>\(v_x=v_y=0\)</td><td>\(u_y=0\)</td></tr>
+         <tr><td>CIRCLE</td><td>\(v_x=v_y=0\)</td><td>\(u_x=u_y=0\)</td></tr>
+         <tr><td>OUTLET</td><td>Natural traction</td><td>\(u_x=u_y=0\)</td></tr>
+        </tbody></table></div><p>The solver selects an automatic fluid pressure pin at value zero. The interface is an internal shared boundary, rather than an imposed displacement history.</p>
+       </article>
+       <article class="math-card wide"><span class="tag">7 &middot; Continuous weak form</span><h3>Fluid momentum, incompressibility, and solid motion</h3>
+        <div class="formula-block">\[G_f=\int_{\Omega_f^0}\rho_f J\left[\partial_t\mathbf v+\nabla_0\mathbf v\,\mathbf F^{-1}(\mathbf v-\mathbf w)\right]\cdot\delta\mathbf v+\mathbf P_f:\nabla_0\delta\mathbf v+\left(J\mathbf F^{-T}:\nabla_0\mathbf v\right)\delta p\,dV+G_m.\]</div>
+        <div class="formula-block">\[G_s=\int_{\Omega_s^0}\rho_s\partial_t\mathbf v\cdot\delta\mathbf v+\mathbf P_s:\nabla_0\delta\mathbf v+\rho_s(\partial_t\mathbf u-\mathbf v)\cdot\delta\mathbf u+p\,\delta p\,dV,\qquad G_f+G_s=0.\]</div>
+        <p>Integration by parts introduces the Piola stress terms. External natural tractions vanish for this input, while the two interface traction terms cancel for the shared velocity test field. The code uses the time-discrete form below, including its row scaling.</p>
+       </article>
+       <article class="math-card"><span class="tag">Mesh &middot; HE</span><h3>Hyperelastic mesh motion</h3>
+        <div class="formula-block">\[\begin{aligned}G_m^{\mathrm{HE}}&=\int_{\Omega_f^0}c_m\mathbf P_m:\nabla_0\delta\mathbf u\,dV,\\\mathbf P_m&=\mu_m(\mathbf F-\mathbf F^{-T})\\&\quad+\frac{\lambda_m}{2}(J^2-1)\mathbf F^{-T}.\end{aligned}\]</div>
+        <div class="formula-block">\[\mu_m=\frac1{2(1+\nu_m)},\qquad\lambda_m=\frac{\nu_m}{(1+\nu_m)(1-2\nu_m)}.\]</div><p><code>mesh_motion_type HE</code></p>
+       </article>
+       <article class="math-card"><span class="tag">Mesh &middot; BH</span><h3>Weighted Laplace mesh motion</h3>
+        <div class="formula-block">\[G_m^{\mathrm{BH}}=\int_{\Omega_f^0}\frac{c_m}{J}\nabla_0\mathbf u:\nabla_0\delta\mathbf u\,dV.\]</div><p><code>mesh_motion_type BH</code></p>
+       </article>
+       <article class="math-card wide"><span class="tag">8 &middot; Time discretization</span><h3>Shifted Crank&ndash;Nicolson weights</h3>
+        <div class="formula-block">\[\alpha=\texttt{theta}+\Delta t,\qquad z_\alpha=\alpha z^{n+1}+(1-\alpha)z^n,\qquad\Delta z=z^{n+1}-z^n.\]</div>
+        <p><code>Shift_Crank_Nicolson</code> gives \(\alpha=0.51\) at the initial \(\Delta t=0.01\), <code>theta = 0.5</code>. Adaptive stepping updates this weight with the actual step size. The implementation interpolates \(\mathbf F_\alpha\) and \(J_\alpha\) separately and uses \(p^{n+1}\) in the fluid stress.</p>
+        <div class="formula-block">\[\begin{aligned}\mathbf P_{f,\alpha}&=J_\alpha\left[-p^{n+1}\mathbf I+\eta_f\left(\nabla_0\mathbf v_\alpha\mathbf F_\alpha^{-1}+\mathbf F_\alpha^{-T}(\nabla_0\mathbf v_\alpha)^T\right)\right]\mathbf F_\alpha^{-T},\\\mathbf P_{s,\alpha}&=\alpha\mathbf P_s(\mathbf F^{n+1})+(1-\alpha)\mathbf P_s(\mathbf F^n).\end{aligned}\]</div>
+       </article>
+       <article class="math-card wide"><span class="tag">9 &middot; Implemented time-discrete weak form</span><h3>Exactly the terms assembled in each domain</h3>
+        <div class="formula-block">\[\begin{aligned}G_f^\Delta={}&\int_{\Omega_f^0}\Big[\rho_f\frac{J^{n+1}+J^n}{2}\Delta\mathbf v+\Delta t\,\rho_f J_\alpha\nabla_0\mathbf v_\alpha\mathbf F_\alpha^{-1}\mathbf v_\alpha\\&\hspace{3em}-\rho_f J^{n+1}\nabla_0\mathbf v^{n+1}(\mathbf F^{n+1})^{-1}\Delta\mathbf u\Big]\cdot\delta\mathbf v\,dV\\&+\int_{\Omega_f^0}\Delta t\,\mathbf P_{f,\alpha}:\nabla_0\delta\mathbf v+\left(J_\alpha\mathbf F_\alpha^{-T}:\nabla_0\mathbf v^{n+1}\right)\delta p\,dV+G_m^{n+1}.\end{aligned}\]</div>
+        <div class="formula-block">\[\begin{aligned}G_s^\Delta=\int_{\Omega_s^0}&\rho_s\Delta\mathbf v\cdot\delta\mathbf v+\Delta t\,\mathbf P_{s,\alpha}:\nabla_0\delta\mathbf v\\&+\rho_s(\Delta\mathbf u-\Delta t\,\mathbf v_\alpha)\cdot\delta\mathbf u+p^{n+1}\delta p\,dV.\end{aligned}\]</div>
+        <p>Momentum and solid kinematics carry the step factor shown here. Fluid incompressibility uses the current velocity gradient, and the mesh equation uses current displacement. These choices reproduce <code>weak_scalar_fluid_domain</code> and <code>weak_scalar_solid_domain</code>.</p>
+       </article>
+       <article class="math-card wide"><span class="tag">10 &middot; FEM / Newton / AD</span><h3>Differentiate the scalar weak form</h3>
+        <div class="formula-block">\[\mathbf x_e=(\mathbf v_e,\mathbf u_e,p_e),\qquad R_{e,a}=\frac{\partial G_e}{\partial\delta x_{e,a}},\qquad K_{e,ab}=\frac{\partial R_{e,a}}{\partial x_{e,b}},\qquad\mathbf K\Delta\mathbf x=-\mathbf R.\]</div>
+        <p>The 2D mesh uses Q9 velocity, Q9 displacement, and Q4 pressure interpolation. Nested Sacado AD differentiates the domain scalar, and the shared assembly scatters its residual and tangent into one global Newton system.</p>
+       </article>
+      </div>
+      <div class="section-heading compact-heading"><p class="eyebrow">Equation &harr; implementation</p><h2>Locate each part of the formulation.</h2></div>
+      <div class="equation-code-table-wrap"><table class="equation-code-table"><thead><tr><th>Quantity / equation</th><th>Code identifier</th><th>Source</th></tr></thead><tbody>
+       <tr><td>\(\mathbf v,\mathbf u,p\)</td><td><code>L.field("velocity" / "displacement" / "pressure")</code></td><td><code>weak_form_fsi.cpp</code></td></tr>
+       <tr><td>\(\mathbf F,J,\mathbf F^{-1}\)</td><td><code>deformation_gradient_as</code>, <code>det</code>, <code>inv</code></td><td><a href="../code/space.html">Kinematics helpers</a></td></tr>
+       <tr><td>\(G_f^\Delta,G_m\)</td><td><code>weak_scalar_fluid_domain</code></td><td><code>weak_form_fsi.cpp</code></td></tr>
+       <tr><td>\(G_s^\Delta\)</td><td><code>weak_scalar_solid_domain</code></td><td><code>weak_form_fsi.cpp</code></td></tr>
+       <tr><td>\(\mathbf P_s\)</td><td><code>neo_hookean_first_piola_lame</code></td><td><a href="../code/space.html?file=kinematics.h">kinematics.h</a></td></tr>
+       <tr><td>\(\alpha\)</td><td><code>Shift_Crank_Nicolson</code></td><td><a href="../code/hpx.html?file=time_integrator.h">time_integrator.h</a></td></tr>
+       <tr><td>\(\mathbf R_e,\mathbf K_e\)</td><td><code>scalar_weak_form_element_system</code></td><td><a href="../code/hpx.html?file=local_element_system_ad.h">AD extraction</a></td></tr>
+      </tbody></table></div>
+     </div>
+     <div id="fsi-code-panel" class="plasticity-tab-panel" role="tabpanel" aria-labelledby="fsi-code-tab" data-fsi-panel="code">
+      <div class="section-heading"><p class="eyebrow">Code</p><h2>One FEM model, two domains, one solve.</h2><p>The implementation excerpts and mesh below come from <code>FEM/models/FSI_Models/weak_form_fsi.cpp</code> and its 2D input. HE and BH select the mesh term within this same model.</p></div>
+      <figure class="fsi-mesh-figure"><img src="../assets/images/fsi-2d-mesh.svg" width="1120" height="650" alt="Actual 2D fluid and solid finite-element mesh, with an enlarged view of the cylinder and flexible flag." loading="lazy"/><figcaption><strong>Reference mesh &middot; 2D Q9 / Q9 / Q4</strong><br/>Blue: fluid. Orange: solid. The lower view enlarges the interface region. Geometry and connectivity are extracted from the downloadable <code>ProblemMesh.txt</code>.</figcaption></figure>
+      <div class="cook-workflow">
+       <article><span>1</span><h3>Read the fields and domains</h3><p><code>Info_FSI.txt</code> declares <code>velocity displacement pressure</code>. <code>fsi_2d.txt</code> supplies <code>fluid</code> and <code>solid</code> domains and shared interface nodes.</p></article>
+       <article><span>2</span><h3>Evaluate the domain scalar</h3><p><code>weak_scalar_domain</code> dispatches to the fluid or solid kernel. The fluid kernel also adds the selected mesh equation.</p></article>
+       <article><span>3</span><h3>Differentiate and assemble</h3><p><code>scalar_weak_form_element_system</code> extracts the residual and tangent. Global assembly and Newton iterations solve all active fields together.</p></article>
+      </div>
+      <div class="actual-code-intro"><h3>Implementation excerpts</h3><p>Each excerpt is taken directly from the current source. <a href="../examples/fsi-he/weak_form.cpp" download>Download the complete model</a>.</p></div>
+      <div class="actual-code-stack">
+<!-- GENERATED:FSI_SNIPPETS:START -->
+<details class="code-details" open><summary>1. Local fields and shifted time weights</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/FEM/models/FSI_Models/weak_form_fsi.cpp#L152" target="_blank" rel="noopener">FEM/models/FSI_Models/weak_form_fsi.cpp:152</a></p><div class="code-window"><pre><code>    const DomainLocalLayout L = make_domain_layout(mesh, elem_id, state.domain_type);
+    const auto&amp; V = L.field(&quot;velocity&quot;);
+    const auto&amp; U = L.field(&quot;displacement&quot;);
+    const auto&amp; Pf = L.field(&quot;pressure&quot;);
+    if (static_cast&lt;int&gt;(x_elem.size()) != L.n_local()) throw std::runtime_error(&quot;Bad current element vector size in fluid domain.&quot;);
+    if (state.past_dofs.size() &lt; 1 || static_cast&lt;int&gt;(state.past_dofs[0].size()) != L.n_local()) throw std::runtime_error(&quot;Bad previous element vector size in fluid domain.&quot;);
+    if (test_elem.size() != x_elem.size()) throw std::runtime_error(&quot;Bad test element vector size in fluid-domain weak form.&quot;);
+
+    Scalar G(0.0);
+    const ElementGeometry geom = make_velocity_element_geometry(mesh, elem_id);
+
+    const double rho = params.material.rho;
+    const double mu = params.material.mu;
+    const hpx::TimeSchemeStencils time_scheme = hpx::Shift_Crank_Nicolson(params.solver.theta, dt);
+    const double theta_current = time_scheme.value.current();
+    const double theta_past = time_scheme.value.past(0);
+    const double mesh_coeff = params.material.mesh_motion_coefficient;</code></pre></div></details>
+<details class="code-details"><summary>2. Fluid momentum and incompressibility</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/FEM/models/FSI_Models/weak_form_fsi.cpp#L270" target="_blank" rel="noopener">FEM/models/FSI_Models/weak_form_fsi.cpp:270</a></p><div class="code-window"><pre><code>        // Momentum weak scalar.
+        for (int i = 0; i &lt; L.dim; ++i) {
+            const Scalar mass_conv_mesh = Scalar(rho) * Scalar(0.5) * (J + Jn) * (v[i] - vn[i])
+                                        + Scalar(dt) * conv[i]
+                                        - meshmove[i];
+            G += mass_conv_mesh * delta_v[i] * Scalar(dV);
+            for (int j = 0; j &lt; L.dim; ++j) {
+                G += Scalar(dt) * (stress[i][j] + pressure_stress[i][j])
+                   * grad_delta_v[i][j] * Scalar(dV);
+            }
+        }
+
+        // Incompressibility in ALE form: (J_theta F_theta^{-T}) : grad(v) delta_p.
+        Scalar div_ale(0.0);
+        for (int i = 0; i &lt; L.dim; ++i)
+            for (int j = 0; j &lt; L.dim; ++j) div_ale += J_time * Finv_time[j][i] * grad_v[i][j];
+        G += div_ale * delta_p * Scalar(dV);</code></pre></div></details>
+<details class="code-details"><summary>3. Solid momentum, kinematics, and pressure equation</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/FEM/models/FSI_Models/weak_form_fsi.cpp#L389" target="_blank" rel="noopener">FEM/models/FSI_Models/weak_form_fsi.cpp:389</a></p><div class="code-window"><pre><code>        // Momentum balance against delta_v.
+        for (int i = 0; i &lt; L.dim; ++i) {
+            G += Scalar(rho_s) * (v[i] - vn[i]) * delta_v[i] * Scalar(dV);
+            for (int j = 0; j &lt; L.dim; ++j) {
+                const Scalar Ptime = Scalar(theta_current) * P[i][j] + Scalar(theta_past) * Pn[i][j];
+                G += Scalar(dt) * Ptime * grad_delta_v[i][j] * Scalar(dV);
+            }
+        }
+
+        // Kinematic equation against delta_u.
+        for (int i = 0; i &lt; L.dim; ++i) {
+            G += Scalar(rho_s) * (u[i] - un[i] - Scalar(dt) * v_time[i]) * delta_u[i] * Scalar(dV);
+        }
+
+        // Pressure mass equation, matching the solid-domain Python reference: p * delta_p.
+        G += p * delta_p * Scalar(dV);
+    }</code></pre></div></details>
+<details class="code-details"><summary>4. Domain dispatcher</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/FEM/models/FSI_Models/weak_form_fsi.cpp#L417" target="_blank" rel="noopener">FEM/models/FSI_Models/weak_form_fsi.cpp:417</a></p><div class="code-window"><pre><code>static Scalar weak_scalar_domain(
+    const FieldMesh&amp; mesh,
+    int elem_id,
+    const std::vector&lt;Scalar&gt;&amp; x_elem,
+    const std::vector&lt;Scalar&gt;&amp; test_elem,
+    const ProblemParameters&amp; params,
+    const ElementState&amp; state
+) {
+    if (state.domain_name == &quot;fluid&quot;) {
+        return weak_scalar_fluid_domain(mesh, elem_id, x_elem, test_elem, params, state);
+    }
+    if (state.domain_name == &quot;solid&quot;) {
+        return weak_scalar_solid_domain(mesh, elem_id, x_elem, test_elem, params, state);
+    }
+
+    switch (state.domain_type) {
+        case DomainType::Fluid:
+            return weak_scalar_fluid_domain(mesh, elem_id, x_elem, test_elem, params, state);
+        case DomainType::Solid:
+            return weak_scalar_solid_domain(mesh, elem_id, x_elem, test_elem, params, state);
+        default:
+            throw std::runtime_error(&quot;Unsupported domain type in weak form.&quot;);
+    }
+}</code></pre></div></details>
+<details class="code-details"><summary>5. AD residual and tangent</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/FEM/models/FSI_Models/weak_form_fsi.cpp#L449" target="_blank" rel="noopener">FEM/models/FSI_Models/weak_form_fsi.cpp:449</a></p><div class="code-window"><pre><code>ElementSystem compute_constitutive_element_system(
+    const FieldMesh&amp; mesh,
+    int elem_id,
+    const Vector&amp; x_elem,
+    const ProblemParameters&amp; params,
+    const ElementState&amp; state
+) {
+    // FSI mixed Q9/Q9/Q4 elements have about 40 local DOFs.  Nested SLFad&lt;64&gt;
+    // is slower than DFad here because every scalar operation carries a large
+    // fixed derivative array through the full velocity/displacement/pressure
+    // weak form.
+    return hpx::scalar_weak_form_element_system(
+    // return hpx::scalar_weak_form_element_system(    
+        x_elem,
+        [&amp;](const auto&amp; x_ad, const auto&amp; test_ad) {
+            return weak_scalar_domain(mesh, elem_id, x_ad, test_ad, params, state);
+        }
+    );
+}</code></pre></div></details>
+<details class="code-details"><summary>6. Neo-Hookean Piola helper</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/space/kinematics.h#L605" target="_blank" rel="noopener">core/space/kinematics.h:605</a></p><div class="code-window"><pre><code>inline std::vector&lt;std::vector&lt;Scalar&gt;&gt; neo_hookean_first_piola_lame(
+    const std::vector&lt;std::vector&lt;Scalar&gt;&gt;&amp; F3,
+    double lambda,
+    double mu
+) {
+    if (static_cast&lt;int&gt;(F3.size()) != 3 || static_cast&lt;int&gt;(F3[0].size()) != 3) {
+        throw std::runtime_error(&quot;Neo-Hookean first Piola helper expects a 3x3 deformation gradient.&quot;);
+    }
+
+    const Scalar J = det(F3);
+    const auto FinvT = inv_transpose(F3);
+    const Scalar coeff = Scalar(0.5 * lambda) * (J * J - Scalar(1.0));
+
+    std::vector&lt;std::vector&lt;Scalar&gt;&gt; P(3, std::vector&lt;Scalar&gt;(3, Scalar(0.0)));
+    for (int i = 0; i &lt; 3; ++i) {
+        for (int A = 0; A &lt; 3; ++A) {
+            P[i][A] = Scalar(mu) * (F3[i][A] - FinvT[i][A]) + coeff * FinvT[i][A];
+        }
+    }
+    return P;
+}</code></pre></div></details>
+<details class="code-details"><summary>7. Shifted Crank–Nicolson helper</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/hpx/time_integrator.h#L145" target="_blank" rel="noopener">core/hpx/time_integrator.h:145</a></p><div class="code-window"><pre><code>inline TimeSchemeStencils Shift_Crank_Nicolson(double theta, double dt) {
+    const double shifted_theta = theta + dt;
+    return {
+        &quot;Shift_Crank_Nicolson&quot;,
+        {&quot;Shift_Crank_Nicolson_Derivative&quot;, 2, {1.0, -1.0}},
+        {&quot;Shift_Crank_Nicolson_Value&quot;, 2, {shifted_theta, 1.0 - shifted_theta}}
+    };
+}</code></pre></div></details>
+<!-- GENERATED:FSI_SNIPPETS:END -->
+      </div>
+      <div class="section-heading compact-heading"><p class="eyebrow">Run the 2D example</p><h2>Use the FEM FSI runner.</h2><p>After the environment setup in <a href="../install.html">Installation</a>, run from the repository root. The runner copies the selected case into <code>FEM/input/</code>, builds the model, and starts the solve.</p></div>
+      <div class="code-window"><pre><code>cd FEM
+bash run.sh fsi</code></pre></div>
+      <p>The default is HE mesh motion. To use the BH mesh equation with the same 2D model, run <code>bash run.sh fsi_bh</code> from <code>FEM/</code>.</p>
+      <div class="equation-code-table-wrap"><table class="equation-code-table"><thead><tr><th>Input</th><th>Current 2D configuration</th></tr></thead><tbody>
+       <tr><td><code>DOFS_info.txt</code></td><td><code>field_key velocity displacement pressure</code>; fluid and solid domains</td></tr>
+       <tr><td><code>Material.txt</code></td><td>\(\rho_f=1000\), \(\eta_f=1\), \(\rho_s=5000\), \(E=5\times10^6\), \(\nu=0.3\); default HE mesh motion</td></tr>
+       <tr><td><code>Solver.txt</code></td><td>UMFPACK backend; initial \(\Delta t=0.01\), final time 12, adaptive stepping; <code>theta 0.5</code></td></tr>
+       <tr><td><code>Postprocessing.txt</code></td><td>VTK, HDF5, force, and minimum-Jacobian output controls</td></tr>
+      </tbody></table></div>
+      <div class="section-heading compact-heading"><p class="eyebrow">Download &middot; 2D</p><h2>Model and input files</h2><p>HE and BH use the same model, mesh, and boundary conditions. Only the mesh-motion material file is switched.</p></div>
+      <div class="download-grid">
+       <a class="download-card" download href="../examples/fsi-he/weak_form.cpp"><span class="tag">Model</span><h3>weak_form.cpp</h3><p>Coupled FEM FSI weak form.</p></a>
+       <a class="download-card" download href="../examples/fsi-he/input/ProblemMesh.txt"><span class="tag">2D mesh</span><h3>ProblemMesh.txt</h3><p>Fluid and solid connectivity.</p></a>
+       <a class="download-card" download href="../examples/fsi-he/input/DOFS_info.txt"><span class="tag">Fields</span><h3>DOFS_info.txt</h3><p>Velocity, displacement, pressure.</p></a>
+       <a class="download-card" download href="../examples/fsi-he/input/BC.txt"><span class="tag">Boundary</span><h3>BC.txt</h3><p>Inlet, walls, circle, outlet.</p></a>
+       <a class="download-card" download href="../examples/fsi-he/input/Material.txt"><span class="tag">Mesh &middot; HE</span><h3>Material.txt</h3><p>Physical parameters and HE selector.</p></a>
+       <a class="download-card" download="Material_BH.txt" href="../examples/fsi-bh/input/Material.txt"><span class="tag">Mesh &middot; BH</span><h3>Material_BH.txt</h3><p>Alternative mesh-motion selector.</p></a>
+       <a class="download-card" download href="../examples/fsi-he/input/Solver.txt"><span class="tag">Solver</span><h3>Solver.txt</h3><p>Time integration and nonlinear solve.</p></a>
+       <a class="download-card" download href="../examples/fsi-he/input/Postprocessing.txt"><span class="tag">Output</span><h3>Postprocessing.txt</h3><p>Output locations and diagnostics.</p></a>
+      </div>
+     </div>
+    </div>
+   </section>
+  </main>
+  <script defer src="../assets/js/main.js"></script>
+ </body>
+</html>

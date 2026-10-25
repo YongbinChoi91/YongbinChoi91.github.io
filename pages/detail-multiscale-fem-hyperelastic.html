@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="A 2D linear macro FE mesh coupled to a quadratic perforated RVE. The micro material is hyperelastic; linear and quadratic describe interpolation order."><title>FE² · Linear Macro / Quadratic Micro · HiPaCs</title>
+<link href="../assets/css/styles.css" rel="stylesheet"><script src="../assets/js/mathjax-config.js"></script><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script></head>
+<body><header class="topbar"><a class="brand" href="../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-expanded="false" aria-label="Open navigation"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../index.html">Home</a><a href="../architecture.html">Code Structure</a><a href="../applications.html">Applications</a><a href="detail-multiscale-analysis.html">Computational Homogenization</a></nav></header>
+<main class="homogenization-example"><section class="subpage-hero section-wrap cook-page"><a class="back-button route-card" href="detail-multiscale-analysis.html">&larr; Back to Computational Homogenization</a><p class="eyebrow">Elastic / Macro Q4 / Micro Q9</p><h1>FE² · Linear Macro / Quadratic Micro</h1><p class="lead">A 2D linear macro FE mesh coupled to a quadratic perforated RVE. The micro material is hyperelastic; linear and quadratic describe interpolation order.</p></section>
+<section class="doc-section section-wrap cook-page"><div class="section-heading"><p class="eyebrow">Results</p><h2>Macro displacement and local RVE response</h2></div>
+<figure class="rve-error-figure"><img src="../examples/multiscale-fem-hyperelastic/FE2.png" width="1100" height="780" alt="Macro displacement in the y direction and Green–Lagrange shear strain Exy in the RVEs at P1, P2, and P3."/><figcaption>Macro displacement in the y direction and Green–Lagrange shear strain Exy in the RVEs at P1, P2, and P3.</figcaption></figure></section>
+<section class="doc-section section-wrap cook-page"><div class="section-heading"><p class="eyebrow">Response transfer</p><h2>One equilibrated RVE response per macro evaluation point.</h2><p>See <a href="detail-multiscale-analysis.html">Computational Homogenization</a> for the sensitivity derivation and <a href="detail-hyperelastic.html">Solid</a> for the micro material theory.</p></div>
+<div class="math-explain-grid theory-grid"><article class="math-card wide"><span class="tag">Stress and tangent</span><div class="formula-block">\[\bar{\mathbf P}=\frac{\mathrm{intP}}{V_\mu},\qquad\bar{\mathbb A}=\frac{\mathrm{C}}{V_\mu},\qquad\mathrm{C}=\frac{\partial\mathrm{intP}}{\partial\mathbf u_\mu}\frac{\partial\mathbf u_\mu}{\partial\bar{\mathbf F}}.\]</div><p>The micro model provides <code>volume</code>, <code>intP</code>, and <code>dIntPdu</code>. The periodic solver computes <code>du_dF</code>, and the macro kernel uses the normalized sensitivity in its AD stress expression.</p></article></div>
+<div class="section-heading compact-heading"><p class="eyebrow">Input</p><h2>Macro Q4 / Micro Q9</h2><p>Two load increments: <code>dt 0.1</code>, <code>total_time 0.2</code>; UMFPACK; RVE substepping off. The macro boundary file fixes the left edge and applies <code>NEUMANN RIGHT uy 1.0*t</code>.</p></div>
+<div class="equation-code-table-wrap"><table class="equation-code-table"><thead><tr><th>Component</th><th>Source / configuration</th></tr></thead><tbody>
+<tr><td>Macro model</td><td><code>Multiscale/models/weak_form_macro_fem.cpp</code></td></tr><tr><td>Micro model</td><td><code>FEM/models/Elastic_Models/weak_form_hyper_elastic_ad.cpp</code></td></tr>
+<tr><td>Macro field layout</td><td><code>input/macro/DOFS_info.txt</code></td></tr><tr><td>Micro field and history layout</td><td><code>input/rve/DOFS_info.txt</code>, selected with <code>--micro-dofs</code></td></tr>
+</tbody></table></div>
+<div class="section-heading compact-heading"><p class="eyebrow">Build and run</p><h2>Run from a HiPaCs checkout.</h2><p>Activate the environment described in <a href="../install.html">Installation</a>, then run this command from the repository root. The script selects the two model sources and passes input paths directly; results are written under <code>Multiscale/output/web/multiscale-fem-hyperelastic/</code>. Interactive plotting is disabled for this command.</p></div>
+<div class="code-window"><pre><code>bash Web/examples/multiscale-fem-hyperelastic/run.sh</code></pre></div>
+<details class="code-details"><summary>Complete build and input command</summary><div class="code-window"><pre><code>#!/usr/bin/env bash
+set -euo pipefail
+case_dir=&quot;$(cd &quot;$(dirname &quot;${BASH_SOURCE[0]}&quot;)&quot; &amp;&amp; pwd)&quot;
+repo_dir=&quot;$(cd &quot;$case_dir/../../..&quot; &amp;&amp; pwd)&quot;
+# Select the canonical models matching the downloadable source snapshots.
+make -C &quot;$repo_dir/Multiscale&quot; \
+  MACRO_MODEL_SRC=models/weak_form_macro_fem.cpp \
+  MICRO_MODEL_SRC=../FEM/models/Elastic_Models/weak_form_hyper_elastic_ad.cpp \
+  TARGET=bin/web_multiscale-fem-hyperelastic
+run_dir=&quot;$repo_dir/Multiscale/output/web/multiscale-fem-hyperelastic&quot;
+mkdir -p &quot;$run_dir&quot;
+post_file=&quot;$run_dir/Postprocessing.txt&quot;
+cat &quot;$case_dir/input/solver/Postprocessing.txt&quot; &gt; &quot;$post_file&quot;
+printf &#x27;\nplot_window off\nplot_each_step off\nmultiscale_plot_show off\n&#x27; &gt;&gt; &quot;$post_file&quot;
+cd &quot;$run_dir&quot;
+export OMP_NUM_THREADS=&quot;${OMP_NUM_THREADS:-2}&quot;
+exec &quot;$repo_dir/Multiscale/bin/web_multiscale-fem-hyperelastic&quot; \
+  --macro-mesh &quot;$case_dir/input/macro/Macro_Mesh.txt&quot; \
+  --micro-mesh &quot;$case_dir/input/rve/Micro_Mesh.txt&quot; \
+  --dofs &quot;$case_dir/input/macro/DOFS_info.txt&quot; \
+  --micro-dofs &quot;$case_dir/input/rve/DOFS_info.txt&quot; \
+  --macro-bc &quot;$case_dir/input/macro/BC.txt&quot; \
+  --material &quot;$case_dir/input/solver/Material.txt&quot; \
+  --solver &quot;$case_dir/input/solver/Solver.txt&quot; \
+  --post &quot;$post_file&quot;
+</code></pre></div></details>
+<div class="section-heading compact-heading"><p class="eyebrow">Downloads</p><h2>Macro, micro, and solver files</h2></div><div class="download-grid"><a class="download-card" download href="../examples/multiscale-fem-hyperelastic/weak_form_macro.cpp"><span class="tag">Macro model</span><h3>weak_form_macro.cpp</h3></a><a class="download-card" download href="../examples/multiscale-fem-hyperelastic/constitutive_model.cpp"><span class="tag">Micro model</span><h3>constitutive_model.cpp</h3></a><a class="download-card" download href="../examples/multiscale-fem-hyperelastic/input/macro/Macro_Mesh.txt"><span class="tag">Macro mesh</span><h3>Macro_Mesh.txt</h3></a><a class="download-card" download href="../examples/multiscale-fem-hyperelastic/input/macro/DOFS_info.txt"><span class="tag">Macro DOFs</span><h3>DOFS_info.txt</h3></a><a class="download-card" download href="../examples/multiscale-fem-hyperelastic/input/macro/BC.txt"><span class="tag">Macro boundary</span><h3>BC.txt</h3></a><a class="download-card" download href="../examples/multiscale-fem-hyperelastic/input/rve/Micro_Mesh.txt"><span class="tag">Micro mesh</span><h3>Micro_Mesh.txt</h3></a><a class="download-card" download href="../examples/multiscale-fem-hyperelastic/input/rve/DOFS_info.txt"><span class="tag">Micro DOFs</span><h3>DOFS_info.txt</h3></a><a class="download-card" download href="../examples/multiscale-fem-hyperelastic/input/solver/Material.txt"><span class="tag">Material</span><h3>Material.txt</h3></a><a class="download-card" download href="../examples/multiscale-fem-hyperelastic/input/solver/Solver.txt"><span class="tag">Solver</span><h3>Solver.txt</h3></a><a class="download-card" download href="../examples/multiscale-fem-hyperelastic/input/solver/Postprocessing.txt"><span class="tag">Output</span><h3>Postprocessing.txt</h3></a><a class="download-card" download href="../examples/multiscale-fem-hyperelastic/run.sh"><span class="tag">Run</span><h3>run.sh</h3></a></div></section>
+<section class="doc-section section-wrap cook-page"><p class="eyebrow">Verification</p><h2>Two load increments and four sensitivity directions.</h2><div class="equation-code-table-wrap"><table class="equation-code-table"><thead><tr><th>Check</th><th>Observed result</th></tr></thead><tbody>
+<tr><td>Macro solve</td><td>2 accepted steps, final load time 0.2, 6 total Newton iterations</td></tr>
+<tr><td>Final macro residual</td><td>1.028e-12</td></tr>
+<tr><td>Central-difference sensitivity check</td><td>4 macro deformation-gradient directions; relative Frobenius error 8.785e-11, perturbation 1e-06</td></tr>
+</tbody></table></div><p>The sensitivity check compares <code>C / volume</code> with derivatives of the converged average stress at a prescribed finite deformation. <a href="../examples/multiscale-fem-hyperelastic/validation.json" download>Download the verification record</a>.</p></section></main><script defer src="../assets/js/main.js"></script></body></html>

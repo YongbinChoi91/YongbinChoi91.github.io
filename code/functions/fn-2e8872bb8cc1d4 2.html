@@ -1,0 +1,26 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements build dof layout."><title>build_dof_layout() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../space.html?file=field_layout.cpp">← core/space/field_layout.cpp</a>
+<p class="eyebrow">Function detail</p><h1>build_dof_layout()</h1><p class="lead">Implements build dof layout.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>DofLayout build_dof_layout(const FieldMesh &amp;mesh)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/space/field_layout.cpp:155</dd></div><div><dt>Declaration</dt><dd>core/space/field_layout.cpp:155</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/space/field_layout.cpp#L155" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 155–167</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="155">DofLayout build_dof_layout(<span class="token keyword">const</span> FieldMesh&amp; mesh){</span>
+<span class="source-line" data-line="156">    DofLayout g;</span>
+<span class="source-line" data-line="157">    g.dim=mesh.dim;</span>
+<span class="source-line" data-line="158"> </span>
+<span class="source-line" data-line="159">    <span class="token keyword">const</span> std::vector&lt;std::string&gt; order = active_dof_field_names(mesh);</span>
+<span class="source-line" data-line="160">    <span class="token keyword">for</span>(<span class="token keyword">const</span> std::string&amp; name:order){</span>
+<span class="source-line" data-line="161">        <span class="token keyword">if</span>(find_field_index(g,name,<span class="token keyword">false</span>)&gt;=<span class="token number">0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Duplicate field in DOFS_info.txt field_key list: &quot;</span>+name);</span>
+<span class="source-line" data-line="162">        g.fields.push_back(make_builtin_field_info(mesh,name));</span>
+<span class="source-line" data-line="163">    }</span>
+<span class="source-line" data-line="164"> </span>
+<span class="source-line" data-line="165">    assign_field_dof_offsets(g);</span>
+<span class="source-line" data-line="166">    <span class="token keyword">return</span> g;</span>
+<span class="source-line" data-line="167">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-312e46975715a2.html">← make_builtin_field_info()</a><a href="fn-66387f527d02cc.html">get_cached_dof_layout() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

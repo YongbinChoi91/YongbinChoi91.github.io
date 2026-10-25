@@ -1,0 +1,3 @@
+
+TORSION_DIRICHLET displacement RIGHT z auto angle_deg 90*t
+TORSION_DIRICHLET displacement LEFT z auto angle_deg -90*t

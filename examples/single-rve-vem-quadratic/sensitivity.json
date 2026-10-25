@@ -1,0 +1,700 @@
+{
+  "passed": true,
+  "quantity": "integrated_piola",
+  "deformation_gradient": [
+    [
+      1.015,
+      0.02
+    ],
+    [
+      0.005,
+      1.01
+    ]
+  ],
+  "solver_tolerance": 1e-12,
+  "max_rve_residual": 8.945066909404886e-13,
+  "volume": 0.729999999999996,
+  "representative_epsilon": 1e-06,
+  "acceptance_relative_error": 1e-05,
+  "solve_count": 65,
+  "analytic": [
+    [
+      147.37439785562157,
+      0.7889519844338044,
+      -0.1897449195914097,
+      45.32808303944999
+    ],
+    [
+      0.7652650108260258,
+      34.654044885875905,
+      32.27786617543057,
+      1.5138440649465261
+    ],
+    [
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      -0.2137617327965043,
+      32.2775762082257,
+      34.78732439966876,
+      -0.3710291660466707
+    ],
+    [
+      45.350744142420055,
+      1.5344816440011753,
+      -0.3503816188940484,
+      149.3222093675134
+    ],
+    [
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      59.012597332343866,
+      0.8318989074623561,
+      -0.05503227354331848,
+      59.556932042255006
+    ]
+  ],
+  "sweep": [
+    {
+      "epsilon": 0.01,
+      "relative_error": 3.15124063095393e-05,
+      "absolute_frobenius_error": 0.007697028376942887,
+      "max_absolute_error": 0.004058824156402352,
+      "direction_relative_errors": [
+        2.32655217927911e-05,
+        6.451526268504317e-05,
+        6.136307658536239e-05,
+        3.090984543248483e-05
+      ],
+      "finite_difference": [
+        [
+          147.37579817348734,
+          0.7887603813095057,
+          -0.1897004816717729,
+          45.328864279494695
+        ],
+        [
+          0.7655279400206272,
+          34.656668604233474,
+          32.27631882830549,
+          1.5147238725945422
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          -0.21336467611888232,
+          32.276057530328394,
+          34.78979099350297,
+          -0.37065759595567016
+        ],
+        [
+          45.3513191738243,
+          1.5341594689389337,
+          -0.3503713382154716,
+          149.3262681916698
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          59.00909925043808,
+          0.8317588351743344,
+          -0.05504784671078733,
+          59.5539889629364
+        ]
+      ]
+    },
+    {
+      "epsilon": 0.001,
+      "relative_error": 3.152163235395267e-07,
+      "absolute_frobenius_error": 7.69920898069108e-05,
+      "max_absolute_error": 4.062060429532721e-05,
+      "direction_relative_errors": [
+        2.3271813892245708e-07,
+        6.452255429070303e-07,
+        6.136944537082386e-07,
+        3.0923313691535734e-07
+      ],
+      "finite_difference": [
+        [
+          147.37441191203348,
+          0.7889500683198047,
+          -0.18974447460951005,
+          45.32809085651213
+        ],
+        [
+          0.7652676411437631,
+          34.65407112513047,
+          32.27785069990286,
+          1.5138528617785196
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          -0.21375776164272997,
+          32.277561019214694,
+          34.787349067333054,
+          -0.3710254508402233
+        ],
+        [
+          45.35074990250787,
+          1.5344784221620333,
+          -0.35038151592958755,
+          149.3222499881177
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          59.01256236325991,
+          0.8318975067077572,
+          -0.055032429117196635,
+          59.556902618942644
+        ]
+      ]
+    },
+    {
+      "epsilon": 0.0001,
+      "relative_error": 3.1520795105478105e-09,
+      "absolute_frobenius_error": 7.699003750665318e-07,
+      "max_absolute_error": 4.061767242546921e-07,
+      "direction_relative_errors": [
+        2.3271470907594658e-09,
+        6.452291101824492e-09,
+        6.137212511009339e-09,
+        3.092125404676813e-09
+      ],
+      "finite_difference": [
+        [
+          147.37439799615615,
+          0.7889519653003774,
+          -0.1897449151289088,
+          45.32808311760839
+        ],
+        [
+          0.765265037128704,
+          34.65404514826464,
+          32.27786602065685,
+          1.5138441529188862
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          -0.21376169309028636,
+          32.277576056322644,
+          34.7873246463487,
+          -0.3710291288816503
+        ],
+        [
+          45.35074420001672,
+          1.5344816117801585,
+          -0.3503816178729302,
+          149.32220977369013
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          59.012596982646045,
+          0.831898893456362,
+          -0.05503227508363295,
+          59.55693174804155
+        ]
+      ]
+    },
+    {
+      "epsilon": 1e-05,
+      "relative_error": 3.4263157406198207e-11,
+      "absolute_frobenius_error": 8.368830045336915e-09,
+      "max_absolute_error": 5.135319725013687e-09,
+      "direction_relative_errors": [
+        2.553782148693787e-11,
+        6.416994805227874e-11,
+        6.01293274678073e-11,
+        3.535022846692932e-11
+      ],
+      "finite_difference": [
+        [
+          147.37439785830196,
+          0.7889519842763092,
+          -0.18974491986512018,
+          45.328083040718774
+        ],
+        [
+          0.76526501119889,
+          34.654044888560165,
+          32.27786617386319,
+          1.5138440657869177
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          -0.21376173239273652,
+          32.27757620680727,
+          34.787324402019145,
+          -0.3710291656910946
+        ],
+        [
+          45.350744143557435,
+          1.5344816439943896,
+          -0.35038161914080485,
+          149.32220937264873
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          59.01259732934427,
+          0.8318989073718973,
+          -0.05503227370473595,
+          59.55693203979484
+        ]
+      ]
+    },
+    {
+      "epsilon": 1e-06,
+      "relative_error": 8.210933021017509e-11,
+      "absolute_frobenius_error": 2.0055332947155646e-08,
+      "max_absolute_error": 1.2583825537149096e-08,
+      "direction_relative_errors": [
+        8.355480469115492e-11,
+        3.473830273204002e-11,
+        8.754488550686116e-11,
+        8.294099793678516e-11
+      ],
+      "finite_difference": [
+        [
+          147.37439784373586,
+          0.7889519835213576,
+          -0.18974492266288223,
+          45.32808303658875
+        ],
+        [
+          0.7652650106382275,
+          34.654044886506256,
+          32.27786617682194,
+          1.5138440642714635
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          -0.2137617332587105,
+          32.27757620860583,
+          34.78732440037602,
+          -0.3710291654468456
+        ],
+        [
+          45.350744138694665,
+          1.5344816450824084,
+          -0.3503816210503885,
+          149.32220935492958
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          59.01259732643549,
+          0.8318989078714978,
+          -0.05503227440417646,
+          59.55693203729684
+        ]
+      ]
+    },
+    {
+      "epsilon": 1e-07,
+      "relative_error": 5.719177115465591e-10,
+      "absolute_frobenius_error": 1.3969179995555218e-07,
+      "max_absolute_error": 8.311738497468468e-08,
+      "direction_relative_errors": [
+        4.831243451485718e-10,
+        6.457282159946237e-10,
+        9.725465913958173e-10,
+        6.011924174677361e-10
+      ],
+      "finite_difference": [
+        [
+          147.37439792522622,
+          0.7889520126092009,
+          -0.18974488646961163,
+          45.32808308477243
+        ],
+        [
+          0.7652650069189804,
+          34.654044892001856,
+          32.27786618487105,
+          1.5138440701001343
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          -0.21376173831022527,
+          32.27757621571126,
+          34.78732441108967,
+          -0.3710291712755165
+        ],
+        [
+          45.350744166672285,
+          1.5344816506335235,
+          -0.350381590408233,
+          149.3222094506308
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          59.01259736207365,
+          0.8318989097588769,
+          -0.05503227207270811,
+          59.5569320749334
+        ]
+      ]
+    },
+    {
+      "epsilon": 1e-08,
+      "relative_error": 7.494177933294353e-09,
+      "absolute_frobenius_error": 1.8304647265494477e-06,
+      "max_absolute_error": 1.0361774798184342e-06,
+      "direction_relative_errors": [
+        6.970908208245539e-09,
+        1.4226591532721974e-08,
+        6.4876780557315004e-09,
+        7.2746054537886474e-09
+      ],
+      "finite_difference": [
+        [
+          147.3743968194441,
+          0.7889513486958322,
+          -0.18974515292313754,
+          45.32808246526798
+        ],
+        [
+          0.765264990265635,
+          34.654044972493026,
+          32.27786609660832,
+          1.513844005707199
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          -0.213761680578628,
+          32.27757626733663,
+          34.78732442108168,
+          -0.37102900751762036
+        ],
+        [
+          45.35074371592174,
+          1.5344818304896535,
+          -0.350381634817154,
+          149.32220839813937
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          59.01259707563611,
+          0.8318988387046033,
+          -0.0550324563697302,
+          59.55693161974196
+        ]
+      ]
+    },
+    {
+      "epsilon": 1e-09,
+      "relative_error": 7.782495882150622e-08,
+      "absolute_frobenius_error": 1.9008869836731914e-05,
+      "max_absolute_error": 1.0821004423178238e-05,
+      "direction_relative_errors": [
+        7.827106237821439e-08,
+        8.811773453224383e-08,
+        6.856393488606313e-08,
+        7.720497025207684e-08
+      ],
+      "finite_difference": [
+        [
+          147.374408676626,
+          0.7889486841605731,
+          -0.18974599669263625,
+          45.328088393858934
+        ],
+        [
+          0.7652665168222939,
+          34.65404485591961,
+          32.27786549153677,
+          1.5138431619377002
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          -0.2137615640052104,
+          32.27757550128274,
+          34.78732546469132,
+          -0.3710297624692771
+        ],
+        [
+          45.35074982214837,
+          1.5344792103633154,
+          -0.35037883705513195,
+          149.32221992225436
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          59.012601250074674,
+          0.831898550046617,
+          -0.05503197897382961,
+          59.55693704873254
+        ]
+      ]
+    }
+  ],
+  "case": "single-rve-vem-quadratic",
+  "validated_at_utc": "2026-10-15T14:58:50.831581+00:00",
+  "input_sha256": {
+    "weak_form.cpp": "4039d6ff5c5a24e212c1691720f00a70ba7ecd5817635e00e2cdab30ae8b7c6b",
+    "input/ProblemMesh.txt": "4b6b9f486d55193957c6931106d56fe5fd4db7e7fe1bdbfd3d755deaba543ccd",
+    "input/BC.txt": "f4ca9f1d9da5e38bb2ca16561924030bf278925f9e7b38ea282d8be24947f4c9",
+    "input/DOFS_info.txt": "56f857b9b7c5150e11457f45f4f5572757567b0e9198cda8640f580db9dc718c",
+    "input/Material.txt": "e2387c24f46d1d241ae716233f2873495a610b3e5634d6e9643b0366e319b6ac",
+    "input/Solver.txt": "899ec505f0f42a5e7d45a5185620f6e9ddd9adc1826257f2668bdcec7daf390e",
+    "input/Postprocessing.txt": "438f8aba2f31bd6f215d58e87f8542ed2ea1a4fca8131eb557ac194680299e13"
+  },
+  "implementation_sha256": {
+    "FEM/models/VEM/weak_form_vem_quadratic.cpp": "4039d6ff5c5a24e212c1691720f00a70ba7ecd5817635e00e2cdab30ae8b7c6b",
+    "Multiscale/Makefile": "914f39064256423adfd23b9d1f5d2841b0ebe225286e1a00e9dbdd92f76b6637",
+    "Web/tools/sweep_rve_sensitivity.cpp": "72e8b53851b39dea12a34c20078f6d13f77b828096db75252f47027fe8d1d5e5",
+    "core/assembly/assembly.cpp": "e53b949caa2688599d129e3d5dce35f27e94770750e00f01a3f2a27b0dbdb04e",
+    "core/assembly/assembly.h": "043e5eeab6eb56eb0bc26e2b6b3d1b9b871e28f8c4a2fd496355ff6718b8d5ba",
+    "core/boundary/boundary_condition.h": "10d3f140a9bd632bcc68f0bfa63850eb88886da87e3697b24c311a424588d766",
+    "core/boundary/boundary_dirichlet.cpp": "e9b4ef2678ecd9b05562f0bb98bfd6410360c8a579e29352c312a596e6d4f370",
+    "core/boundary/boundary_neumann.cpp": "d6fadffb3ea5b020f0e97e55051d2c90c7a7129ecdb952518248a612b633cbb0",
+    "core/hpx/autodiff.cpp": "4eb172702231ea074cbb3e0e7780288b2c87f0855fca1fa4bd8bb2dbe3fc3ef1",
+    "core/hpx/autodiff.h": "668aba0fdbd768efce51d805ef8a1d110cf0242d21b718f42fd723a8d77c2745",
+    "core/hpx/local_dense_solve.h": "e7c1fcf17008f29c1122cbabb281b3f963e6ac253ab0c8f540b8313f0d58b63a",
+    "core/hpx/local_element_system_ad.h": "c41caa6be3d88472610dee05b7a06ed3e510332243ba0a99eb7400cfb2cb1119",
+    "core/hpx/time_integrator.h": "f4a2212672cc9bba8720a67fff72aad6ce61dee481d028c3a42b69d6f70927b1",
+    "core/io/parameter_reader.cpp": "e5858a75d09db68074fe5ceb8e942f7203bf869fe7a80018541a1d4d5b8110ca",
+    "core/io/parameter_reader.h": "2fe92dceea6e6f015d059cc65ea7e46dc2f9dc2599905a4e22b93006d293f323",
+    "core/io/postprocess.cpp": "4bef8a5421ce51123ce39b67efa6e7e026e395772a4e25d6abd5b7ccdb8612d5",
+    "core/io/postprocess.h": "3e988006dbcb9911d7012274c303c841056b96617eef16e705250886a52c46eb",
+    "core/io/postprocess_hdf5.cpp": "678e25dfea56152bfb65943ced29509187beba7ce440e44a2168031c9362aea9",
+    "core/io/postprocess_utils.cpp": "e1cdbc17123096016e9b49068416e0f41ab2c2a831fd41c80b1b872cfe333c0c",
+    "core/io/postprocess_vtk.cpp": "b10bb7c9f1f31f8dda9545ff0e1519805e1a1ca328785189bf0f87b9ed7aa04b",
+    "core/mesh/element_topology.cpp": "533630ba6e9bb7cae8f2f11590daf73cfa1cac1cb40c52e3b71dd9f9c036d84c",
+    "core/mesh/element_topology.h": "0723456ece35e75551cff549b71d6af380abc0e7b55f8eee60ad0bdbc89dfee2",
+    "core/mesh/mesh.cpp": "d39ee866aa6dcf2dfed27b15fc0f140423d7df35a3b0f8bd150110878d53c227",
+    "core/mesh/mesh.h": "c0a6afbc9add5a58c182b1fa49e8fa45db3bd3204a07e39c64bf93fc744e165c",
+    "core/mesh/mesh_reader.cpp": "12596e000e1bba82f90c0daeae40f863a156501facfd7c979aad2582c3fcc8ae",
+    "core/mesh/mesh_reader.h": "7695570cf02bdb0bedce363249f9b816c450b184e36713bb9990aef1554059ed",
+    "core/multiscale/macro_rve_common.h": "bbc2d019fd32fa85c955495b6c7e4d08185c2d7c41f1a78aab98a2f6622eb086",
+    "core/multiscale/multiscale.h": "66a33872294e33388d5a67fe52037662f5d09f8526008937ba6a93a4035fc597",
+    "core/multiscale/multiscale_context.cpp": "787d4a59efc7ed7c9452d4f59efda017b11601d38373cdb9abe2a1093a419058",
+    "core/multiscale/multiscale_types.h": "28d24ba744455cb69c237473ded92e2da72c6b20cf98012587acd061ea0f3948",
+    "core/multiscale/rve_batch.cpp": "a9d4655fd43a95f0948ff996bd24a7d06d04a7b96ff3335f91ef51694d996482",
+    "core/multiscale/rve_homogenization.cpp": "456e850cb1bf5c739bc986912d9332824da833dc83ca203de6a0a09180842664",
+    "core/multiscale/rve_output.cpp": "de424975d6a385fc472bd20a293d2440bbfe724efc1fc87bc48123629d1cc88c",
+    "core/multiscale/rve_pbc.cpp": "815993a0423f662d09c69c7b62adc518499b0c4238089689bad099ab4ff5055e",
+    "core/multiscale/rve_solver.cpp": "231e926163fa9ad08e6031973cd4eeb8ab6b7a9cc2efbf5a16655ca3cb63a815",
+    "core/solver/linear_solver_backend.h": "c330c1f63c6b34af91faed17b5e5f194d59214e3d1191f9afe5abdddd134baec",
+    "core/solver/linear_solver_dispatch.cpp": "2dbef642c26b4aa0db891695a95ef360a84cfe2d831738c3bc628a4343eac16f",
+    "core/solver/linear_solver_pardiso.cpp": "cef0f561cf4ffd1393b3437a756b0698c82630e4fc019278eec30a1709d33be6",
+    "core/solver/linear_solver_petsc.cpp": "ea15294950f456499d8329e58da46a8ac44d3c53fd0417090b0f43035ffa82fa",
+    "core/solver/linear_solver_petsc_matfree.cpp": "82d385f72a8bfb9deefeda0379b302155147fedfdbf92338dd1207911bdf1aa2",
+    "core/solver/linear_solver_umfpack.cpp": "7eff8153c006d14f7fad7f110b17c08802348c1acc1791419acf4335310c086c",
+    "core/solver/matfree_solver.cpp": "c6553d90216c353e7bda3e35797ead6b3761a95a00a7161352d88d5f04192626",
+    "core/solver/matfree_solver.h": "24a4581340326f6774e8b82c9e5baf82990be6e705926ebaea7ee404c11a8f03",
+    "core/solver/solver.cpp": "215f22509dbcddfdcd435620dd38948e58d7653966b82921b0a54f48bf86492e",
+    "core/solver/solver.h": "09f673ad550604f61dcc52a6d0c140cad8aa503d9fa8d22cd9f546c8f6b73f6c",
+    "core/solver/time_step_control.cpp": "2fdd32e6f79c902890e8b8a5a348c8cc06b74ad80ccd18219b9eb2f810751627",
+    "core/solver/time_step_control.h": "62b30f82811aba8aa4167dd5655baf155531b0757844aabb1f8cfa19ad0744e7",
+    "core/space/field_layout.cpp": "bac3a5cdde99a8806f7f701a9b0d7998b5cb9222387b41a70496f2d0f486a869",
+    "core/space/field_layout.h": "7198d88477cd62bd044a6a10c458f42f88129b7c9a103a3f30186fa4fcc6d1e9",
+    "core/space/kinematics.h": "bb1a339c19e654d5dcbbbe6783aa8d2db1848095c3b7f1d38558344b6cf061a8",
+    "core/space/local_dense_solve.h": "6a0a8c2511db0772c8d47ad459d60ac8e2b913ffbdf592891f1b301f69092f5d",
+    "core/space/local_element_system_ad.h": "6b7f38cb8bc78e761c16096c098990a9e56f1f7295b68e7cdd7c8e02b6e93443",
+    "core/space/matfree_weak_form.h": "dc7dd554b1ccb9ce23e33cc4d24074d16ef61eede788c634ff6db335ee051434",
+    "core/space/space.cpp": "80719f2ddd4ef6a8072607bb6a2b42e8d7afaba0fa4be85b41d2bef35cfe72e1",
+    "core/space/time_integrator.h": "63fae1e0d6e99a1375b51a77e3bd38ce64b37494b5deb9b557ec744ebaeb78ca",
+    "core/space/weak_form.h": "cab4f0973822e8ec445d5153e4b6668a085085211863d9ee150e6fc563e8a0ca",
+    "core/vem/vem.cpp": "b08fe965bbfffe47ecdb84ac09845ef681bd7f7b08e49021ec7deb036951582e",
+    "core/vem/vem.h": "c8193a2c255831e4eda3bd5da403d793803581f37e59c5e0fc516ea946b5d7f6"
+  },
+  "plot_generator_sha256": "24a5ed57dc78843d5fbf0e72044aee1cc9fbf6052a2f660fef3215b401d3faa3",
+  "artifacts_sha256": {
+    "examples/single-rve-vem-quadratic/sensitivity-error.svg": "605194a9df43132684b19a3a04f138b4922e1f1b7957a5e34a6c7e523bb5d4b8",
+    "examples/single-rve-vem-quadratic/sensitivity-error.png": "dc04737c11925a9424b1adab529224df854396755c5eaec0043da4073f5cde58",
+    "assets/images/rve-sensitivity-comparison.svg": "6276ea85799f63628a9016a26e5abd595fbc01fd8aa958cd0efb5c0269a3868d",
+    "assets/images/rve-sensitivity-comparison.png": "6267aa07ce1435246ba876100c9d8d7fe2a607007368cd133e7b39d5be431526"
+  }
+}

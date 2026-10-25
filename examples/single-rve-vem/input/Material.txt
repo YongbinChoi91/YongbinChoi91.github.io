@@ -1,0 +1,3 @@
+youngs_modulus 240.5
+poisson_ratio 0.3
+stabilization_parameter 1.0

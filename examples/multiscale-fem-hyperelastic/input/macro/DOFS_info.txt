@@ -1,0 +1,2 @@
+# The macro problem has displacement unknowns; material history belongs to the RVE.
+field_key displacement

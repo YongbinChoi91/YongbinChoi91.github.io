@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   HPX AutoDiff &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap wide-page-wrap">
+    <a class="back-button route-card" href="framework-weakform.html">
+     &larr; Back to Weak Form / AD
+    </a>
+    <p class="eyebrow">
+     Code Structure / Local AD helper
+    </p>
+    <h1>
+     HPX AutoDiff
+    </h1>
+    <p class="lead">
+     Fixed-capacity tensor-index automatic differentiation helpers for local scalar, vector, and tensor derivative checks.
+    </p>
+   </section>
+   <section class="doc-section section-wrap wide-page-wrap framework-detail-wide">
+    <article class="framework-hero-card">
+     <span class="tag">
+      Purpose
+     </span>
+     <h2>
+      Local tensor-index AD helper
+     </h2>
+     <p>
+      HPX AutoDiff provides small fixed-capacity active scalar, vector, and tensor types. It is used to write compact local scalar potentials and extract first or second derivatives with respect to active variables.
+     </p>
+     <p>
+      This module is separate from global weak-form assembly. The solver still receives local residuals and tangents through
+      <code>
+       ElementSystem
+      </code>
+      and assembles them into the global CSR system.
+     </p>
+    </article>
+    <div class="framework-detail-grid">
+     <article class="detail-card">
+      <h2>
+       Main files
+      </h2>
+      <ul class="clean-list code-list">
+       <li>
+        <code>
+         hpx_autodiff.h
+        </code>
+        <span class="muted">
+         types, operators, tensor algebra, derivative extraction
+        </span>
+       </li>
+       <li>
+        <code>
+         hpx_autodiff.cpp
+        </code>
+        <span class="muted">
+         scalar, tensor, determinant, and Neo-Hookean self-check routines
+        </span>
+       </li>
+       <li>
+        <code>
+         kinematics.h
+        </code>
+        <span class="muted">
+         connection only; ordinary FE kinematics remain there
+        </span>
+       </li>
+      </ul>
+     </article>
+     <article class="detail-card">
+      <h2>
+       Key structures
+      </h2>
+      <ul class="clean-list code-list">
+       <li>
+        <code>
+         hpx::ADScalar&lt;MaxVars&gt;
+        </code>
+       </li>
+       <li>
+        <code>
+         hpx::ADVector&lt;Dim, MaxVars&gt;
+        </code>
+       </li>
+       <li>
+        <code>
+         hpx::ADTensor2&lt;Rows, Cols, MaxVars&gt;
+        </code>
+       </li>
+       <li>
+        <code>
+         hpx::Tensor4&lt;A, B, C, D&gt;
+        </code>
+       </li>
+       <li>
+        <code>
+         hpx::Wrt&lt;T&gt;
+        </code>
+        <span class="muted">
+         optional wrapper for the implemented
+         <code>
+          wrt()
+         </code>
+         call style
+        </span>
+       </li>
+      </ul>
+     </article>
+     <article class="detail-card function-groups">
+      <h2>
+       Key functions
+      </h2>
+      <p class="function-map-intro">
+       Click a function to open the implementation-oriented code view.
+      </p>
+      <h3>
+       Active variables
+      </h3>
+      <ul class="clean-list function-link-list code-list">
+       <li>
+        <a class="function-link route-card" href="../code/hpx.html">
+         <code>
+          hpx::reset_ad_variables()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/hpx.html">
+         <code>
+          hpx::active_scalar/vector/tensor()
+         </code>
+        </a>
+       </li>
+      </ul>
+      <h3>
+       Derivative extraction
+      </h3>
+      <ul class="clean-list function-link-list code-list">
+       <li>
+        <a class="function-link route-card" href="../code/hpx.html">
+         <code>
+          hpx::diff()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/hpx.html">
+         <code>
+          hpx::diff2()
+         </code>
+        </a>
+       </li>
+      </ul>
+      <h3>
+       Tensor operations
+      </h3>
+      <ul class="clean-list function-link-list code-list">
+       <li>
+        <a class="function-link route-card" href="../code/hpx.html">
+         <code>
+          hpx::transpose(), trace(), inner(), det()
+         </code>
+        </a>
+       </li>
+      </ul>
+      <h3>
+       Self checks
+      </h3>
+      <ul class="clean-list function-link-list code-list">
+       <li>
+        <a class="function-link route-card" href="../code/hpx.html">
+         <code>
+          hpx::run_hpx_autodiff_self_checks()
+         </code>
+        </a>
+       </li>
+      </ul>
+     </article>
+    </div>
+    <div class="framework-wide-layout">
+     <article class="detail-card">
+      <h2>
+       Data flow
+      </h2>
+      <div class="flow-stack">
+       <span>
+        Reset active-variable offsets
+       </span>
+       <span>
+        Create active scalar/vector/tensor
+       </span>
+       <span>
+        Evaluate scalar potential
+       </span>
+       <span>
+        Extract gradient or Hessian
+       </span>
+       <span>
+        Compare with constitutive implementation
+       </span>
+      </div>
+     </article>
+     <article class="detail-card">
+      <h2>
+       Design point
+      </h2>
+      <ul class="clean-list">
+       <li>
+        Local AD helper for compact tensor-index derivative checks.
+       </li>
+       <li>
+        Fixed active-variable capacity must be documented clearly.
+       </li>
+       <li>
+        Fixed-capacity AD can fail when the number of active variables exceeds the compiled limit.
+       </li>
+       <li>
+        Use for small constitutive derivatives and validation, not as a global symbolic assembler.
+       </li>
+       <li>
+        Keep ordinary FE kinematics in
+        <code>
+         kinematics.h
+        </code>
+        .
+       </li>
+      </ul>
+      <p class="code-note">
+       The global weak-form, CSR assembly, and Newton solver remain the production path unless a weak form explicitly opts into this local helper.
+      </p>
+     </article>
+    </div>
+    <div class="function-map-promo detail-card">
+     <div>
+      <span class="tag">
+       Function map
+      </span>
+      <h2>
+       Open the HPX AutoDiff implementation view.
+      </h2>
+      <p>
+       Inspect the fixed-capacity active variables, tensor operations, derivative extraction helpers, and self-check routines.
+      </p>
+     </div>
+     <a class="button primary route-card" href="../code/hpx.html">
+      Open HPX AutoDiff function map &rarr;
+     </a>
+    </div>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

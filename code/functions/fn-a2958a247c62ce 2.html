@@ -1,0 +1,126 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements solve linear system backend petsc matfree."><title>solve_linear_system_backend_petsc_matfree() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../solver.html?file=linear_solver_petsc_matfree.cpp">← core/solver/linear_solver_petsc_matfree.cpp</a>
+<p class="eyebrow">Function detail</p><h1>solve_linear_system_backend_petsc_matfree()</h1><p class="lead">Implements solve linear system backend petsc matfree.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>Vector solve_linear_system_backend_petsc_matfree(const Vector &amp;rhs, const LinearSolverSettings &amp;settings, const PetscMatFreeOperator &amp;op, const CSRMatrix *preconditioner_matrix, const PetscPCDData *pcd_data)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/solver/linear_solver_petsc_matfree.cpp:61</dd></div><div><dt>Declaration</dt><dd>core/solver/linear_solver_petsc_matfree.cpp:61</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/solver/linear_solver_petsc_matfree.cpp#L61" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 61–173</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="61">Vector solve_linear_system_backend_petsc_matfree(</span>
+<span class="source-line" data-line="62">    <span class="token keyword">const</span> Vector&amp; rhs,</span>
+<span class="source-line" data-line="63">    <span class="token keyword">const</span> LinearSolverSettings&amp; settings,</span>
+<span class="source-line" data-line="64">    <span class="token keyword">const</span> PetscMatFreeOperator&amp; op,</span>
+<span class="source-line" data-line="65">    <span class="token keyword">const</span> CSRMatrix* preconditioner_matrix,</span>
+<span class="source-line" data-line="66">    <span class="token keyword">const</span> PetscPCDData* pcd_data</span>
+<span class="source-line" data-line="67">){</span>
+<span class="source-line" data-line="68">    (<span class="token keyword">void</span>)preconditioner_matrix;</span>
+<span class="source-line" data-line="69">    (<span class="token keyword">void</span>)pcd_data;</span>
+<span class="source-line" data-line="70">    <span class="token keyword">if</span>(op.n&lt;=<span class="token number">0</span> || static_cast&lt;<span class="token keyword">int</span>&gt;(rhs.size())!=op.n) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;PETSc MatFree dimension mismatch.&quot;</span>);</span>
+<span class="source-line" data-line="71">    <span class="token keyword">if</span>(!op.apply) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;PETSc MatFree operator has no callback.&quot;</span>);</span>
+<span class="source-line" data-line="72">    <span class="token keyword">if</span>(lower_copy(settings.backend)!=<span class="token string">&quot;petsc&quot;</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;petsc_matfree_full requires solver_backend petsc.&quot;</span>);</span>
+<span class="source-line" data-line="73">    <span class="token keyword">const</span> std::string mfpc=lower_copy(settings.petsc_matfree_pc.empty()?settings.preconditioner:settings.petsc_matfree_pc);</span>
+<span class="source-line" data-line="74">    <span class="token keyword">if</span>(mfpc!=<span class="token string">&quot;none&quot;</span> &amp;&amp; mfpc!=<span class="token string">&quot;element_block_jacobi&quot;</span> &amp;&amp; mfpc!=<span class="token string">&quot;element_jacobi&quot;</span>){</span>
+<span class="source-line" data-line="75">        <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;PETSc MatFree backend supports only petsc_matfree_pc none or element_block_jacobi.&quot;</span>);</span>
+<span class="source-line" data-line="76">    }</span>
+<span class="source-line" data-line="77"> </span>
+<span class="source-line" data-line="78">    <span class="token keyword">const</span> std::string solver=lower_copy(settings.linear_solver);</span>
+<span class="source-line" data-line="79">    <span class="token keyword">if</span>(solver==<span class="token string">&quot;direct&quot;</span> || solver==<span class="token string">&quot;lu&quot;</span> || solver==<span class="token string">&quot;preonly&quot;</span>){</span>
+<span class="source-line" data-line="80">        <span class="token keyword">throw</span> std::runtime_error(</span>
+<span class="source-line" data-line="81">            <span class="token string">&quot;petsc_matfree_full requires an iterative KSP such as fgmres/gmres/bicgstab. &quot;</span></span>
+<span class="source-line" data-line="82">            <span class="token string">&quot;direct/preonly/lu cannot solve a MatShell operator.&quot;</span></span>
+<span class="source-line" data-line="83">        );</span>
+<span class="source-line" data-line="84">    }</span>
+<span class="source-line" data-line="85"> </span>
+<span class="source-line" data-line="86">    <span class="token keyword">auto</span> chk=[](PetscErrorCode ierr,<span class="token keyword">const</span> <span class="token keyword">char</span>* where){ <span class="token keyword">if</span>(ierr) <span class="token keyword">throw</span> std::runtime_error(std::string(<span class="token string">&quot;PETSc MatFree error at &quot;</span>)+where); };</span>
+<span class="source-line" data-line="87">    <span class="token keyword">int</span> argc=<span class="token number">0</span>; <span class="token keyword">char</span>** argv=<span class="token keyword">nullptr</span>; PetscBool initialized=PETSC_FALSE;</span>
+<span class="source-line" data-line="88">    chk(PetscInitialized(&amp;initialized),<span class="token string">&quot;PetscInitialized&quot;</span>);</span>
+<span class="source-line" data-line="89">    <span class="token keyword">if</span>(!initialized) chk(PetscInitialize(&amp;argc,&amp;argv,<span class="token keyword">nullptr</span>,<span class="token keyword">nullptr</span>),<span class="token string">&quot;PetscInitialize&quot;</span>);</span>
+<span class="source-line" data-line="90"> </span>
+<span class="source-line" data-line="91">    <span class="token keyword">auto</span> set_ksp_type_from_string=[&amp;](KSP target,<span class="token keyword">const</span> std::string&amp; name){</span>
+<span class="source-line" data-line="92">        <span class="token keyword">const</span> std::string v=lower_copy(name);</span>
+<span class="source-line" data-line="93">        <span class="token keyword">if</span>(v==<span class="token string">&quot;preonly&quot;</span>) chk(KSPSetType(target,KSPPREONLY),<span class="token string">&quot;KSPSetType preonly&quot;</span>);</span>
+<span class="source-line" data-line="94">        <span class="token keyword">else</span> <span class="token keyword">if</span>(v==<span class="token string">&quot;fgmres&quot;</span>) chk(KSPSetType(target,KSPFGMRES),<span class="token string">&quot;KSPSetType fgmres&quot;</span>);</span>
+<span class="source-line" data-line="95">        <span class="token keyword">else</span> <span class="token keyword">if</span>(v==<span class="token string">&quot;gmres&quot;</span>) chk(KSPSetType(target,KSPGMRES),<span class="token string">&quot;KSPSetType gmres&quot;</span>);</span>
+<span class="source-line" data-line="96">        <span class="token keyword">else</span> <span class="token keyword">if</span>(v==<span class="token string">&quot;bicgstab&quot;</span> || v==<span class="token string">&quot;bcgs&quot;</span>) chk(KSPSetType(target,KSPBCGS),<span class="token string">&quot;KSPSetType bicgstab&quot;</span>);</span>
+<span class="source-line" data-line="97">        <span class="token keyword">else</span> <span class="token keyword">if</span>(v==<span class="token string">&quot;cg&quot;</span>) chk(KSPSetType(target,KSPCG),<span class="token string">&quot;KSPSetType cg&quot;</span>);</span>
+<span class="source-line" data-line="98">        <span class="token keyword">else</span> <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Unknown PETSc KSP type: &quot;</span>+name);</span>
+<span class="source-line" data-line="99">        <span class="token keyword">if</span>((v==<span class="token string">&quot;gmres&quot;</span> || v==<span class="token string">&quot;fgmres&quot;</span>) &amp;&amp; settings.gmres_restart&gt;<span class="token number">0</span>)</span>
+<span class="source-line" data-line="100">            chk(KSPGMRESSetRestart(target,settings.gmres_restart),<span class="token string">&quot;KSPGMRESSetRestart&quot;</span>);</span>
+<span class="source-line" data-line="101">    };</span>
+<span class="source-line" data-line="102"> </span>
+<span class="source-line" data-line="103">    <span class="token keyword">const</span> <span class="token keyword">int</span> n=op.n;</span>
+<span class="source-line" data-line="104">    PetscMatFreeShellContext shell_ctx{&amp;op};</span>
+<span class="source-line" data-line="105">    PetscMatFreeBlockJacobiContext pc_ctx{&amp;op};</span>
+<span class="source-line" data-line="106">    Mat A=<span class="token keyword">nullptr</span>;</span>
+<span class="source-line" data-line="107">    Vec b=<span class="token keyword">nullptr</span>,x=<span class="token keyword">nullptr</span>;</span>
+<span class="source-line" data-line="108">    KSP ksp=<span class="token keyword">nullptr</span>;</span>
+<span class="source-line" data-line="109">    chk(MatCreateShell(PETSC_COMM_SELF,n,n,n,n,&amp;shell_ctx,&amp;A),<span class="token string">&quot;MatCreateShell&quot;</span>);</span>
+<span class="source-line" data-line="110">    chk(MatShellSetOperation(A,MATOP_MULT,(<span class="token keyword">void</span>(*)(<span class="token keyword">void</span>))apply_petsc_matfree_shell),<span class="token string">&quot;MatShellSetOperation MATOP_MULT&quot;</span>);</span>
+<span class="source-line" data-line="111">    chk(MatCreateVecs(A,&amp;x,&amp;b),<span class="token string">&quot;MatCreateVecs&quot;</span>);</span>
+<span class="source-line" data-line="112">    PetscScalar* ba=<span class="token keyword">nullptr</span>;</span>
+<span class="source-line" data-line="113">    chk(VecGetArray(b,&amp;ba),<span class="token string">&quot;VecGetArray b&quot;</span>);</span>
+<span class="source-line" data-line="114">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;n;++i) ba[i]=rhs[i];</span>
+<span class="source-line" data-line="115">    chk(VecRestoreArray(b,&amp;ba),<span class="token string">&quot;VecRestoreArray b&quot;</span>);</span>
+<span class="source-line" data-line="116">    chk(VecSet(x,<span class="token number">0.0</span>),<span class="token string">&quot;VecSet x&quot;</span>);</span>
+<span class="source-line" data-line="117"> </span>
+<span class="source-line" data-line="118">    chk(KSPCreate(PETSC_COMM_SELF,&amp;ksp),<span class="token string">&quot;KSPCreate&quot;</span>);</span>
+<span class="source-line" data-line="119">    set_ksp_type_from_string(ksp,solver);</span>
+<span class="source-line" data-line="120">    chk(KSPSetOperators(ksp,A,A),<span class="token string">&quot;KSPSetOperators&quot;</span>);</span>
+<span class="source-line" data-line="121">    chk(KSPSetTolerances(ksp,settings.tol,settings.atol&gt;=<span class="token number">0.0</span>?settings.atol:PETSC_DEFAULT,PETSC_DEFAULT,settings.max_iter),<span class="token string">&quot;KSPSetTolerances&quot;</span>);</span>
+<span class="source-line" data-line="122">    chk(KSPSetPCSide(ksp,PC_RIGHT),<span class="token string">&quot;KSPSetPCSide RIGHT&quot;</span>);</span>
+<span class="source-line" data-line="123">    chk(KSPSetNormType(ksp,KSP_NORM_UNPRECONDITIONED),<span class="token string">&quot;KSPSetNormType unpreconditioned&quot;</span>);</span>
+<span class="source-line" data-line="124"> </span>
+<span class="source-line" data-line="125">    PC pc=<span class="token keyword">nullptr</span>;</span>
+<span class="source-line" data-line="126">    chk(KSPGetPC(ksp,&amp;pc),<span class="token string">&quot;KSPGetPC&quot;</span>);</span>
+<span class="source-line" data-line="127">    <span class="token keyword">if</span>(mfpc==<span class="token string">&quot;none&quot;</span>){</span>
+<span class="source-line" data-line="128">        chk(PCSetType(pc,PCNONE),<span class="token string">&quot;PCSetType none&quot;</span>);</span>
+<span class="source-line" data-line="129">    } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="130">        chk(PCSetType(pc,PCSHELL),<span class="token string">&quot;PCSetType MatFree block Jacobi PCSHELL&quot;</span>);</span>
+<span class="source-line" data-line="131">        chk(PCShellSetContext(pc,&amp;pc_ctx),<span class="token string">&quot;PCShellSetContext MatFree block Jacobi&quot;</span>);</span>
+<span class="source-line" data-line="132">        chk(PCShellSetApply(pc,apply_petsc_matfree_block_jacobi_pc),<span class="token string">&quot;PCShellSetApply MatFree block Jacobi&quot;</span>);</span>
+<span class="source-line" data-line="133">    }</span>
+<span class="source-line" data-line="134"> </span>
+<span class="source-line" data-line="135">    chk(KSPSetFromOptions(ksp),<span class="token string">&quot;KSPSetFromOptions&quot;</span>);</span>
+<span class="source-line" data-line="136"> </span>
+<span class="source-line" data-line="137">    <span class="token keyword">if</span>(settings.verbose){</span>
+<span class="source-line" data-line="138">        std::cout &lt;&lt; <span class="token string">&quot;    PETSc MatFree KSP\n&quot;</span></span>
+<span class="source-line" data-line="139">                  &lt;&lt; <span class="token string">&quot;      ksp       : &quot;</span> &lt;&lt; solver &lt;&lt; <span class="token string">&quot;\n&quot;</span></span>
+<span class="source-line" data-line="140">                  &lt;&lt; <span class="token string">&quot;      pc        : &quot;</span> &lt;&lt; mfpc &lt;&lt; <span class="token string">&quot;\n&quot;</span></span>
+<span class="source-line" data-line="141">                  &lt;&lt; <span class="token string">&quot;      pmat      : none\n&quot;</span></span>
+<span class="source-line" data-line="142">                  &lt;&lt; <span class="token string">&quot;      jvp       : &quot;</span> &lt;&lt; settings.petsc_matfree_jvp_mode &lt;&lt; <span class="token string">&quot;\n&quot;</span>;</span>
+<span class="source-line" data-line="143">    }</span>
+<span class="source-line" data-line="144"> </span>
+<span class="source-line" data-line="145">    <span class="token keyword">const</span> <span class="token keyword">auto</span> solve_start=std::chrono::steady_clock::now();</span>
+<span class="source-line" data-line="146">    chk(KSPSolve(ksp,b,x),<span class="token string">&quot;KSPSolve MatFree&quot;</span>);</span>
+<span class="source-line" data-line="147">    <span class="token keyword">const</span> <span class="token keyword">auto</span> solve_end=std::chrono::steady_clock::now();</span>
+<span class="source-line" data-line="148">    KSPConvergedReason reason;</span>
+<span class="source-line" data-line="149">    chk(KSPGetConvergedReason(ksp,&amp;reason),<span class="token string">&quot;KSPGetConvergedReason&quot;</span>);</span>
+<span class="source-line" data-line="150">    PetscInt its=<span class="token number">0</span>;</span>
+<span class="source-line" data-line="151">    chk(KSPGetIterationNumber(ksp,&amp;its),<span class="token string">&quot;KSPGetIterationNumber&quot;</span>);</span>
+<span class="source-line" data-line="152">    <span class="token keyword">if</span>(settings.verbose){</span>
+<span class="source-line" data-line="153">        PetscReal rnorm=<span class="token number">0.0</span>;</span>
+<span class="source-line" data-line="154">        chk(KSPGetResidualNorm(ksp,&amp;rnorm),<span class="token string">&quot;KSPGetResidualNorm&quot;</span>);</span>
+<span class="source-line" data-line="155">        <span class="token keyword">const</span> <span class="token keyword">double</span> solve_sec=std::chrono::duration&lt;<span class="token keyword">double</span>&gt;(solve_end-solve_start).count();</span>
+<span class="source-line" data-line="156">        std::cout &lt;&lt; <span class="token string">&quot;    PETSc MatFree KSP result: its=&quot;</span> &lt;&lt; static_cast&lt;<span class="token keyword">int</span>&gt;(its)</span>
+<span class="source-line" data-line="157">                  &lt;&lt; <span class="token string">&quot;, reason=&quot;</span> &lt;&lt; static_cast&lt;<span class="token keyword">int</span>&gt;(reason)</span>
+<span class="source-line" data-line="158">                  &lt;&lt; <span class="token string">&quot;, rnorm=&quot;</span> &lt;&lt; static_cast&lt;<span class="token keyword">double</span>&gt;(rnorm)</span>
+<span class="source-line" data-line="159">                  &lt;&lt; <span class="token string">&quot;, solve_time=&quot;</span> &lt;&lt; solve_sec &lt;&lt; <span class="token string">&quot; s\n&quot;</span>;</span>
+<span class="source-line" data-line="160">    }</span>
+<span class="source-line" data-line="161">    <span class="token keyword">if</span>(reason&lt;<span class="token number">0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;PETSc MatFree KSP did not converge. Iterations=&quot;</span>+std::to_string(static_cast&lt;<span class="token keyword">int</span>&gt;(its))+</span>
+<span class="source-line" data-line="162">                                           <span class="token string">&quot;, reason=&quot;</span>+std::to_string(static_cast&lt;<span class="token keyword">int</span>&gt;(reason)));</span>
+<span class="source-line" data-line="163">    Vector sol(n,<span class="token number">0.0</span>);</span>
+<span class="source-line" data-line="164">    <span class="token keyword">const</span> PetscScalar* xa=<span class="token keyword">nullptr</span>;</span>
+<span class="source-line" data-line="165">    chk(VecGetArrayRead(x,&amp;xa),<span class="token string">&quot;VecGetArrayRead x&quot;</span>);</span>
+<span class="source-line" data-line="166">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;n;++i) sol[i]=static_cast&lt;<span class="token keyword">double</span>&gt;(xa[i]);</span>
+<span class="source-line" data-line="167">    chk(VecRestoreArrayRead(x,&amp;xa),<span class="token string">&quot;VecRestoreArrayRead x&quot;</span>);</span>
+<span class="source-line" data-line="168">    KSPDestroy(&amp;ksp);</span>
+<span class="source-line" data-line="169">    VecDestroy(&amp;x);</span>
+<span class="source-line" data-line="170">    VecDestroy(&amp;b);</span>
+<span class="source-line" data-line="171">    MatDestroy(&amp;A);</span>
+<span class="source-line" data-line="172">    <span class="token keyword">return</span> sol;</span>
+<span class="source-line" data-line="173">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-caee61fbbcfebe.html">← apply_petsc_matfree_block_jacobi_pc()</a><a href="fn-7e21cb42e91736.html">solve_linear_system_backend_petsc_matfree() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

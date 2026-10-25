@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   HiPaCs Main Page &middot; HiPaCs
+  </title>
+  <link href="assets/css/styles.css" rel="stylesheet"/>
+  <script src="assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="index.html">
+     Home
+    </a>
+    <a class="" href="main.html">
+     Main Page
+    </a>
+    <a class="" href="framework.html">
+     Framework
+    </a>
+    <a class="" href="architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="applications.html">
+     Applications
+    </a>
+    <a class="" href="gallery.html">
+     Gallery
+    </a>
+    <a class="" href="install.html">
+     Install
+    </a>
+    <a class="" href="contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap main-hub-hero">
+    <a class="back-button route-card" href="index.html">
+     &larr; Back to home
+    </a>
+    <p class="eyebrow">
+     Documentation hub
+    </p>
+    <h1>
+     HiPaCs Main Page
+    </h1>
+    <p class="lead">
+     This page works as the central lobby of the website. Home stays as the visual landing page,
+              while the Main Page gives visitors a clear route into the framework concept, implementation map,
+              application branches, gallery, installation guide, and contact information.
+    </p>
+    <div class="hero-actions">
+     <a class="button primary route-card" href="applications.html">
+      View Applications
+     </a>
+     <a class="button secondary route-card" href="framework.html">
+      Explore Framework
+     </a>
+    </div>
+   </section>
+   <section class="doc-section section-wrap main-hub-flow-section">
+    <div class="section-heading">
+     <p class="eyebrow">
+      Automatic differentiation and parallel execution
+     </p>
+     <h2>
+      Weak-form models, Sacado AD, and parallel-ready assembly.
+     </h2>
+     <p>
+      HiPaCs combines weak-form-driven model definition with Trilinos Sacado automatic differentiation
+              and OpenMP/MPI-ready assembly paths. Local element and RVE contributions are converted into residuals
+              and tangents, scattered into a global CSR system, and solved through interchangeable sparse linear solver backends.
+     </p>
+    </div>
+    <div aria-label="Automatic differentiation and parallel execution flow" class="pipeline main-hub-pipeline ad-parallel-pipeline">
+     <div>
+      <strong>
+       Local weak form G
+      </strong>
+      <span>
+       model-level physics
+      </span>
+     </div>
+     <div>
+      <strong>
+       Trilinos Sacado AD
+      </strong>
+      <span>
+       residual + tangent
+      </span>
+     </div>
+     <div>
+      <strong>
+       OpenMP / MPI assembly
+      </strong>
+      <span>
+       element and RVE loops
+      </span>
+     </div>
+     <div>
+      <strong>
+       Global CSR + solver
+      </strong>
+      <span>
+       UMFPACK / PETSc / Pardiso
+      </span>
+     </div>
+    </div>
+   </section>
+   <section class="doc-section section-wrap main-hub-section">
+    <div class="section-heading">
+     <p class="eyebrow">
+      Site map
+     </p>
+     <h2>
+      Choose where to go next.
+     </h2>
+     <p>
+      Each card opens a dedicated page. The Main Page only summarizes the website structure,
+              so visitors are not forced to scroll through long technical sections before finding the topic they need.
+     </p>
+    </div>
+    <div class="framework-summary-grid page-hub-grid main-hub-grid">
+     <a class="framework-summary-card route-card main-hub-card" href="framework.html">
+      <span class="tag">
+       Architecture
+      </span>
+      <h3>
+       Framework
+      </h3>
+      <p>
+       Weak-form-driven design, automatic differentiation, reusable assembly, Newton solve flow, and extension philosophy.
+      </p>
+      <span class="text-link">
+       Open Framework &rarr;
+      </span>
+     </a>
+     <a class="framework-summary-card route-card main-hub-card" href="architecture.html">
+      <span class="tag">
+       Implementation
+      </span>
+      <h3>
+       Code Structure
+      </h3>
+      <p>
+       Input layer, mesh and DOF layout, space utilities, kinematics, weak forms, assembly, solver, backend, and postprocess modules.
+      </p>
+      <span class="text-link">
+       Open Code Structure &rarr;
+      </span>
+     </a>
+     <a class="framework-summary-card route-card main-hub-card" href="applications.html">
+      <span class="tag">
+       Physics
+      </span>
+      <h3>
+       Applications
+      </h3>
+      <p>
+       Solid mechanics, fluid mechanics, FSI, multiscale analysis, and VEM model branches with detailed example pages.
+      </p>
+      <span class="text-link">
+       Open Applications &rarr;
+      </span>
+     </a>
+     <a class="framework-summary-card route-card main-hub-card" href="gallery.html">
+      <span class="tag">
+       Results
+      </span>
+      <h3>
+       Gallery
+      </h3>
+      <p>
+       Prepared space for simulation images, VTK screenshots, benchmark plots, animations, and future result showcases.
+      </p>
+      <span class="text-link">
+       Open Gallery &rarr;
+      </span>
+     </a>
+     <a class="framework-summary-card route-card main-hub-card" href="install.html">
+      <span class="tag">
+       Setup
+      </span>
+      <h3>
+       Install
+      </h3>
+      <p>
+       Conda environment, Trilinos/Sacado setup, Makefile paths, backend choices, and build commands.
+      </p>
+      <span class="text-link">
+       Open Install &rarr;
+      </span>
+     </a>
+     <a class="framework-summary-card route-card main-hub-card" href="contact.html">
+      <span class="tag">
+       Profile
+      </span>
+      <h3>
+       Contact
+      </h3>
+      <p>
+       Developer profile, GitHub links, project repository, and collaboration/contact information.
+      </p>
+      <span class="text-link">
+       Open Contact &rarr;
+      </span>
+     </a>
+    </div>
+   </section>
+  </main>
+  <script defer="True" src="assets/js/main.js">
+  </script>
+ </body>
+</html>

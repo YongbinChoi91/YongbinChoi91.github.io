@@ -1,0 +1,168 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements rebuild pressure pcd cache."><title>rebuild_pressure_pcd_cache() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../solver.html?file=solver.cpp">← core/solver/solver.cpp</a>
+<p class="eyebrow">Function detail</p><h1>rebuild_pressure_pcd_cache()</h1><p class="lead">Implements rebuild pressure pcd cache.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static void rebuild_pressure_pcd_cache(PressurePcdCache &amp;cache, const std::vector&lt; int &gt; &amp;free_dofs, const FieldMesh &amp;mesh, const ProblemParameters &amp;params, const LinearSolverSettings &amp;settings, double dt_for_schur)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/solver/solver.cpp:328</dd></div><div><dt>Declaration</dt><dd>core/solver/solver.cpp:328</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/solver/solver.cpp#L328" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 328–482</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="328"><span class="token keyword">static</span> <span class="token keyword">void</span> rebuild_pressure_pcd_cache(</span>
+<span class="source-line" data-line="329">    PressurePcdCache&amp; cache,</span>
+<span class="source-line" data-line="330">    <span class="token keyword">const</span> std::vector&lt;<span class="token keyword">int</span>&gt;&amp; free_dofs,</span>
+<span class="source-line" data-line="331">    <span class="token keyword">const</span> FieldMesh&amp; mesh,</span>
+<span class="source-line" data-line="332">    <span class="token keyword">const</span> ProblemParameters&amp; params,</span>
+<span class="source-line" data-line="333">    <span class="token keyword">const</span> LinearSolverSettings&amp; settings,</span>
+<span class="source-line" data-line="334">    <span class="token keyword">double</span> dt_for_schur</span>
+<span class="source-line" data-line="335">){</span>
+<span class="source-line" data-line="336">    <span class="token keyword">const</span> <span class="token keyword">int</span> n_full=total_dof_count(mesh);</span>
+<span class="source-line" data-line="337">    cache=PressurePcdCache();</span>
+<span class="source-line" data-line="338">    cache.valid=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="339">    cache.mesh=&amp;mesh;</span>
+<span class="source-line" data-line="340">    cache.free_dofs=free_dofs;</span>
+<span class="source-line" data-line="341">    cache.full_to_pidx.assign(n_full,-<span class="token number">1</span>);</span>
+<span class="source-line" data-line="342">    cache.dt=dt_for_schur;</span>
+<span class="source-line" data-line="343">    cache.theta=params.solver.theta;</span>
+<span class="source-line" data-line="344">    cache.rho=params.material.rho;</span>
+<span class="source-line" data-line="345">    cache.mu=params.material.mu;</span>
+<span class="source-line" data-line="346">    cache.kp_mass_shift=settings.pcd_kp_mass_shift;</span>
+<span class="source-line" data-line="347">    cache.ap_mass_weight=settings.pcd_ap_mass_weight;</span>
+<span class="source-line" data-line="348">    cache.ap_laplacian_weight=settings.pcd_ap_laplacian_weight;</span>
+<span class="source-line" data-line="349">    cache.schur_pressure_shift=settings.schur_pressure_shift;</span>
+<span class="source-line" data-line="350">    cache.stabilization_time_order=params.solver.stabilization_time_order;</span>
+<span class="source-line" data-line="351">    cache.gauss_order=params.solver.gauss_order;</span>
+<span class="source-line" data-line="352"> </span>
+<span class="source-line" data-line="353">    <span class="token keyword">int</span> np_red=<span class="token number">0</span>;</span>
+<span class="source-line" data-line="354">    <span class="token keyword">for</span>(<span class="token keyword">int</span> rid=<span class="token number">0</span>; rid&lt;static_cast&lt;<span class="token keyword">int</span>&gt;(free_dofs.size()); ++rid){</span>
+<span class="source-line" data-line="355">        <span class="token keyword">const</span> <span class="token keyword">int</span> full=free_dofs[rid];</span>
+<span class="source-line" data-line="356">        <span class="token keyword">if</span>(is_pressure_full_dof_for_mesh(mesh,full)) cache.full_to_pidx[full]=np_red++;</span>
+<span class="source-line" data-line="357">    }</span>
+<span class="source-line" data-line="358">    <span class="token keyword">if</span>(np_red&lt;=<span class="token number">0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;PCD requested but there are no free pressure DOFs.&quot;</span>);</span>
+<span class="source-line" data-line="359">    <span class="token keyword">if</span>(mesh.pressure_elements.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Cannot build PCD data: no pressure elements.&quot;</span>);</span>
+<span class="source-line" data-line="360">    <span class="token keyword">if</span>(mesh.velocity_elements.size() &lt; mesh.pressure_elements.size()) {</span>
+<span class="source-line" data-line="361">        <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Cannot build PCD data: velocity/pressure element counts are inconsistent.&quot;</span>);</span>
+<span class="source-line" data-line="362">    }</span>
+<span class="source-line" data-line="363"> </span>
+<span class="source-line" data-line="364">    std::vector&lt;std::map&lt;<span class="token keyword">int</span>,<span class="token keyword">char</span>&gt;&gt; pattern_rows(np_red);</span>
+<span class="source-line" data-line="365">    <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; pe:mesh.pressure_elements){</span>
+<span class="source-line" data-line="366">        <span class="token keyword">const</span> <span class="token keyword">int</span> np_loc=static_cast&lt;<span class="token keyword">int</span>&gt;(pe.size());</span>
+<span class="source-line" data-line="367">        <span class="token keyword">for</span>(<span class="token keyword">int</span> a=<span class="token number">0</span>;a&lt;np_loc;++a){</span>
+<span class="source-line" data-line="368">            <span class="token keyword">const</span> <span class="token keyword">int</span> Ia_full=pressure_dof(mesh,pe[a]);</span>
+<span class="source-line" data-line="369">            <span class="token keyword">const</span> <span class="token keyword">int</span> Ia=(Ia_full&gt;=<span class="token number">0</span> &amp;&amp; Ia_full&lt;n_full) ? cache.full_to_pidx[Ia_full] : -<span class="token number">1</span>;</span>
+<span class="source-line" data-line="370">            <span class="token keyword">if</span>(Ia&lt;<span class="token number">0</span>) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="371">            <span class="token keyword">for</span>(<span class="token keyword">int</span> b=<span class="token number">0</span>;b&lt;np_loc;++b){</span>
+<span class="source-line" data-line="372">                <span class="token keyword">const</span> <span class="token keyword">int</span> Ib_full=pressure_dof(mesh,pe[b]);</span>
+<span class="source-line" data-line="373">                <span class="token keyword">const</span> <span class="token keyword">int</span> Ib=(Ib_full&gt;=<span class="token number">0</span> &amp;&amp; Ib_full&lt;n_full) ? cache.full_to_pidx[Ib_full] : -<span class="token number">1</span>;</span>
+<span class="source-line" data-line="374">                <span class="token keyword">if</span>(Ib&gt;=<span class="token number">0</span>) pattern_rows[Ia][Ib]=<span class="token number">1</span>;</span>
+<span class="source-line" data-line="375">            }</span>
+<span class="source-line" data-line="376">        }</span>
+<span class="source-line" data-line="377">    }</span>
+<span class="source-line" data-line="378"> </span>
+<span class="source-line" data-line="379">    <span class="token comment">// PCD Kp/Ap are used as PETSc inner preconditioner matrices.  PETSc ILU</span></span>
+<span class="source-line" data-line="380">    <span class="token comment">// requires a structurally present diagonal in every row, while reduced</span></span>
+<span class="source-line" data-line="381">    <span class="token comment">// pressure spaces can contain pinned/isolated pressure rows after boundary</span></span>
+<span class="source-line" data-line="382">    <span class="token comment">// reduction.  Complete the pressure CSR pattern here; this changes only the</span></span>
+<span class="source-line" data-line="383">    <span class="token comment">// preconditioner operators, not the nonlinear residual or weak form.</span></span>
+<span class="source-line" data-line="384">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>; i&lt;np_red; ++i) pattern_rows[i][i]=<span class="token number">1</span>;</span>
+<span class="source-line" data-line="385"> </span>
+<span class="source-line" data-line="386">    CSRMatrix pattern;</span>
+<span class="source-line" data-line="387">    pattern.n_rows=np_red;</span>
+<span class="source-line" data-line="388">    pattern.n_cols=np_red;</span>
+<span class="source-line" data-line="389">    pattern.row_ptr.assign(np_red+<span class="token number">1</span>,<span class="token number">0</span>);</span>
+<span class="source-line" data-line="390">    <span class="token keyword">int</span> nnz=<span class="token number">0</span>;</span>
+<span class="source-line" data-line="391">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;np_red;++i){</span>
+<span class="source-line" data-line="392">        pattern.row_ptr[i]=nnz;</span>
+<span class="source-line" data-line="393">        nnz += static_cast&lt;<span class="token keyword">int</span>&gt;(pattern_rows[i].size());</span>
+<span class="source-line" data-line="394">    }</span>
+<span class="source-line" data-line="395">    pattern.row_ptr[np_red]=nnz;</span>
+<span class="source-line" data-line="396">    pattern.col_idx.reserve(nnz);</span>
+<span class="source-line" data-line="397">    pattern.values.assign(nnz,<span class="token number">0.0</span>);</span>
+<span class="source-line" data-line="398">    cache.csr_index.assign(np_red,{});</span>
+<span class="source-line" data-line="399">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;np_red;++i){</span>
+<span class="source-line" data-line="400">        cache.csr_index[i].reserve(pattern_rows[i].size());</span>
+<span class="source-line" data-line="401">        <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; kv:pattern_rows[i]){</span>
+<span class="source-line" data-line="402">            <span class="token keyword">const</span> <span class="token keyword">int</span> idx=static_cast&lt;<span class="token keyword">int</span>&gt;(pattern.col_idx.size());</span>
+<span class="source-line" data-line="403">            pattern.col_idx.push_back(kv.first);</span>
+<span class="source-line" data-line="404">            cache.csr_index[i].emplace(kv.first,idx);</span>
+<span class="source-line" data-line="405">        }</span>
+<span class="source-line" data-line="406">    }</span>
+<span class="source-line" data-line="407"> </span>
+<span class="source-line" data-line="408">    cache.data.enabled=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="409">    cache.data.Mp=make_zero_csr_like(pattern);</span>
+<span class="source-line" data-line="410">    cache.Kp_base=make_zero_csr_like(pattern);</span>
+<span class="source-line" data-line="411"> </span>
+<span class="source-line" data-line="412">    <span class="token keyword">for</span>(<span class="token keyword">int</span> e=<span class="token number">0</span>;e&lt;static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.pressure_elements.size());++e){</span>
+<span class="source-line" data-line="413">        <span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; pe=mesh.pressure_elements[e];</span>
+<span class="source-line" data-line="414">        <span class="token keyword">const</span> ElementGeometry geom=make_velocity_element_geometry(mesh,e);</span>
+<span class="source-line" data-line="415">        <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; gp: gauss_rule(mesh.velocity_type, params.solver.gauss_order)){</span>
+<span class="source-line" data-line="416">            <span class="token keyword">const</span> ShapeData sv=compute_shape(mesh.velocity_type,gp.xi,gp.eta,gp.zeta);</span>
+<span class="source-line" data-line="417">            <span class="token keyword">const</span> JacobianData J=compute_jacobian_data(geom,sv);</span>
+<span class="source-line" data-line="418">            <span class="token keyword">if</span>(J.detJ&lt;=<span class="token number">0.0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Negative detJ while assembling PCD pressure operators.&quot;</span>);</span>
+<span class="source-line" data-line="419"> </span>
+<span class="source-line" data-line="420">            <span class="token keyword">const</span> ShapeData sp=compute_shape(mesh.pressure_type,gp.xi,gp.eta,gp.zeta);</span>
+<span class="source-line" data-line="421">            <span class="token keyword">const</span> <span class="token keyword">auto</span> dNp=compute_dN_dx(sp,J);</span>
+<span class="source-line" data-line="422">            <span class="token keyword">const</span> <span class="token keyword">double</span> w=J.detJ*gp.weight;</span>
+<span class="source-line" data-line="423">            <span class="token keyword">const</span> <span class="token keyword">int</span> np_loc=std::min(static_cast&lt;<span class="token keyword">int</span>&gt;(pe.size()),static_cast&lt;<span class="token keyword">int</span>&gt;(sp.N.size()));</span>
+<span class="source-line" data-line="424">            <span class="token keyword">for</span>(<span class="token keyword">int</span> a=<span class="token number">0</span>;a&lt;np_loc;++a){</span>
+<span class="source-line" data-line="425">                <span class="token keyword">const</span> <span class="token keyword">int</span> Ia_full=pressure_dof(mesh,pe[a]);</span>
+<span class="source-line" data-line="426">                <span class="token keyword">const</span> <span class="token keyword">int</span> Ia=(Ia_full&gt;=<span class="token number">0</span> &amp;&amp; Ia_full&lt;n_full) ? cache.full_to_pidx[Ia_full] : -<span class="token number">1</span>;</span>
+<span class="source-line" data-line="427">                <span class="token keyword">if</span>(Ia&lt;<span class="token number">0</span>) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="428">                <span class="token keyword">for</span>(<span class="token keyword">int</span> b=<span class="token number">0</span>;b&lt;np_loc;++b){</span>
+<span class="source-line" data-line="429">                    <span class="token keyword">const</span> <span class="token keyword">int</span> Ib_full=pressure_dof(mesh,pe[b]);</span>
+<span class="source-line" data-line="430">                    <span class="token keyword">const</span> <span class="token keyword">int</span> Ib=(Ib_full&gt;=<span class="token number">0</span> &amp;&amp; Ib_full&lt;n_full) ? cache.full_to_pidx[Ib_full] : -<span class="token number">1</span>;</span>
+<span class="source-line" data-line="431">                    <span class="token keyword">if</span>(Ib&lt;<span class="token number">0</span>) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="432">                    <span class="token keyword">const</span> <span class="token keyword">int</span> idx=pressure_cache_csr_index(cache,Ia,Ib);</span>
+<span class="source-line" data-line="433">                    <span class="token keyword">if</span>(idx&lt;<span class="token number">0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;PCD cache CSR entry missing.&quot;</span>);</span>
+<span class="source-line" data-line="434">                    <span class="token keyword">double</span> gd=<span class="token number">0.0</span>;</span>
+<span class="source-line" data-line="435">                    <span class="token keyword">for</span>(<span class="token keyword">int</span> d=<span class="token number">0</span>; d&lt;mesh.dim; ++d) gd += dNp[a][d]*dNp[b][d];</span>
+<span class="source-line" data-line="436">                    cache.data.Mp.values[idx] += sp.N[a]*sp.N[b]*w;</span>
+<span class="source-line" data-line="437">                    cache.Kp_base.values[idx] += gd*w;</span>
+<span class="source-line" data-line="438">                }</span>
+<span class="source-line" data-line="439">            }</span>
+<span class="source-line" data-line="440">        }</span>
+<span class="source-line" data-line="441">    }</span>
+<span class="source-line" data-line="442"> </span>
+<span class="source-line" data-line="443">    <span class="token keyword">const</span> <span class="token keyword">double</span> kp_mass_shift = (settings.pcd_kp_mass_shift&lt;<span class="token number">0.0</span>) ? <span class="token number">1.0e-8</span> : settings.pcd_kp_mass_shift;</span>
+<span class="source-line" data-line="444">    cache.data.Kp=make_zero_csr_like(pattern);</span>
+<span class="source-line" data-line="445">    <span class="token keyword">for</span>(<span class="token keyword">int</span> q=<span class="token number">0</span>;q&lt;static_cast&lt;<span class="token keyword">int</span>&gt;(cache.data.Kp.values.size());++q){</span>
+<span class="source-line" data-line="446">        cache.data.Kp.values[q] = cache.Kp_base.values[q] + kp_mass_shift*cache.data.Mp.values[q];</span>
+<span class="source-line" data-line="447">    }</span>
+<span class="source-line" data-line="448">    <span class="token keyword">if</span>(settings.schur_pressure_shift&gt;<span class="token number">0.0</span>){</span>
+<span class="source-line" data-line="449">        <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;np_red;++i){</span>
+<span class="source-line" data-line="450">            <span class="token keyword">const</span> <span class="token keyword">int</span> idx=pressure_cache_csr_index(cache,i,i);</span>
+<span class="source-line" data-line="451">            <span class="token keyword">if</span>(idx&gt;=<span class="token number">0</span>) cache.data.Kp.values[idx] += settings.schur_pressure_shift;</span>
+<span class="source-line" data-line="452">        }</span>
+<span class="source-line" data-line="453">    }</span>
+<span class="source-line" data-line="454"> </span>
+<span class="source-line" data-line="455">    <span class="token comment">// Numerical diagonal completion for robust PETSc PC setup.  The diagonal is</span></span>
+<span class="source-line" data-line="456">    <span class="token comment">// already present structurally above; here we make sure a completely empty</span></span>
+<span class="source-line" data-line="457">    <span class="token comment">// reduced pressure row does not create a zero-pivot preconditioner.</span></span>
+<span class="source-line" data-line="458">    <span class="token keyword">double</span> kp_diag_scale=<span class="token number">0.0</span>;</span>
+<span class="source-line" data-line="459">    <span class="token keyword">int</span> kp_diag_count=<span class="token number">0</span>;</span>
+<span class="source-line" data-line="460">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;np_red;++i){</span>
+<span class="source-line" data-line="461">        <span class="token keyword">const</span> <span class="token keyword">int</span> idx=pressure_cache_csr_index(cache,i,i);</span>
+<span class="source-line" data-line="462">        <span class="token keyword">if</span>(idx&gt;=<span class="token number">0</span>){</span>
+<span class="source-line" data-line="463">            kp_diag_scale += std::abs(cache.data.Kp.values[idx]);</span>
+<span class="source-line" data-line="464">            ++kp_diag_count;</span>
+<span class="source-line" data-line="465">        }</span>
+<span class="source-line" data-line="466">    }</span>
+<span class="source-line" data-line="467">    <span class="token keyword">const</span> <span class="token keyword">double</span> kp_diag_floor = std::max(<span class="token number">1.0e-14</span>, <span class="token number">1.0e-12</span> * (kp_diag_count&gt;<span class="token number">0</span> ? kp_diag_scale/kp_diag_count : <span class="token number">1.0</span>));</span>
+<span class="source-line" data-line="468">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;np_red;++i){</span>
+<span class="source-line" data-line="469">        <span class="token keyword">const</span> <span class="token keyword">int</span> idx=pressure_cache_csr_index(cache,i,i);</span>
+<span class="source-line" data-line="470">        <span class="token keyword">if</span>(idx&gt;=<span class="token number">0</span> &amp;&amp; std::abs(cache.data.Kp.values[idx]) &lt; kp_diag_floor){</span>
+<span class="source-line" data-line="471">            cache.data.Kp.values[idx] += kp_diag_floor;</span>
+<span class="source-line" data-line="472">        }</span>
+<span class="source-line" data-line="473">    }</span>
+<span class="source-line" data-line="474"> </span>
+<span class="source-line" data-line="475">    cache.data.Ap=make_zero_csr_like(pattern);</span>
+<span class="source-line" data-line="476">    cache.data.Mp_lumped_inv.assign(np_red,<span class="token number">1.0</span>);</span>
+<span class="source-line" data-line="477">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;np_red;++i){</span>
+<span class="source-line" data-line="478">        <span class="token keyword">double</span> lump=<span class="token number">0.0</span>;</span>
+<span class="source-line" data-line="479">        <span class="token keyword">for</span>(<span class="token keyword">int</span> q=cache.data.Mp.row_ptr[i]; q&lt;cache.data.Mp.row_ptr[i+<span class="token number">1</span>]; ++q) lump += cache.data.Mp.values[q];</span>
+<span class="source-line" data-line="480">        cache.data.Mp_lumped_inv[i] = (std::abs(lump)&gt;<span class="token number">1.0e-30</span>) ? <span class="token number">1.0</span>/lump : <span class="token number">1.0</span>;</span>
+<span class="source-line" data-line="481">    }</span>
+<span class="source-line" data-line="482">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-3392cbc8601171.html">← pressure_pcd_cache_matches()</a><a href="fn-8d2780feef4431.html">update_pressure_pcd_data_cached() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

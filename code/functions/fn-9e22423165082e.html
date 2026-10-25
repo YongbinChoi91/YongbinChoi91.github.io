@@ -1,0 +1,22 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements read on off bool."><title>read_on_off_bool() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=parameter_reader.cpp">← core/io/parameter_reader.cpp</a>
+<p class="eyebrow">Function detail</p><h1>read_on_off_bool()</h1><p class="lead">Implements read on off bool.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static bool read_on_off_bool(std::stringstream &amp;ss, const std::string &amp;key)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/parameter_reader.cpp:205</dd></div><div><dt>Declaration</dt><dd>core/io/parameter_reader.cpp:205</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/parameter_reader.cpp#L205" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 205–213</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="205"><span class="token keyword">static</span> <span class="token keyword">bool</span> read_on_off_bool(std::stringstream&amp; ss, <span class="token keyword">const</span> std::string&amp; key){</span>
+<span class="source-line" data-line="206">    std::string v;</span>
+<span class="source-line" data-line="207">    ss &gt;&gt; v;</span>
+<span class="source-line" data-line="208">    <span class="token keyword">if</span>(v.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Missing on/off value for key: &quot;</span> + key);</span>
+<span class="source-line" data-line="209">    v = lower_copy(v);</span>
+<span class="source-line" data-line="210">    <span class="token keyword">if</span>(v==<span class="token string">&quot;on&quot;</span> || v==<span class="token string">&quot;true&quot;</span> || v==<span class="token string">&quot;1&quot;</span> || v==<span class="token string">&quot;yes&quot;</span>) <span class="token keyword">return</span> <span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="211">    <span class="token keyword">if</span>(v==<span class="token string">&quot;off&quot;</span> || v==<span class="token string">&quot;false&quot;</span> || v==<span class="token string">&quot;0&quot;</span> || v==<span class="token string">&quot;no&quot;</span>) <span class="token keyword">return</span> <span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="212">    <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Expected on/off, true/false, or 1/0 for key: &quot;</span> + key);</span>
+<span class="source-line" data-line="213">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-6fba6deac59e21.html">← key_in()</a><a href="fn-5f7c914d1b1685.html">read_problem_parameters() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

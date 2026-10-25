@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   DOFS_info.txt &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body class="framework-detail-page">
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap wide-page-wrap">
+    <a class="back-button route-card" href="framework-mesh.html">
+     &larr; Back to Mesh / DOF Layout
+    </a>
+    <p class="eyebrow">
+     Framework / Input format
+    </p>
+    <h1>
+     DOFS_info.txt
+    </h1>
+    <p class="lead">
+     This file defines the active Newton fields, their ordering, optional VEM order, and Gauss-point history-variable declarations.
+    </p>
+   </section>
+   <section class="doc-section section-wrap wide-page-wrap framework-detail-wide">
+    <article class="framework-hero-card">
+     <span class="tag">
+      Core idea
+     </span>
+     <h2>
+      Field order is a user-level setting.
+     </h2>
+     <p>
+      The
+      <code>
+       field_key
+      </code>
+      line uses physical field names such as
+      <code>
+       displacement
+      </code>
+      ,
+      <code>
+       velocity
+      </code>
+      ,
+      <code>
+       pressure
+      </code>
+      , and
+      <code>
+       temperature
+      </code>
+      . The order controls the global DOF layout and the element-local
+      <code>
+       LocalFieldView
+      </code>
+      order used by weak-form kernels.
+     </p>
+    </article>
+    <div class="example-grid two-col">
+     <article class="detail-card">
+      <h2>
+       Solid-only example
+      </h2>
+      <p>
+       A pure displacement problem keeps the global Newton vector minimal.
+      </p>
+      <pre class="example-code"><code># Global unknown/element-local field order
+field_key displacement</code></pre>
+     </article>
+     <article class="detail-card">
+      <h2>
+       Fluid / FSI-style example
+      </h2>
+      <p>
+       Mixed problems can expose several named fields in a controlled order.
+      </p>
+      <pre class="example-code"><code># Mixed mechanical-pressure layout
+field_key velocity displacement pressure
+
+# Thermo-coupled variant
+# field_key velocity displacement temperature pressure</code></pre>
+     </article>
+    </div>
+    <div class="framework-wide-layout">
+     <article class="detail-card">
+      <h2>
+       Optional declarations
+      </h2>
+      <ul class="input-key-reference">
+       <li>
+        <code>
+         history plasticity 5
+        </code>
+        declares five Gauss-point history variables.
+       </li>
+       <li>
+        <code>
+         VEM linear
+        </code>
+        or
+        <code>
+         VEM quadratic
+        </code>
+        can select the polygon interpolation order.
+       </li>
+       <li>
+        <code>
+         domain solid
+        </code>
+        may provide a display name for single-domain runs.
+       </li>
+      </ul>
+     </article>
+     <article class="detail-card">
+      <h2>
+       Design point
+      </h2>
+      <p>
+       Only fields listed in
+       <code>
+        field_key
+       </code>
+       become global Newton unknowns. History variables are local material state variables and are not included in the global sparse matrix.
+      </p>
+     </article>
+    </div>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

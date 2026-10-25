@@ -1,0 +1,35 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements pressure pcd cache matches."><title>pressure_pcd_cache_matches() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../solver.html?file=solver.cpp">← core/solver/solver.cpp</a>
+<p class="eyebrow">Function detail</p><h1>pressure_pcd_cache_matches()</h1><p class="lead">Implements pressure pcd cache matches.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static bool pressure_pcd_cache_matches(const PressurePcdCache &amp;cache, const std::vector&lt; int &gt; &amp;free_dofs, const FieldMesh &amp;mesh, const ProblemParameters &amp;params, const LinearSolverSettings &amp;settings, double dt_for_schur)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/solver/solver.cpp:305</dd></div><div><dt>Declaration</dt><dd>core/solver/solver.cpp:305</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/solver/solver.cpp#L305" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 305–326</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="305"><span class="token keyword">static</span> <span class="token keyword">bool</span> pressure_pcd_cache_matches(</span>
+<span class="source-line" data-line="306">    <span class="token keyword">const</span> PressurePcdCache&amp; cache,</span>
+<span class="source-line" data-line="307">    <span class="token keyword">const</span> std::vector&lt;<span class="token keyword">int</span>&gt;&amp; free_dofs,</span>
+<span class="source-line" data-line="308">    <span class="token keyword">const</span> FieldMesh&amp; mesh,</span>
+<span class="source-line" data-line="309">    <span class="token keyword">const</span> ProblemParameters&amp; params,</span>
+<span class="source-line" data-line="310">    <span class="token keyword">const</span> LinearSolverSettings&amp; settings,</span>
+<span class="source-line" data-line="311">    <span class="token keyword">double</span> dt_for_schur</span>
+<span class="source-line" data-line="312">){</span>
+<span class="source-line" data-line="313">    <span class="token keyword">return</span> cache.valid &amp;&amp;</span>
+<span class="source-line" data-line="314">           cache.mesh == &amp;mesh &amp;&amp;</span>
+<span class="source-line" data-line="315">           cache.free_dofs == free_dofs &amp;&amp;</span>
+<span class="source-line" data-line="316">           cache.dt == dt_for_schur &amp;&amp;</span>
+<span class="source-line" data-line="317">           cache.theta == params.solver.theta &amp;&amp;</span>
+<span class="source-line" data-line="318">           cache.rho == params.material.rho &amp;&amp;</span>
+<span class="source-line" data-line="319">           cache.mu == params.material.mu &amp;&amp;</span>
+<span class="source-line" data-line="320">           cache.kp_mass_shift == settings.pcd_kp_mass_shift &amp;&amp;</span>
+<span class="source-line" data-line="321">           cache.ap_mass_weight == settings.pcd_ap_mass_weight &amp;&amp;</span>
+<span class="source-line" data-line="322">           cache.ap_laplacian_weight == settings.pcd_ap_laplacian_weight &amp;&amp;</span>
+<span class="source-line" data-line="323">           cache.schur_pressure_shift == settings.schur_pressure_shift &amp;&amp;</span>
+<span class="source-line" data-line="324">           cache.stabilization_time_order == params.solver.stabilization_time_order &amp;&amp;</span>
+<span class="source-line" data-line="325">           cache.gauss_order == params.solver.gauss_order;</span>
+<span class="source-line" data-line="326">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-9af44f79aee61b.html">← pressure_cache_csr_index()</a><a href="fn-dadaada40d002b.html">rebuild_pressure_pcd_cache() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

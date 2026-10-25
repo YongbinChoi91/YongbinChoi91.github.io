@@ -1,4 +1,2 @@
-
-DIRICHLET LEFT ux 0.0
-DIRICHLET LEFT uy 0.0
-NEUMANN RIGHT uy 1.0*t
+# Placeholder file for BC.txt
+# Replace this with the verified HiPaCs example input/source file.

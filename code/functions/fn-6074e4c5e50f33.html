@@ -1,0 +1,18 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements the operator- overload."><title>operator-() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../hpx.html?file=autodiff.h">← core/hpx/autodiff.h</a>
+<p class="eyebrow">Function detail</p><h1>operator-()</h1><p class="lead">Implements the operator- overload.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Special</span>
+<h2>Signature</h2><p class="function-signature"><code>AD1&lt; Scalar, N &gt; hpx::operator-(const AD1&lt; Scalar, N &gt; &amp;a, const T &amp;b)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/hpx/autodiff.h:99</dd></div><div><dt>Declaration</dt><dd>core/hpx/autodiff.h:99</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/hpx/autodiff.h#L99" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 99–103</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="99"><span class="token keyword">inline</span> AD1&lt;Scalar, N&gt; <span class="token keyword">operator</span>-(<span class="token keyword">const</span> AD1&lt;Scalar, N&gt;&amp; a, <span class="token keyword">const</span> T&amp; b) {</span>
+<span class="source-line" data-line="100">    AD1&lt;Scalar, N&gt; c(a.val - Scalar(b));</span>
+<span class="source-line" data-line="101">    <span class="token keyword">for</span> (std::size_t i = <span class="token number">0</span>; i &lt; N; ++i) c.grad[i] = a.grad[i];</span>
+<span class="source-line" data-line="102">    <span class="token keyword">return</span> c;</span>
+<span class="source-line" data-line="103">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-8db9b1a88b0c98.html">← operator-()</a><a href="fn-e53d8676f17146.html">operator-() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

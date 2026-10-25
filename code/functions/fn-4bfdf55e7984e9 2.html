@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements solve local dense lu."><title>solve_local_dense_lu() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../hpx.html?file=local_dense_solve.h">← core/hpx/local_dense_solve.h</a>
+<p class="eyebrow">Function detail</p><h1>solve_local_dense_lu()</h1><p class="lead">Implements solve local dense lu.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>Vector hpx::solve_local_dense_lu(LocalDenseMatrix A, Vector b, const std::string &amp;context=&quot;Local dense LU solve&quot;)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/hpx/local_dense_solve.h:136</dd></div><div><dt>Declaration</dt><dd>core/hpx/local_dense_solve.h:136</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/hpx/local_dense_solve.h#L136" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 136–142</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="136"><span class="token keyword">inline</span> Vector solve_local_dense_lu(</span>
+<span class="source-line" data-line="137">    LocalDenseMatrix A,</span>
+<span class="source-line" data-line="138">    Vector b,</span>
+<span class="source-line" data-line="139">    <span class="token keyword">const</span> std::string&amp; context = <span class="token string">&quot;Local dense LU solve&quot;</span></span>
+<span class="source-line" data-line="140">) {</span>
+<span class="source-line" data-line="141">    <span class="token keyword">return</span> solve_local_dense_lu(factorize_local_dense_lu(std::move(A), context), std::move(b));</span>
+<span class="source-line" data-line="142">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-c9b0a928cb6416.html">← solve_local_dense_lu()</a><span></span></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

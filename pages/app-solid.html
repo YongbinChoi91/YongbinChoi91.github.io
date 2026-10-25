@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   Solid Mechanics &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap">
+    <a class="back-button route-card" href="../applications.html">
+     &larr; Back to applications
+    </a>
+    <p class="eyebrow">
+     Application / Solid Mechanics
+    </p>
+    <h1>
+     Solid Mechanics
+    </h1>
+    <p class="lead">
+     Solid mechanics is organized through the same tabbed platform used by the detailed Theory / Simulation pages.
+            Select FEM for standard element formulations, or VEM for polygonal virtual-element formulations.
+    </p>
+   </section>
+   <section class="doc-section section-wrap solid-method-document-section">
+    <div class="plasticity-document-panel solid-method-document-panel">
+     <div aria-label="Solid mechanics method tabs" class="plasticity-tabs solid-method-tabs" role="tablist">
+      <button aria-selected="true" class="active" data-solid-method-tab="fem" role="tab" type="button">
+       FEM
+      </button>
+      <button aria-selected="false" data-solid-method-tab="vem" role="tab" type="button">
+       VEM
+      </button>
+     </div>
+     <div class="plasticity-tab-panel solid-method-panel active" data-solid-method-panel="fem" role="tabpanel">
+      <div class="section-heading">
+       <p class="eyebrow">
+        Finite Element Method
+       </p>
+       <h2>
+        Standard element branch for elastic, inelastic, and dynamic solids.
+       </h2>
+       <p>
+        The FEM branch uses classical finite-element interpolation, Gauss-point constitutive evaluation,
+                    AD-based residual/tangent extraction, and the same global assembly and Newton solver used across the framework.
+       </p>
+      </div>
+      <div class="subpage-grid solid-method-card-grid">
+       <a class="detail-card route-card" href="app-solid-elastic.html">
+        <span class="tag">
+         Elastic
+        </span>
+        <h2>
+         Elastic Solids
+        </h2>
+        <p>
+         Hyperelastic and other elastic material models for large-deformation solid mechanics.
+        </p>
+        <span class="text-link">
+         Open elastic models &rarr;
+        </span>
+       </a>
+       <a class="detail-card route-card" href="app-solid-inelastic.html">
+        <span class="tag">
+         Inelastic
+        </span>
+        <h2>
+         Inelastic Solids
+        </h2>
+        <p>
+         History-dependent material response including elastoplasticity and viscoelasticity.
+        </p>
+        <span class="text-link">
+         Open inelastic models &rarr;
+        </span>
+       </a>
+       <a class="detail-card route-card" href="app-solid-dynamic.html">
+        <span class="tag">
+         Dynamic
+        </span>
+        <h2>
+         Solid Dynamics
+        </h2>
+        <p>
+         Transient solid mechanics with inertial residuals, Newmark integration, and local velocity/acceleration histories.
+        </p>
+        <span class="text-link">
+         Open dynamic models &rarr;
+        </span>
+       </a>
+      </div>
+     </div>
+     <div class="plasticity-tab-panel solid-method-panel" data-solid-method-panel="vem" role="tabpanel">
+      <div class="section-heading">
+       <p class="eyebrow">
+        Virtual Element Method
+       </p>
+       <h2>
+        Polygonal element branch focused on virtual shape functions and projection.
+       </h2>
+       <p>
+        The VEM branch keeps the same displacement-based solver platform, but replaces classical element shape
+                    functions with polygonal projection, stabilization, and order-dependent virtual-element caches.
+       </p>
+      </div>
+      <div class="subpage-grid two-col solid-method-card-grid">
+       <a class="detail-card route-card" href="detail-vem-linear.html">
+        <span class="tag">
+         VEM &middot; Linear
+        </span>
+        <h2>
+         Linear VEM
+        </h2>
+        <p>
+         Polygonal patch tests, virtual basis notes, projected gradients, stabilization, and displacement contour placeholders.
+        </p>
+        <span class="text-link">
+         Open linear VEM &rarr;
+        </span>
+       </a>
+       <a class="detail-card route-card" href="detail-vem-quadratic.html">
+        <span class="tag">
+         VEM &middot; Quadratic
+        </span>
+        <h2>
+         Quadratic VEM
+        </h2>
+        <p>
+         High-order polygonal elements, DOFI stabilization, centroid triangulation, and comparison against T6 triangulation.
+        </p>
+        <span class="text-link">
+         Open quadratic VEM &rarr;
+        </span>
+       </a>
+      </div>
+     </div>
+    </div>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

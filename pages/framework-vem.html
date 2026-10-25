@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   VEM Extension &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body class="framework-detail-page">
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap wide-page-wrap">
+    <a class="back-button route-card" href="framework-mesh.html">
+     &larr; Back to Mesh / DOF
+    </a>
+    <p class="eyebrow">
+     Framework / Polygonal extension
+    </p>
+    <h1>
+     VEM Extension
+    </h1>
+    <p class="lead">
+     The VEM module handles polygonal geometry and projection data while the rest of the solver remains FEM-like.
+    </p>
+   </section>
+   <section class="doc-section section-wrap wide-page-wrap framework-detail-wide">
+    <article class="framework-hero-card">
+     <span class="tag">
+      Purpose
+     </span>
+     <h2>
+      What this module does
+     </h2>
+     <p>
+      VEM-specific geometry, projection, internal quadrature, and moment data are isolated in vem.h/.cpp. The uploaded weak_form.cpp uses these caches to evaluate the current quadratic polygonal VEM model.
+     </p>
+    </article>
+    <div class="framework-wide-layout single-detail-layout">
+     <article class="detail-card">
+      <span class="tag">Consistency projection</span>
+      <h2>Projected displacement</h2>
+      <p>The virtual displacement is not explicitly available in the element interior. Its polynomial projection is written as</p>
+      <div class="equation-box compact-equation">u<sub>&pi;</sub> = N<sub>&pi;</sub>a</div>
+      <p>The gradient Galerkin condition gives</p>
+      <div class="equation-box compact-equation">G<sub>&pi;</sub> &acirc; = b<sub>&pi;,I</sub> &minus; b<sub>&pi;,II</sub></div>
+      <p>The constant coefficients are then fixed by matching the element-wise mean displacement.</p>
+     </article>
+    </div>
+    <div class="framework-wide-layout">
+     <article class="detail-card"><span class="tag">Linear VEM</span><h2>Boundary contribution only</h2><div class="equation-box compact-equation">&acirc; = G<sub>&pi;</sub><sup>&minus;1</sup>b<sub>&pi;,I</sub></div><p>For the linear polynomial basis, the divergence contribution vanishes: b<sub>&pi;,II</sub> = 0. Vertex-average consistency determines the constant part.</p></article>
+     <article class="detail-card"><span class="tag">Quadratic VEM</span><h2>Boundary and internal-moment contributions</h2><div class="equation-box compact-equation">&acirc; = G<sub>&pi;</sub><sup>&minus;1</sup>(b<sub>&pi;,I</sub> &minus; b<sub>&pi;,II</sub>)</div><p>The quadratic projection retains the internal divergence term. The internal moment is reconstructed from nodal data, and the mean-value condition completes the constant coefficients.</p></article>
+    </div>
+    <p class="reference-note">Reference: Ph.D. thesis, Section 2.4, especially Eqs. (2.136)&ndash;(2.176).</p>
+    <div class="framework-detail-grid implementation-summary">
+     <article class="detail-card">
+      <h2>
+       Main files
+      </h2>
+      <ul class="clean-list code-list">
+       <li>
+        <code>
+         vem.h
+        </code>
+       </li>
+       <li>
+        <code>
+         vem.cpp
+        </code>
+       </li>
+       <li>
+        <code>
+         weak_form.cpp
+        </code>
+       </li>
+       <li>
+        <code>
+         kinematics.h
+        </code>
+       </li>
+      </ul>
+     </article>
+     <article class="detail-card">
+      <h2>
+       Key structures
+      </h2>
+      <ul class="clean-list code-list">
+       <li>
+        <code>
+         LinearElementCache
+        </code>
+       </li>
+       <li>
+        <code>
+         QuadraticElementCache
+        </code>
+       </li>
+       <li>
+        <code>
+         QuadraticGeometry
+        </code>
+       </li>
+       <li>
+        <code>
+         QuadraticMomentData
+        </code>
+       </li>
+       <li>
+        <code>
+         QuadraticInternalQuadraturePoint
+        </code>
+       </li>
+      </ul>
+     </article>
+     <article class="detail-card">
+      <h2>
+       Key functions
+      </h2>
+      <p class="function-map-intro">
+       Click a function to see the code-level VEM implementation view.
+      </p>
+      <ul class="clean-list function-link-list code-list">
+       <li>
+        <a class="function-link route-card" href="../code/vem.html">
+         <code>
+          cached_linear_element()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/vem.html">
+         <code>
+          cached_quadratic_element()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/vem.html">
+         <code>
+          poly2_basis()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/vem.html">
+         <code>
+          poly2_grad_basis()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/vem.html">
+         <code>
+          linear_projected_gradient()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/vem.html">
+         <code>
+          linear_triangle_gradient()
+         </code>
+        </a>
+       </li>
+      </ul>
+      <a class="text-link route-card inline-route-link" href="../code/vem.html">
+       Open full function map &rarr;
+      </a>
+     </article>
+    </div>
+    <div class="framework-wide-layout">
+     <article class="detail-card">
+      <h2>
+       Data flow
+      </h2>
+      <div class="flow-stack">
+       <span>
+        Polygon element
+       </span>
+       <span>
+        VEM cache
+       </span>
+       <span>
+        Projection / internal quadrature
+       </span>
+       <span>
+        Weak-form residual + tangent
+       </span>
+      </div>
+     </article>
+     <article class="detail-card">
+      <h2>
+       Design point
+      </h2>
+      <ul class="clean-list">
+       <li>
+        Polygonal element details are hidden from the global solver.
+       </li>
+       <li>
+        Linear and quadratic VEM share the same framework-level assembly path.
+       </li>
+       <li>
+        Projection gradients and DOFI stabilization can be documented independently.
+       </li>
+      </ul>
+     </article>
+    </div>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

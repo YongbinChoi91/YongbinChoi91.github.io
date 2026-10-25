@@ -1,0 +1,16 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements dirichlet rule matches."><title>dirichlet_rule_matches() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=postprocess_utils.cpp">← core/io/postprocess_utils.cpp</a>
+<p class="eyebrow">Function detail</p><h1>dirichlet_rule_matches()</h1><p class="lead">Implements dirichlet rule matches.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static bool dirichlet_rule_matches(const FieldDirichletBC &amp;r, const FieldComponentTarget &amp;t)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/postprocess_utils.cpp:1855</dd></div><div><dt>Declaration</dt><dd>core/io/postprocess_utils.cpp:1855</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/postprocess_utils.cpp#L1855" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 1855–1857</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="1855"><span class="token keyword">static</span> <span class="token keyword">bool</span> dirichlet_rule_matches(<span class="token keyword">const</span> FieldDirichletBC&amp; r,<span class="token keyword">const</span> FieldComponentTarget&amp; t){</span>
+<span class="source-line" data-line="1856">    <span class="token keyword">return</span> r.field==t.field &amp;&amp; r.group==t.group &amp;&amp; r.component==t.component;</span>
+<span class="source-line" data-line="1857">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-ddb56ee108cb38.html">← hysteresis_label()</a><a href="fn-7d29d64ac8dca7.html">find_hysteresis_x_function() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

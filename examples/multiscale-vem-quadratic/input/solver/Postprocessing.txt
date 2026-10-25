@@ -1,0 +1,51 @@
+# Postprocessing output paths
+# HDF5 is the default macro result database:
+#   <output_directory>/<sanitized_weakform_model_name>/<sanitized_weakform_model_name>.h5
+# It stores /time, /solution/dofs, /solution/final_raw_dofs, and enabled
+# /history or /diagnostics tables.  CSV/TXT debug exports are off by default.
+# Full RVE micro fields for every macro Gauss point are not dumped by default;
+# selected dashboard RVE samples are written under multiscale_rve_output_dir.
+output_directory ./output/Solid
+hdf5_output on
+debug_csv_output off
+model_output_subdir on
+output_name Cook16
+output_every 1
+
+# force_output on stores drag/lift in HDF5 /history/force.
+# CSV force output is written only when debug_csv_output is on.
+force_output 0
+force_boundary CIRCLE
+force_csv auto
+force_svg auto
+
+# Explicit legacy CSV/SVG paths are also supported when CSV/SVG output is active:
+# force_csv ./output/fsi_case/tables/drag_lift.csv
+# force_svg ./output/fsi_case/figures/drag_lift.svg
+
+# Mesh quality output is stored in HDF5 /diagnostics/minJ when minJ_output is on.
+# CSV minJ output is only for debug_csv_output on.
+minJ_csv auto
+
+plot_window on
+plot_each_step off
+plot_script ../scripts/plot_multiscale_dashboard.py
+
+# Multiscale dashboard options.
+# Repeat multiscale_plot_point to inspect more macro coordinates.
+# Format: multiscale_plot_point x y label
+# Available plot quantities/components:
+#   displacement, displacement_x, displacement_y, Exx, Eyy, Exy, von_mises
+# multiscale_macro_quantity controls the left macro plot.
+# multiscale_plot_component controls the right RVE plots.
+multiscale_plot_component Exy
+multiscale_macro_quantity displacement_y
+multiscale_plot_point 24 44 P1
+multiscale_plot_point 48 60 P2
+multiscale_plot_point 0 24 P3
+# The solver writes each selected element's first Gauss-point RVE here during
+# the multiscale solve; the dashboard reads these files without re-solving RVE.
+multiscale_rve_output_dir ./output/rve_samples
+multiscale_plot_show on
+# Optional: save every dashboard image instead of only showing the window.
+# multiscale_plot_save ./output/figures/

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   Local weak-form first. &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap">
+    <a class="back-button route-card" href="../framework.html">
+     &larr; Back to Framework
+    </a>
+    <p class="eyebrow">
+     Framework concept
+    </p>
+    <h1>
+     Local weak-form first.
+    </h1>
+    <p class="lead">
+     The central design rule is simple: physics models are implemented at the element level,
+            while mesh handling, global assembly, nonlinear solve, linear algebra, and output remain shared.
+    </p>
+   </section>
+   <section class="doc-section section-wrap wide-page-wrap framework-detail-wide">
+    <div class="framework-detail-grid">
+     <article class="detail-card">
+      <span class="tag">
+       Local model
+      </span>
+      <h3>
+       Element contribution
+      </h3>
+      <p>
+       A model provides the local residual and tangent for the active fields of one element. This keeps solid, fluid, VEM, and coupled formulations isolated from the global solver.
+      </p>
+     </article>
+     <article class="detail-card">
+      <span class="tag">
+       Global reuse
+      </span>
+      <h3>
+       Same infrastructure
+      </h3>
+      <p>
+       After the local element system is computed, the same CSR assembly, boundary-condition handling, Newton loop, backend solver, and postprocessing path are reused.
+      </p>
+     </article>
+     <article class="detail-card">
+      <span class="tag">
+       Design benefit
+      </span>
+      <h3>
+       Less duplicated code
+      </h3>
+      <p>
+       Adding a model should not require rewriting how global DOFs are numbered, how matrices are assembled, or how the nonlinear solve is advanced.
+      </p>
+     </article>
+    </div>
+    <div class="framework-wide-layout">
+     <article class="detail-card">
+      <h3>
+       Practical meaning
+      </h3>
+      <p>
+       For a new constitutive model, the important task is to define what happens inside one element or Gauss point. The framework then lifts that local definition to a complete nonlinear finite-element problem.
+      </p>
+     </article>
+     <article class="detail-card">
+      <h3>
+       Where to look next
+      </h3>
+      <p>
+       Use
+       <strong>
+        Code Structure
+       </strong>
+       when you want file-level ownership. Use
+       <strong>
+        Weak form
+       </strong>
+       when you want to see how local residuals and tangents are connected to assembly.
+      </p>
+     </article>
+    </div>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

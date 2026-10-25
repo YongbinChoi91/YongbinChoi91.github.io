@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="description" content="Elastic and inelastic computational homogenization: periodic RVE sensitivity, averaged stress, algorithmic tangent transfer, and 2D FE²/VE² examples."/>
+  <title>Computational Homogenization · HiPaCs</title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap cook-page">
+    <a class="back-button route-card" href="app-multiscale.html">&larr; Back to Multiscale Analysis</a>
+    <p class="eyebrow">Multiscale / Computational Homogenization</p>
+    <h1>Computational Homogenization</h1>
+    <p class="lead">An equilibrated RVE supplies the macroscopic stress and tangent. Follow that transfer for elastic and history-dependent micro models, then run the 2D examples.</p>
+   </section>
+   <section class="doc-section section-wrap cook-page plasticity-document-section homogenization-document-section">
+    <div class="plasticity-document-panel">
+     <div class="plasticity-tabs" role="tablist" aria-label="Computational homogenization material behavior">
+      <button id="hom-elastic-tab" class="active" type="button" role="tab" aria-selected="true" aria-controls="hom-elastic-panel" data-homogenization-tab="elastic">Elastic</button>
+      <button id="hom-inelastic-tab" type="button" role="tab" aria-selected="false" aria-controls="hom-inelastic-panel" data-homogenization-tab="inelastic">Inelastic</button>
+     </div>
+     <div id="hom-elastic-panel" class="plasticity-tab-panel active" role="tabpanel" aria-labelledby="hom-elastic-tab" data-homogenization-panel="elastic">
+      <div class="section-heading"><p class="eyebrow">Elastic / Theory</p><h2>From micro equilibrium to macroscopic stress and tangent.</h2><p>Elastic here includes the finite-strain hyperelastic model. Its material law is explained in <a href="detail-hyperelastic.html">Solid / Hyperelasticity</a>; this page follows the response and its sensitivity through the RVE and back to the macro solve.</p></div>
+      <div class="cook-workflow homogenization-transfer">
+       <article><span>1</span><h3>Macro &rarr; Micro</h3><p>Send the current macroscopic deformation gradient \(\bar{\mathbf F}\) to a periodic RVE problem.</p></article>
+       <article><span>2</span><h3>Equilibrate and differentiate</h3><p>Converge the micro displacement and periodic multipliers, then solve for their sensitivity to \(\bar{\mathbf F}\).</p></article>
+       <article><span>3</span><h3>Micro &rarr; Macro</h3><p>Return averaged Piola stress \(\bar{\mathbf P}\) and tangent \(\bar{\mathbb A}\) for the macro residual and Newton matrix.</p></article>
+      </div>
+      <div class="math-explain-grid theory-grid">
+       <article class="math-card wide"><span class="tag">1 &middot; Micro material response</span><h3>Stress and material tangent</h3>
+        <div class="formula-block">\[\mathbf P_\mu=\frac{\partial W_\mu}{\partial\mathbf F_\mu},\qquad\mathbb A_\mu=\frac{\partial\mathbf P_\mu}{\partial\mathbf F_\mu}.\]</div>
+        <p>The micro kernel uses these local derivatives to assemble equilibrium and the derivative of integrated stress with respect to its displacement DOFs. The homogenized tangent also includes the resulting redistribution of micro deformation.</p>
+       </article>
+       <article class="math-card wide"><span class="tag">2 &middot; Periodic micro equilibrium</span><h3>The macro deformation enters through the constraints</h3>
+        <div class="formula-block">\[\mathbf u_\mu^+-\mathbf u_\mu^-=(\bar{\mathbf F}-\mathbf I)(\mathbf X^+-\mathbf X^-),\qquad\mathbf B\mathbf u_\mu=\mathbf g(\bar{\mathbf F}).\]</div>
+        <div class="formula-block">\[\mathbf r_\mu(\mathbf q,\bar{\mathbf F})=\begin{bmatrix}\mathbf r_u(\mathbf u_\mu)+\mathbf B^T\boldsymbol\lambda\\\mathbf B\mathbf u_\mu-\mathbf g(\bar{\mathbf F})\end{bmatrix}=\mathbf0,\qquad\mathbf q=\begin{bmatrix}\mathbf u_\mu\\\boldsymbol\lambda\end{bmatrix}.\]</div>
+        <p>Periodic multipliers enforce the displacement jumps. An anchor removes rigid translation. The reference geometry and constraint matrix remain fixed while differentiating the converged response.</p>
+       </article>
+       <article class="math-card wide"><span class="tag">3 &middot; RVE sensitivity</span><h3>Differentiate the converged micro equilibrium</h3>
+        <div class="formula-block">\[\mathbf r_{\mu,\mathbf q}\frac{\partial\mathbf q}{\partial\bar{\mathbf F}}=-\mathbf r_{\mu,\bar{\mathbf F}},\qquad\begin{bmatrix}\mathbf K_{uu}&\mathbf B^T\\\mathbf B&\mathbf0\end{bmatrix}\begin{bmatrix}\mathbf u_{\mu,\bar{\mathbf F}}\\\boldsymbol\lambda_{,\bar{\mathbf F}}\end{bmatrix}=\begin{bmatrix}\mathbf0\\\mathbf g_{,\bar{\mathbf F}}\end{bmatrix}.\]</div>
+        <p>In 2D, the code solves four right-hand sides in the order \(\bar F_{11},\bar F_{12},\bar F_{21},\bar F_{22}\). This gives <code>du_dF</code> with shape <code>ndofs × 4</code>.</p>
+       </article>
+       <article class="math-card wide"><span class="tag">4 &middot; Homogenized response</span><h3>Apply the chain rule, then normalize once</h3>
+        <div class="formula-block">\[\mathbf I_P=\int_{\Omega_\mu^0}\mathbf P_\mu\,dV,\qquad V_\mu=\int_{\Omega_\mu^0}dV,\qquad\bar{\mathbf P}=\frac{\mathbf I_P}{V_\mu}.\]</div>
+        <div class="formula-block">\[\mathbf C^{\mathrm{int}}=\frac{\partial\mathbf I_P}{\partial\mathbf u_\mu}\frac{\partial\mathbf u_\mu}{\partial\bar{\mathbf F}},\qquad\bar{\mathbb A}=\frac{d\bar{\mathbf P}}{d\bar{\mathbf F}}=\frac{\mathbf C^{\mathrm{int}}}{V_\mu}.\]</div>
+        <p>The micro model returns <code>volume</code>, <code>intP</code>, and <code>dIntPdu</code>. <code>RveSensitivity.C</code> stores the integrated derivative \(\mathbf C^{\mathrm{int}}\); the macro kernel divides it by the reference volume. Here \(\bar{\mathbf F}\) enters the micro stress through the solved total displacement, as imposed by the periodic constraints.</p>
+       </article>
+       <article class="math-card wide"><span class="tag">5 &middot; Macro equilibrium</span><h3>Use stress for the residual and sensitivity for the tangent</h3>
+        <div class="formula-block">\[G_M(\mathbf u_M;\delta\mathbf u_M)=\int_{\Omega_M^0}\bar{\mathbf P}:\nabla_0\delta\mathbf u_M\,dV-\ell_{\mathrm{ext}}(\delta\mathbf u_M)=0,\qquad\bar{\mathbf F}=\mathbf I+\nabla_0\mathbf u_M.\]</div>
+        <div class="formula-block">\[\mathbf R_M=\mathbf f_{\mathrm{int}}-\mathbf f_{\mathrm{ext}},\qquad\mathbf K_M\Delta\mathbf u_M=-\mathbf R_M,\qquad\delta G_M=\int_{\Omega_M^0}\nabla_0\delta\mathbf u_M:\bar{\mathbb A}:\nabla_0\Delta\mathbf u_M\,dV.\]</div>
+        <p>The last expression is the internal tangent contribution. The examples use prescribed external tractions, so their load derivative is zero. The FE or VE macro discretization consumes the same RVE response contract.</p>
+       </article>
+       <article class="math-card wide"><span class="tag">6 &middot; Connect to macro AD</span><h3>Preserve the solved stress while exposing its derivative</h3>
+        <div class="formula-block">\[\mathbf P_{\mathrm{AD}}(\bar{\mathbf F})=\bar{\mathbf P}_*+\bar{\mathbb A}_*:(\bar{\mathbf F}-\bar{\mathbf F}_*).\]</div>
+        <p>At the current macro iterate, \(\bar{\mathbf F}=\bar{\mathbf F}_*\), so the residual uses the solved RVE stress. AD sees \(\bar{\mathbb A}_*\) when building the Newton tangent. Each new macro iterate requests a new equilibrated RVE response.</p>
+       </article>
+      </div>
+      <div class="section-heading compact-heading"><p class="eyebrow">Elastic / Code</p><h2>The micro-to-macro response contract.</h2></div>
+      <div class="equation-code-table-wrap"><table class="equation-code-table"><thead><tr><th>Data</th><th>Meaning / shape</th><th>Consumer</th></tr></thead><tbody>
+       <tr><td><code>volume</code></td><td>Reference material integration volume \(V_\mu\)</td><td>Stress and tangent normalization</td></tr>
+       <tr><td><code>intP</code></td><td>Integrated Piola stress, 3 × 3 plane-strain storage</td><td><code>Pbar = intP / volume</code></td></tr>
+       <tr><td><code>dIntPdu</code></td><td>9 × ndofs, row <code>3*i + A</code></td><td>Chain rule with <code>du_dF</code></td></tr>
+       <tr><td><code>du_dF</code></td><td>ndofs × 4; columns F11, F12, F21, F22</td><td>Integrated homogenized sensitivity</td></tr>
+       <tr><td><code>rve.sensitivity.C</code></td><td>Integrated derivative, stored as <code>C[i][A][j][B]</code></td><td>Macro uses <code>C / volume</code></td></tr>
+      </tbody></table></div>
+      <div class="actual-code-stack">
+<!-- GENERATED:HOM_ELASTIC_CODE:START -->
+<details class="code-details" open><summary>1. Four periodic sensitivity solves</summary><p class="homogenization-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/multiscale/rve_solver.cpp#L90" target="_blank" rel="noopener">core/multiscale/rve_solver.cpp:90</a></p><div class="code-window"><pre><code>static std::vector&lt;std::vector&lt;double&gt;&gt; compute_rve_displacement_sensitivity(
+    const CSRMatrix&amp; Aaug,
+    const FieldMesh&amp; mesh,
+    const RvePbcSystem&amp; pbc,
+    const LinearSolverSettings&amp; settings
+) {
+    const int ndofs = total_dof_count(mesh);
+    const int n_aug = Aaug.n_rows;
+    std::vector&lt;std::vector&lt;double&gt;&gt; du_dF(ndofs, std::vector&lt;double&gt;(4, 0.0));
+
+    for (int q = 0; q &lt; 4; ++q) {
+        const int i = q / 2;
+        const int A = q % 2;
+        Vector rhs(n_aug, 0.0);
+        for (int r = 0; r &lt; static_cast&lt;int&gt;(pbc.constraints.size()); ++r) {
+            const auto&amp; c = pbc.constraints[r];
+            if (c.macro_dependent &amp;&amp; c.component == i) {
+                rhs[ndofs + r] = c.dX[A];
+            }
+        }
+        Vector sol = solve_linear_system_backend(Aaug, rhs, settings);
+        for (int a = 0; a &lt; ndofs; ++a) du_dF[a][q] = sol[a];
+    }
+    return du_dF;
+}</code></pre></div></details>
+<details class="code-details"><summary>2. Integrated-stress chain rule</summary><p class="homogenization-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/multiscale/rve_homogenization.cpp#L88" target="_blank" rel="noopener">core/multiscale/rve_homogenization.cpp:88</a></p><div class="code-window"><pre><code>RveSensitivity compute_rve_macro_sensitivity_from_piola_du(
+    const FieldMesh&amp; mesh,
+    const std::vector&lt;std::vector&lt;double&gt;&gt;&amp; dPdu,
+    const std::vector&lt;std::vector&lt;double&gt;&gt;&amp; du_dF
+) {
+    const int ndofs = total_dof_count(mesh);
+    if (static_cast&lt;int&gt;(du_dF.size()) != ndofs) {
+        throw std::runtime_error(&quot;du_dF row count must equal the number of displacement DOFs.&quot;);
+    }
+    for (const auto&amp; row : du_dF) {
+        if (row.size() &lt; 4) throw std::runtime_error(&quot;du_dF must have four columns: F11,F12,F21,F22.&quot;);
+    }
+    if (static_cast&lt;int&gt;(dPdu.size()) != 9) {
+        throw std::runtime_error(&quot;dPdu must be 9 x ndofs.&quot;);
+    }
+    for (const auto&amp; row : dPdu) {
+        if (static_cast&lt;int&gt;(row.size()) != ndofs) {
+            throw std::runtime_error(&quot;dPdu column count must equal the number of displacement DOFs.&quot;);
+        }
+    }
+
+    RveSensitivity sens;
+    for (int p = 0; p &lt; 9; ++p) {
+        const int i = p / 3;
+        const int A = p % 3;
+        for (int q = 0; q &lt; 4; ++q) {
+            double value = 0.0;
+            for (int a = 0; a &lt; ndofs; ++a) value += dPdu[p][a] * du_dF[a][q];
+            const int alpha = q / 2;
+            const int B = q % 2;
+            sens.C[i][A][alpha][B] = value;
+        }
+    }
+    return sens;
+}</code></pre></div></details>
+<details class="code-details"><summary>3. Normalize and expose the tangent to macro AD</summary><p class="homogenization-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/Multiscale/models/weak_form_macro_fem.cpp#L60" target="_blank" rel="noopener">Multiscale/models/weak_form_macro_fem.cpp:60</a></p><div class="code-window"><pre><code>                Scalar MacroP = Scalar(rve.macro.Pbar[i][A]);
+                // Residual uses the RVE homogenized MacroP directly.  The
+                // sensitivity term is zero at the solved point F == rve.Fmacro,
+                // but exposes dMacroP/dMacroF to AD for the consistent tangent.
+                for (int j = 0; j &lt; L.dim; ++j) {
+                    for (int B = 0; B &lt; L.dim; ++B) {
+                        const double dMacroP_dMacroF = rve.sensitivity.C[i][A][j][B] / V;
+                        MacroP += Scalar(dMacroP_dMacroF) * (F[j][B] - Scalar(rve.Fmacro[j][B]));
+                    }
+                }</code></pre></div></details>
+<!-- GENERATED:HOM_ELASTIC_CODE:END -->
+      </div>
+      <div class="section-heading compact-heading"><p class="eyebrow">Elastic / Examples</p><h2>Linear macro, quadratic micro.</h2><p>Two 2D examples exercise the same stress-and-tangent transfer. Linear and quadratic refer to approximation order; both use a nonlinear hyperelastic micro material. These examples demonstrate the coupling, rather than a matched-mesh FE–VE accuracy comparison.</p></div>
+      <div class="subpage-grid two-col">
+       <a class="detail-card route-card" href="detail-multiscale-fem-hyperelastic.html"><span class="tag">FE² &middot; Macro Q4 / Micro Q9</span><h2>Finite-element example</h2><p>Linear macro interpolation and a quadratic perforated RVE.</p><span class="text-link">Inputs, code, and run command &rarr;</span></a>
+       <a class="detail-card route-card" href="detail-multiscale-vem.html"><span class="tag">VE² &middot; Macro k=1 / Micro k=2</span><h2>Virtual-element example</h2><p>Linear macro projection and a quadratic polygonal RVE.</p><span class="text-link">Inputs, code, and run command &rarr;</span></a>
+      </div>
+     </div>
+     <div id="hom-inelastic-panel" class="plasticity-tab-panel" role="tabpanel" aria-labelledby="hom-inelastic-tab" data-homogenization-panel="inelastic">
+      <div class="section-heading"><p class="eyebrow">Inelastic / Theory</p><h2>Carry the material update into the RVE sensitivity.</h2><p>Elastoplasticity and viscoelasticity use the same macro response contract. Their material theories are covered under Solid; here the additional ingredient is the derivative of the current micro state with the previous accepted history held fixed.</p></div>
+      <div class="subpage-grid two-col">
+       <article class="detail-card"><span class="tag">Elastoplasticity</span><h3>Stress and algorithmic tangent</h3><p>Evaluate the updated plastic state and its derivative with respect to current deformation.</p><a class="text-link" href="detail-plasticity.html">Material theory in Solid &rarr;</a></article>
+       <article class="detail-card"><span class="tag">Viscoelasticity</span><h3>Stress, tangent, and time increment</h3><p>Evaluate the updated viscous state using the current time increment, then include its deformation sensitivity.</p><a class="text-link" href="detail-viscoelastic.html">Material theory in Solid &rarr;</a></article>
+      </div>
+      <div class="math-explain-grid theory-grid">
+       <article class="math-card wide"><span class="tag">1 &middot; Local material update</span><h3>Differentiate the updated state, keeping accepted history fixed</h3>
+        <div class="formula-block">\[\mathbf Q(\mathbf F_\mu,\mathbf h_{n+1};\mathbf h_n,\Delta t)=\mathbf0,\qquad\frac{d\mathbf h_{n+1}}{d\mathbf F_\mu}=-\mathbf Q_{,\mathbf h}^{-1}\mathbf Q_{,\mathbf F}.\]</div>
+        <div class="formula-block">\[\mathbb A_\mu^{\mathrm{alg}}=\left.\frac{d\mathbf P_\mu}{d\mathbf F_\mu}\right|_{\mathbf h_n,\Delta t}=\mathbf P_{\mu,\mathbf F}+\mathbf P_{\mu,\mathbf h}\frac{d\mathbf h_{n+1}}{d\mathbf F_\mu}.\]</div>
+        <p>The previous accepted state \(\mathbf h_n\) and the time increment are fixed during a Newton linearization. The updated trial state \(\mathbf h_{n+1}\) changes with deformation; its derivative contributes to the algorithmic tangent. In elastoplasticity this applies to the active plastic update, while the elastic branch uses its elastic response.</p>
+       </article>
+       <article class="math-card wide"><span class="tag">2 &middot; RVE and macro response</span><h3>Use the algorithmic derivative in both micro equilibrium and stress output</h3>
+        <div class="formula-block">\[\bar{\mathbf P}_{n+1}=\frac1{V_\mu}\int_{\Omega_\mu^0}\mathbf P_\mu(\mathbf F_\mu,\mathbf h_{n+1})\,dV,\qquad\bar{\mathbb A}_{n+1}^{\mathrm{alg}}=\left.\frac{d\bar{\mathbf P}_{n+1}}{d\bar{\mathbf F}_{n+1}}\right|_{\mathbf h_n,\Delta t}.\]</div>
+        <p>As in the Elastic tab, differentiate the converged periodic RVE system, then combine <code>dIntPdu</code> with <code>du_dF</code> and divide by the reference volume. The local history derivative must be included in both <code>Kuu</code> and <code>dIntPdu</code> for this linearization.</p>
+       </article>
+       <article class="math-card wide"><span class="tag">3 &middot; History ownership</span><h3>Trial during Newton; commit after macro acceptance</h3>
+        <div class="formula-block">\[\mathbf h_n\ \xrightarrow[\bar{\mathbf F}^{(k)},\Delta t]{\mathrm{micro\ solve}}\ \mathbf h_{n+1}^{\mathrm{trial},(k)}\quad\xrightarrow{\mathrm{macro\ step\ accepted}}\quad\mathbf h_{n+1}.\]</div>
+        <p>Every macro Newton evaluation starts from the last accepted material history. Cached micro displacements and multipliers can warm-start the equilibrium solve. After macro acceptance, trial histories are committed; after rejection, the trial cache is discarded.</p>
+       </article>
+      </div>
+      <div class="section-heading compact-heading"><p class="eyebrow">Inelastic / Code</p><h2>State derivative, time data, and accepted history.</h2><p>The following excerpts show the additional work around the shared RVE sensitivity path. They describe a single material increment from a fixed accepted history. For a subdivided micro path, a full-increment tangent also requires sensitivity through the intermediate histories.</p></div>
+      <div class="actual-code-stack">
+<!-- GENERATED:HOM_INELASTIC_CODE:START -->
+<details class="code-details" open><summary>1. Elastoplastic local-state sensitivity</summary><p class="homogenization-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/FEM/models/Inelastic_Models/weak_form_elasto_plastic.cpp#L452" target="_blank" rel="noopener">FEM/models/Inelastic_Models/weak_form_elasto_plastic.cpp:452</a></p><div class="code-window"><pre><code>    const auto Q_h_lu = hpx::factorize_local_dense_lu(Q_h, &quot;local elasto-plastic implicit derivative Jacobian&quot;);
+    for (int jf = 0; jf &lt; nf; ++jf) {
+        Vector rhs(nh, 0.0);
+        for (int i = 0; i &lt; nh; ++i) rhs[i] = -Q_F[i][jf];
+        Vector col = hpx::solve_local_dense_lu(Q_h_lu, rhs);
+        for (int ih = 0; ih &lt; nh; ++ih) dh_dF[ih][jf] = col[ih];
+    }
+    return dh_dF;
+}</code></pre></div></details>
+<details class="code-details"><summary>2. Viscoelastic local-state sensitivity</summary><p class="homogenization-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/FEM/models/Inelastic_Models/weak_form_visco_elastic.cpp#L387" target="_blank" rel="noopener">FEM/models/Inelastic_Models/weak_form_visco_elastic.cpp:387</a></p><div class="code-window"><pre><code>    const auto Q_h_lu = hpx::factorize_local_dense_lu(Q_h, &quot;local viscoelastic implicit derivative Jacobian&quot;);
+    for (int jf = 0; jf &lt; nf; ++jf) {
+        Vector rhs(nh, 0.0);
+        for (int i = 0; i &lt; nh; ++i) rhs[i] = -Q_F[i][jf];
+        const Vector col = hpx::solve_local_dense_lu(Q_h_lu, rhs);
+        for (int ih = 0; ih &lt; nh; ++ih) dh_dF[ih][jf] = col[ih];
+    }
+    return dh_dF;
+}</code></pre></div></details>
+<details class="code-details"><summary>3. Forward the time data and accepted micro history</summary><p class="homogenization-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/multiscale/macro_rve_common.h#L24" target="_blank" rel="noopener">core/multiscale/macro_rve_common.h:24</a></p><div class="code-window"><pre><code>    RveBatchTask task;
+    task.Fmacro = Fmacro;
+    task.dt = dt;
+    task.dt_previous = dt_previous;
+    task.step = step;
+    task.time = time;
+
+    const RveWarmStartState warm = get_multiscale_rve_warm_start(elem_id, gp_index);
+    if (warm.valid &amp;&amp; multiscale_rve_options().use_warm_start) {
+        task.initial_displacement = warm.displacement;
+        task.initial_lambda = warm.lambda;
+        task.has_initial_displacement = true;
+        task.has_initial_lambda = true;
+        task.initial_Fmacro = warm.Fmacro;
+        task.has_initial_Fmacro = true;
+        if (warm.has_history) {
+            task.initial_history = warm.history;
+            task.has_initial_history = true;
+        }
+    }
+    return task;
+}</code></pre></div></details>
+<details class="code-details"><summary>4. Separate accepted history from trial warm starts</summary><p class="homogenization-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/multiscale/multiscale_context.cpp#L99" target="_blank" rel="noopener">core/multiscale/multiscale_context.cpp:99</a></p><div class="code-window"><pre><code>RveWarmStartState get_multiscale_rve_warm_start(int elem_id, int gp_index) {
+    std::lock_guard&lt;std::mutex&gt; lock(warm_start_mutex());
+    const auto key = std::make_pair(elem_id, gp_index);
+    RveWarmStartState out;
+
+    const auto accepted = multiscale_context().accepted_rve_cache.find(key);
+    if (accepted != multiscale_context().accepted_rve_cache.end()) {
+        out = accepted-&gt;second;
+    }
+
+    const auto trial = multiscale_context().trial_rve_cache.find(key);
+    if (trial != multiscale_context().trial_rve_cache.end()) {
+        out.displacement = trial-&gt;second.displacement;
+        out.lambda = trial-&gt;second.lambda;
+        out.Fmacro = trial-&gt;second.Fmacro;
+        out.valid = trial-&gt;second.valid;
+        // Keep the material history anchored to the last accepted macro state.
+        // The trial history is promoted only after the macro time step accepts.
+    }
+
+    return out;
+}</code></pre></div></details>
+<details class="code-details"><summary>5. Commit or discard at the macro-step boundary</summary><p class="homogenization-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/multiscale/multiscale_context.cpp#L136" target="_blank" rel="noopener">core/multiscale/multiscale_context.cpp:136</a></p><div class="code-window"><pre><code>void commit_multiscale_rve_history_cache() {
+    std::lock_guard&lt;std::mutex&gt; lock(warm_start_mutex());
+    for (auto&amp; kv : multiscale_context().trial_rve_cache) {
+        multiscale_context().accepted_rve_cache[kv.first] = std::move(kv.second);
+    }
+    multiscale_context().trial_rve_cache.clear();
+}
+
+void discard_multiscale_rve_trial_cache() {
+    std::lock_guard&lt;std::mutex&gt; lock(warm_start_mutex());
+    multiscale_context().trial_rve_cache.clear();
+}</code></pre></div></details>
+<!-- GENERATED:HOM_INELASTIC_CODE:END -->
+      </div>
+      <div class="section-heading compact-heading"><p class="eyebrow">Inelastic / Examples</p><h2>Existing FEM cases with material history.</h2><p>These examples retain their existing macro and micro meshes and history layouts. The linear-macro/quadratic-micro representative pair is provided in the Elastic tab.</p></div>
+      <div class="subpage-grid two-col">
+       <a class="detail-card route-card" href="detail-multiscale-fem-elastoplastic.html"><span class="tag">FE² &middot; Elastoplastic</span><h2>Plastic micro history</h2><p>Local plastic-state sensitivity and accepted-step history transfer.</p><span class="text-link">Open the existing FEM case &rarr;</span></a>
+       <a class="detail-card route-card" href="detail-multiscale-fem-viscoelastic.html"><span class="tag">FE² &middot; Viscoelastic</span><h2>Rate-dependent micro history</h2><p>Time-increment transfer and the algorithmic viscous response.</p><span class="text-link">Open the existing FEM case &rarr;</span></a>
+      </div>
+     </div>
+    </div>
+   </section>
+  </main>
+  <script defer src="../assets/js/main.js"></script>
+ </body>
+</html>

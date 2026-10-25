@@ -1,0 +1,40 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements write hdf5 final raw dofs."><title>write_hdf5_final_raw_dofs() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=postprocess_hdf5.cpp">← core/io/postprocess_hdf5.cpp</a>
+<p class="eyebrow">Function detail</p><h1>write_hdf5_final_raw_dofs()</h1><p class="lead">Implements write hdf5 final raw dofs.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>void write_hdf5_final_raw_dofs(const ProblemParameters &amp;params, const Vector &amp;x)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/postprocess_hdf5.cpp:876</dd></div><div><dt>Declaration</dt><dd>core/io/postprocess.h:104</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/postprocess_hdf5.cpp#L876" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 876–902</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="876"><span class="token keyword">void</span> write_hdf5_final_raw_dofs(<span class="token keyword">const</span> ProblemParameters&amp; params,<span class="token keyword">const</span> Vector&amp; x){</span>
+<span class="source-line" data-line="877">    <span class="token keyword">if</span>(!params.solver.hdf5_output) <span class="token keyword">return</span>;</span>
+<span class="source-line" data-line="878"><span class="token preprocessor">#ifdef HIPECS_USE_HDF5</span></span>
+<span class="source-line" data-line="879">    hid_t file=h5_open_file_rw(params);</span>
+<span class="source-line" data-line="880">    <span class="token keyword">const</span> std::string path=<span class="token string">&quot;/solution/final_raw_dofs&quot;</span>;</span>
+<span class="source-line" data-line="881">    h5_ensure_group(file,<span class="token string">&quot;/solution&quot;</span>);</span>
+<span class="source-line" data-line="882">    <span class="token keyword">if</span>(H5Lexists(file,path.c_str(),H5P_DEFAULT)&gt;<span class="token number">0</span>) h5_check(H5Ldelete(file,path.c_str(),H5P_DEFAULT),<span class="token string">&quot;deleting dataset &quot;</span> + path);</span>
+<span class="source-line" data-line="883">    hsize_t dims[<span class="token number">2</span>]={static_cast&lt;hsize_t&gt;(x.size()),<span class="token number">2</span>};</span>
+<span class="source-line" data-line="884">    hid_t space=H5Screate_simple(<span class="token number">2</span>,dims,<span class="token keyword">nullptr</span>);</span>
+<span class="source-line" data-line="885">    hid_t dset=H5Dcreate2(file,path.c_str(),H5T_IEEE_F64LE,space,H5P_DEFAULT,H5P_DEFAULT,H5P_DEFAULT);</span>
+<span class="source-line" data-line="886">    <span class="token keyword">if</span>(dset&lt;<span class="token number">0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Could not create HDF5 dataset: &quot;</span> + path);</span>
+<span class="source-line" data-line="887">    std::vector&lt;<span class="token keyword">double</span>&gt; data;</span>
+<span class="source-line" data-line="888">    data.reserve(x.size()*<span class="token number">2</span>);</span>
+<span class="source-line" data-line="889">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;static_cast&lt;<span class="token keyword">int</span>&gt;(x.size());++i){</span>
+<span class="source-line" data-line="890">        data.push_back(static_cast&lt;<span class="token keyword">double</span>&gt;(i));</span>
+<span class="source-line" data-line="891">        data.push_back(x[i]);</span>
+<span class="source-line" data-line="892">    }</span>
+<span class="source-line" data-line="893">    h5_check(H5Dwrite(dset,H5T_NATIVE_DOUBLE,H5S_ALL,H5S_ALL,H5P_DEFAULT,data.data()),<span class="token string">&quot;writing &quot;</span> + path);</span>
+<span class="source-line" data-line="894">    h5_write_string_attr(dset,<span class="token string">&quot;columns&quot;</span>,<span class="token string">&quot;global_dof,value&quot;</span>);</span>
+<span class="source-line" data-line="895">    H5Dclose(dset); H5Sclose(space); H5Fclose(file);</span>
+<span class="source-line" data-line="896"><span class="token preprocessor">#else</span></span>
+<span class="source-line" data-line="897">    reset_hdf5_table(params,<span class="token string">&quot;/solution/final_raw_dofs&quot;</span>,{<span class="token string">&quot;global_dof&quot;</span>,<span class="token string">&quot;value&quot;</span>});</span>
+<span class="source-line" data-line="898">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;static_cast&lt;<span class="token keyword">int</span>&gt;(x.size());++i){</span>
+<span class="source-line" data-line="899">        append_hdf5_table_row(params,<span class="token string">&quot;/solution/final_raw_dofs&quot;</span>,{static_cast&lt;<span class="token keyword">double</span>&gt;(i),x[i]});</span>
+<span class="source-line" data-line="900">    }</span>
+<span class="source-line" data-line="901"><span class="token preprocessor">#endif</span></span>
+<span class="source-line" data-line="902">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-f0079795f65a7e.html">← append_hdf5_solid_gauss_point_snapshot()</a><span></span></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

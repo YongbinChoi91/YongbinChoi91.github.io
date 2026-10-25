@@ -1,0 +1,46 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements print generic field residual diagnostics."><title>print_generic_field_residual_diagnostics() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../solver.html?file=solver.cpp">← core/solver/solver.cpp</a>
+<p class="eyebrow">Function detail</p><h1>print_generic_field_residual_diagnostics()</h1><p class="lead">Implements print generic field residual diagnostics.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static void print_generic_field_residual_diagnostics(const Problem &amp;problem, const Vector &amp;R, const BoundaryData &amp;bc)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/solver/solver.cpp:779</dd></div><div><dt>Declaration</dt><dd>core/solver/solver.cpp:779</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/solver/solver.cpp#L779" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 779–811</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="779"><span class="token keyword">static</span> <span class="token keyword">void</span> print_generic_field_residual_diagnostics(<span class="token keyword">const</span> Problem&amp; problem,</span>
+<span class="source-line" data-line="780">                                                    <span class="token keyword">const</span> Vector&amp; R,</span>
+<span class="source-line" data-line="781">                                                    <span class="token keyword">const</span> BoundaryData&amp; bc){</span>
+<span class="source-line" data-line="782">    <span class="token keyword">const</span> <span class="token keyword">auto</span> fixed = make_fixed_dof_mask(static_cast&lt;<span class="token keyword">int</span>&gt;(R.size()), bc);</span>
+<span class="source-line" data-line="783">    std::cout &lt;&lt; <span class="token string">&quot;    residual by field:\n&quot;</span>;</span>
+<span class="source-line" data-line="784">    <span class="token keyword">if</span>(problem.shared_dofs){</span>
+<span class="source-line" data-line="785">        <span class="token keyword">const</span> DofLayout&amp; g = get_cached_dof_layout(problem.domains.front().mesh);</span>
+<span class="source-line" data-line="786">        <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; f: g.fields){</span>
+<span class="source-line" data-line="787">            <span class="token keyword">double</span> s=<span class="token number">0.0</span>, inf=<span class="token number">0.0</span>; <span class="token keyword">int</span> count=<span class="token number">0</span>;</span>
+<span class="source-line" data-line="788">            <span class="token keyword">for</span>(<span class="token keyword">int</span> i=f.offset; i&lt;f.offset+f.ndofs &amp;&amp; i&lt;static_cast&lt;<span class="token keyword">int</span>&gt;(R.size()); ++i){</span>
+<span class="source-line" data-line="789">                <span class="token keyword">if</span>(fixed[i]) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="790">                <span class="token keyword">const</span> <span class="token keyword">double</span> a=std::abs(R[i]); s += R[i]*R[i]; inf=std::max(inf,a); ++count;</span>
+<span class="source-line" data-line="791">            }</span>
+<span class="source-line" data-line="792">            <span class="token keyword">const</span> <span class="token keyword">double</span> rms = count&gt;<span class="token number">0</span> ? std::sqrt(s/static_cast&lt;<span class="token keyword">double</span>&gt;(count)) : <span class="token number">0.0</span>;</span>
+<span class="source-line" data-line="793">            std::cout &lt;&lt; <span class="token string">&quot;      &quot;</span> &lt;&lt; f.name &lt;&lt; <span class="token string">&quot;_rms = &quot;</span> &lt;&lt; rms &lt;&lt; <span class="token string">&quot;, &quot;</span> &lt;&lt; f.name &lt;&lt; <span class="token string">&quot;_inf = &quot;</span> &lt;&lt; inf &lt;&lt; <span class="token string">&quot;\n&quot;</span>;</span>
+<span class="source-line" data-line="794">        }</span>
+<span class="source-line" data-line="795">        <span class="token keyword">return</span>;</span>
+<span class="source-line" data-line="796">    }</span>
+<span class="source-line" data-line="797">    <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; d: problem.domains){</span>
+<span class="source-line" data-line="798">        <span class="token keyword">const</span> DofLayout&amp; g = get_cached_dof_layout(d.mesh);</span>
+<span class="source-line" data-line="799">        <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; f: g.fields){</span>
+<span class="source-line" data-line="800">            <span class="token keyword">double</span> s=<span class="token number">0.0</span>, inf=<span class="token number">0.0</span>; <span class="token keyword">int</span> count=<span class="token number">0</span>;</span>
+<span class="source-line" data-line="801">            <span class="token keyword">const</span> <span class="token keyword">int</span> begin=d.dof_offset + f.offset;</span>
+<span class="source-line" data-line="802">            <span class="token keyword">const</span> <span class="token keyword">int</span> end=begin + f.ndofs;</span>
+<span class="source-line" data-line="803">            <span class="token keyword">for</span>(<span class="token keyword">int</span> i=begin; i&lt;end &amp;&amp; i&lt;static_cast&lt;<span class="token keyword">int</span>&gt;(R.size()); ++i){</span>
+<span class="source-line" data-line="804">                <span class="token keyword">if</span>(fixed[i]) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="805">                <span class="token keyword">const</span> <span class="token keyword">double</span> a=std::abs(R[i]); s += R[i]*R[i]; inf=std::max(inf,a); ++count;</span>
+<span class="source-line" data-line="806">            }</span>
+<span class="source-line" data-line="807">            <span class="token keyword">const</span> <span class="token keyword">double</span> rms = count&gt;<span class="token number">0</span> ? std::sqrt(s/static_cast&lt;<span class="token keyword">double</span>&gt;(count)) : <span class="token number">0.0</span>;</span>
+<span class="source-line" data-line="808">            std::cout &lt;&lt; <span class="token string">&quot;      &quot;</span> &lt;&lt; d.name &lt;&lt; <span class="token string">&quot;.&quot;</span> &lt;&lt; f.name &lt;&lt; <span class="token string">&quot;_rms = &quot;</span> &lt;&lt; rms &lt;&lt; <span class="token string">&quot;, &quot;</span> &lt;&lt; d.name &lt;&lt; <span class="token string">&quot;.&quot;</span> &lt;&lt; f.name &lt;&lt; <span class="token string">&quot;_inf = &quot;</span> &lt;&lt; inf &lt;&lt; <span class="token string">&quot;\n&quot;</span>;</span>
+<span class="source-line" data-line="809">        }</span>
+<span class="source-line" data-line="810">    }</span>
+<span class="source-line" data-line="811">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-1bcb4938418c40.html">← norm_l2_range()</a><a href="fn-083813e686dd20.html">print_generic_field_update_diagnostics() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

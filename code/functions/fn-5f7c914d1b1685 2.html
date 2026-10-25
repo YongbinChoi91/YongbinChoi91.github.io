@@ -1,0 +1,415 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Reads material, boundary-condition, and solver settings into one parameter object."><title>read_problem_parameters() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=parameter_reader.cpp">← core/io/parameter_reader.cpp</a>
+<p class="eyebrow">Function detail</p><h1>read_problem_parameters()</h1><p class="lead">Reads material, boundary-condition, and solver settings into one parameter object.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>ProblemParameters read_problem_parameters(const std::string &amp;material_file, const std::string &amp;boundary_file, const std::string &amp;solver_file)</code></p><p>material_file Path to the material settings file. boundary_file Path to the boundary-condition settings file. solver_file Path to the solver settings file. Fully populated runtime problem parameters.</p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/parameter_reader.cpp:222</dd></div><div><dt>Declaration</dt><dd>core/mesh/mesh.h:589</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/parameter_reader.cpp#L222" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 222–623</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="222">ProblemParameters read_problem_parameters(<span class="token keyword">const</span> std::string&amp; material_file,</span>
+<span class="source-line" data-line="223">                                      <span class="token keyword">const</span> std::string&amp; boundary_file,</span>
+<span class="source-line" data-line="224">                                      <span class="token keyword">const</span> std::string&amp; solver_file){</span>
+<span class="source-line" data-line="225">    ProblemParameters p;</span>
+<span class="source-line" data-line="226"> </span>
+<span class="source-line" data-line="227">    <span class="token comment">// ------------------------------------------------------------------------</span></span>
+<span class="source-line" data-line="228">    <span class="token comment">// Material.txt</span></span>
+<span class="source-line" data-line="229">    <span class="token comment">// ------------------------------------------------------------------------</span></span>
+<span class="source-line" data-line="230">    {</span>
+<span class="source-line" data-line="231">        std::ifstream file(material_file);</span>
+<span class="source-line" data-line="232">        <span class="token keyword">if</span>(!file) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Cannot open material file: &quot;</span>+material_file);</span>
+<span class="source-line" data-line="233">        <span class="token keyword">struct</span> DoubleKey { std::initializer_list&lt;<span class="token keyword">const</span> <span class="token keyword">char</span>*&gt; aliases; <span class="token keyword">double</span>* value; };</span>
+<span class="source-line" data-line="234">        <span class="token keyword">const</span> DoubleKey double_keys[] = {</span>
+<span class="source-line" data-line="235">            {{<span class="token string">&quot;rho&quot;</span>,<span class="token string">&quot;density&quot;</span>}, &amp;p.material.rho},</span>
+<span class="source-line" data-line="236">            {{<span class="token string">&quot;mu&quot;</span>,<span class="token string">&quot;viscosity&quot;</span>}, &amp;p.material.mu},</span>
+<span class="source-line" data-line="237">            {{<span class="token string">&quot;u_bar&quot;</span>,<span class="token string">&quot;inlet_u_bar&quot;</span>,<span class="token string">&quot;mean_velocity&quot;</span>}, &amp;p.material.u_bar},</span>
+<span class="source-line" data-line="238">            {{<span class="token string">&quot;structure_rho&quot;</span>,<span class="token string">&quot;structure_density&quot;</span>,<span class="token string">&quot;solid_density&quot;</span>}, &amp;p.material.structure_rho},</span>
+<span class="source-line" data-line="239">            {{<span class="token string">&quot;newmark_beta&quot;</span>,<span class="token string">&quot;beta_newmark&quot;</span>}, &amp;p.material.newmark_beta},</span>
+<span class="source-line" data-line="240">            {{<span class="token string">&quot;newmark_gamma&quot;</span>,<span class="token string">&quot;gamma_newmark&quot;</span>}, &amp;p.material.newmark_gamma},</span>
+<span class="source-line" data-line="241">            {{<span class="token string">&quot;e&quot;</span>,<span class="token string">&quot;youngs_modulus&quot;</span>,<span class="token string">&quot;young_modulus&quot;</span>,<span class="token string">&quot;structure_youngs_modulus&quot;</span>}, &amp;p.material.youngs_modulus},</span>
+<span class="source-line" data-line="242">            {{<span class="token string">&quot;nu&quot;</span>,<span class="token string">&quot;poisson_ratio&quot;</span>,<span class="token string">&quot;structure_poisson_ratio&quot;</span>}, &amp;p.material.poisson_ratio},</span>
+<span class="source-line" data-line="243">            {{<span class="token string">&quot;sigma_y&quot;</span>,<span class="token string">&quot;yield_stress&quot;</span>,<span class="token string">&quot;sigma_y0&quot;</span>}, &amp;p.material.sigma_y},</span>
+<span class="source-line" data-line="244">            {{<span class="token string">&quot;kf&quot;</span>,<span class="token string">&quot;hardening_kf&quot;</span>,<span class="token string">&quot;hardening_modulus&quot;</span>,<span class="token string">&quot;linear_hardening&quot;</span>}, &amp;p.material.Kf},</span>
+<span class="source-line" data-line="245">            {{<span class="token string">&quot;yinf&quot;</span>,<span class="token string">&quot;hardening_yinf&quot;</span>,<span class="token string">&quot;yield_inf&quot;</span>,<span class="token string">&quot;saturation_yield&quot;</span>}, &amp;p.material.Yinf},</span>
+<span class="source-line" data-line="246">            {{<span class="token string">&quot;delta&quot;</span>,<span class="token string">&quot;hardening_delta&quot;</span>}, &amp;p.material.delta},</span>
+<span class="source-line" data-line="247">            {{<span class="token string">&quot;visco_elastic_eta&quot;</span>,<span class="token string">&quot;viscoelasticity&quot;</span>}, &amp;p.material.visco_elastic_eta},</span>
+<span class="source-line" data-line="248">            {{<span class="token string">&quot;local_tol&quot;</span>,<span class="token string">&quot;local_residual_tol&quot;</span>,<span class="token string">&quot;q_tol&quot;</span>}, &amp;p.material.local_tol},</span>
+<span class="source-line" data-line="249">            {{<span class="token string">&quot;mesh_motion_coefficient&quot;</span>,<span class="token string">&quot;mesh_motion_coeff&quot;</span>,<span class="token string">&quot;mmpde_coefficient&quot;</span>,<span class="token string">&quot;a_u&quot;</span>}, &amp;p.material.mesh_motion_coefficient},</span>
+<span class="source-line" data-line="250">            {{<span class="token string">&quot;mesh_motion_poisson_ratio&quot;</span>,<span class="token string">&quot;mmpde_poisson_ratio&quot;</span>}, &amp;p.material.mesh_motion_poisson_ratio},</span>
+<span class="source-line" data-line="251">            {{<span class="token string">&quot;stabilization_parameter&quot;</span>,<span class="token string">&quot;vem_stabilization_parameter&quot;</span>,<span class="token string">&quot;dofi_stabilization_parameter&quot;</span>,<span class="token string">&quot;dofi_factor&quot;</span>}, &amp;p.material.stabilization_parameter}</span>
+<span class="source-line" data-line="252">        };</span>
+<span class="source-line" data-line="253">        <span class="token keyword">struct</span> IntKey { std::initializer_list&lt;<span class="token keyword">const</span> <span class="token keyword">char</span>*&gt; aliases; <span class="token keyword">int</span>* value; };</span>
+<span class="source-line" data-line="254">        <span class="token keyword">const</span> IntKey int_keys[] = {</span>
+<span class="source-line" data-line="255">            {{<span class="token string">&quot;local_max_iter&quot;</span>,<span class="token string">&quot;q_max_iter&quot;</span>}, &amp;p.material.local_max_iter}</span>
+<span class="source-line" data-line="256">        };</span>
+<span class="source-line" data-line="257"> </span>
+<span class="source-line" data-line="258">        std::string key; std::stringstream ss;</span>
+<span class="source-line" data-line="259">        <span class="token keyword">while</span>(next_config_line(file,key,ss)){</span>
+<span class="source-line" data-line="260">            key = lower_copy(key);</span>
+<span class="source-line" data-line="261">            <span class="token keyword">bool</span> handled=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="262">            <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; item:double_keys){</span>
+<span class="source-line" data-line="263">                <span class="token keyword">if</span>(key_in(key,item.aliases)){ ss &gt;&gt; *item.value; handled=<span class="token keyword">true</span>; <span class="token keyword">break</span>; }</span>
+<span class="source-line" data-line="264">            }</span>
+<span class="source-line" data-line="265">            <span class="token keyword">if</span>(handled) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="266">            <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; item:int_keys){</span>
+<span class="source-line" data-line="267">                <span class="token keyword">if</span>(key_in(key,item.aliases)){ ss &gt;&gt; *item.value; handled=<span class="token keyword">true</span>; <span class="token keyword">break</span>; }</span>
+<span class="source-line" data-line="268">            }</span>
+<span class="source-line" data-line="269">            <span class="token keyword">if</span>(handled) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="270">            <span class="token keyword">if</span>(key==<span class="token string">&quot;mesh_motion_type&quot;</span> || key==<span class="token string">&quot;mmpde_type&quot;</span> || key==<span class="token string">&quot;mmpde&quot;</span>){</span>
+<span class="source-line" data-line="271">                ss &gt;&gt; p.material.mesh_motion_type;</span>
+<span class="source-line" data-line="272">                std::transform(p.material.mesh_motion_type.begin(), p.material.mesh_motion_type.end(),</span>
+<span class="source-line" data-line="273">                               p.material.mesh_motion_type.begin(),</span>
+<span class="source-line" data-line="274">                               [](<span class="token keyword">unsigned</span> <span class="token keyword">char</span> c){ <span class="token keyword">return</span> static_cast&lt;<span class="token keyword">char</span>&gt;(std::toupper(c)); });</span>
+<span class="source-line" data-line="275">            }</span>
+<span class="source-line" data-line="276">            <span class="token keyword">else</span> <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Unknown key in material file: &quot;</span>+key);</span>
+<span class="source-line" data-line="277">        }</span>
+<span class="source-line" data-line="278">    }</span>
+<span class="source-line" data-line="279">    <span class="token comment">// ------------------------------------------------------------------------</span></span>
+<span class="source-line" data-line="280">    <span class="token comment">// BC.txt</span></span>
+<span class="source-line" data-line="281">    <span class="token comment">// ------------------------------------------------------------------------</span></span>
+<span class="source-line" data-line="282">    {</span>
+<span class="source-line" data-line="283">        std::ifstream file(boundary_file);</span>
+<span class="source-line" data-line="284">        <span class="token keyword">if</span>(!file) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Cannot open boundary file: &quot;</span>+boundary_file);</span>
+<span class="source-line" data-line="285">        std::string key; std::stringstream ss;</span>
+<span class="source-line" data-line="286">        <span class="token keyword">while</span>(next_config_line(file,key,ss)){</span>
+<span class="source-line" data-line="287">            <span class="token keyword">if</span>(key==<span class="token string">&quot;VELOCITY_DIRICHLET&quot;</span> || key==<span class="token string">&quot;DIRICHLET_V&quot;</span>){</span>
+<span class="source-line" data-line="288">                std::string g,c; ss&gt;&gt;g&gt;&gt;c; std::string expr=rest_trim(ss);</span>
+<span class="source-line" data-line="289">                <span class="token keyword">if</span>(expr.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad velocity DIRICHLET line.&quot;</span>);</span>
+<span class="source-line" data-line="290">                FieldComponentTarget target{<span class="token string">&quot;velocity&quot;</span>,g,parse_bc_selector_token(g),component_index_from_string(c)};</span>
+<span class="source-line" data-line="291">                append_dirichlet_rule(p,target,make_scalar_function(expr));</span>
+<span class="source-line" data-line="292">            } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;DISPLACEMENT&quot;</span> || key==<span class="token string">&quot;DISPLACEMENT_DIRICHLET&quot;</span> || key==<span class="token string">&quot;DIRICHLET_U&quot;</span>){</span>
+<span class="source-line" data-line="293">                std::string g,c; ss&gt;&gt;g&gt;&gt;c; std::string expr=rest_trim(ss);</span>
+<span class="source-line" data-line="294">                <span class="token keyword">if</span>(expr.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad displacement DIRICHLET line.&quot;</span>);</span>
+<span class="source-line" data-line="295">                FieldComponentTarget target{<span class="token string">&quot;displacement&quot;</span>,g,parse_bc_selector_token(g),component_index_from_string(c)};</span>
+<span class="source-line" data-line="296">                append_dirichlet_rule(p,target,make_scalar_function(expr));</span>
+<span class="source-line" data-line="297">            } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;DIRICHLET&quot;</span> || key==<span class="token string">&quot;FIELD_DIRICHLET&quot;</span> || key==<span class="token string">&quot;DBC&quot;</span>){</span>
+<span class="source-line" data-line="298">                <span class="token comment">// Accepted forms:</span></span>
+<span class="source-line" data-line="299">                <span class="token comment">//   DIRICHLET TOP uy expr                  (alias shorthand)</span></span>
+<span class="source-line" data-line="300">                <span class="token comment">//   DIRICHLET displacement TOP y expr      (explicit generic)</span></span>
+<span class="source-line" data-line="301">                <span class="token comment">//   DBC temperature WALL 0 expr</span></span>
+<span class="source-line" data-line="302">                std::string a,b,c; ss&gt;&gt;a&gt;&gt;b;</span>
+<span class="source-line" data-line="303">                <span class="token keyword">if</span>(a.empty() || b.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad DIRICHLET line.&quot;</span>);</span>
+<span class="source-line" data-line="304">                <span class="token keyword">bool</span> explicit_field=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="305">                FieldComponentTarget target;</span>
+<span class="source-line" data-line="306">                std::string expr;</span>
+<span class="source-line" data-line="307">                <span class="token keyword">if</span>(is_known_field_name(a)){</span>
+<span class="source-line" data-line="308">                    ss &gt;&gt; c;</span>
+<span class="source-line" data-line="309">                    <span class="token keyword">if</span>(c.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad generic DIRICHLET line. Use: DIRICHLET field group component expression.&quot;</span>);</span>
+<span class="source-line" data-line="310">                    target = parse_field_component_target_tokens(a,b,c,explicit_field);</span>
+<span class="source-line" data-line="311">                    expr = rest_trim(ss);</span>
+<span class="source-line" data-line="312">                } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="313">                    target = target_from_alias(a,b);</span>
+<span class="source-line" data-line="314">                    expr = rest_trim(ss);</span>
+<span class="source-line" data-line="315">                }</span>
+<span class="source-line" data-line="316">                <span class="token keyword">if</span>(expr.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad DIRICHLET line: missing expression.&quot;</span>);</span>
+<span class="source-line" data-line="317">                append_dirichlet_rule(p,target,make_scalar_function(expr));</span>
+<span class="source-line" data-line="318">            } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;TORSION_DIRICHLET&quot;</span> || key==<span class="token string">&quot;DIRICHLET_TORSION&quot;</span> || key==<span class="token string">&quot;TORSION_DBC&quot;</span>){</span>
+<span class="source-line" data-line="319">                <span class="token comment">// Accepted forms:</span></span>
+<span class="source-line" data-line="320">                <span class="token comment">//   TORSION_DIRICHLET displacement RIGHT z auto angle_deg 90*(t/4.0)</span></span>
+<span class="source-line" data-line="321">                <span class="token comment">//   TORSION_DIRICHLET displacement RIGHT z center 0 0 0 angle_rad pi/2</span></span>
+<span class="source-line" data-line="322">                <span class="token comment">//   TORSION_DIRICHLET RIGHT z auto angle_deg 90</span></span>
+<span class="source-line" data-line="323">                std::string a,b,c; ss &gt;&gt; a &gt;&gt; b &gt;&gt; c;</span>
+<span class="source-line" data-line="324">                <span class="token keyword">if</span>(a.empty() || b.empty() || c.empty()) {</span>
+<span class="source-line" data-line="325">                    <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad TORSION_DIRICHLET line. Use: TORSION_DIRICHLET [field] group axis auto|center ... angle_deg|angle_rad expression.&quot;</span>);</span>
+<span class="source-line" data-line="326">                }</span>
+<span class="source-line" data-line="327"> </span>
+<span class="source-line" data-line="328">                TorsionDirichletBC rule;</span>
+<span class="source-line" data-line="329">                <span class="token keyword">const</span> std::string al = lower_copy(a);</span>
+<span class="source-line" data-line="330">                <span class="token keyword">if</span>(is_known_field_name(al)){</span>
+<span class="source-line" data-line="331">                    rule.field = (al==<span class="token string">&quot;theta&quot;</span>) ? std::string(<span class="token string">&quot;temperature&quot;</span>) : al;</span>
+<span class="source-line" data-line="332">                    rule.group = b;</span>
+<span class="source-line" data-line="333">                    rule.selector = parse_bc_selector_token(b);</span>
+<span class="source-line" data-line="334">                    rule.axis = torsion_axis_index_from_string(c);</span>
+<span class="source-line" data-line="335">                    ss &gt;&gt; a; <span class="token comment">// center mode</span></span>
+<span class="source-line" data-line="336">                } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="337">                    rule.field = <span class="token string">&quot;displacement&quot;</span>;</span>
+<span class="source-line" data-line="338">                    rule.group = a;</span>
+<span class="source-line" data-line="339">                    rule.selector = parse_bc_selector_token(a);</span>
+<span class="source-line" data-line="340">                    rule.axis = torsion_axis_index_from_string(b);</span>
+<span class="source-line" data-line="341">                    a = c; <span class="token comment">// center mode</span></span>
+<span class="source-line" data-line="342">                }</span>
+<span class="source-line" data-line="343"> </span>
+<span class="source-line" data-line="344">                <span class="token keyword">const</span> std::string center_mode = lower_copy(a);</span>
+<span class="source-line" data-line="345">                <span class="token keyword">if</span>(center_mode.empty()) {</span>
+<span class="source-line" data-line="346">                    <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad TORSION_DIRICHLET line: missing auto|center selector.&quot;</span>);</span>
+<span class="source-line" data-line="347">                }</span>
+<span class="source-line" data-line="348">                <span class="token keyword">if</span>(center_mode==<span class="token string">&quot;auto&quot;</span> || center_mode==<span class="token string">&quot;axis_auto&quot;</span> || center_mode==<span class="token string">&quot;centroid&quot;</span>){</span>
+<span class="source-line" data-line="349">                    rule.auto_center = <span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="350">                } <span class="token keyword">else</span> <span class="token keyword">if</span>(center_mode==<span class="token string">&quot;center&quot;</span> || center_mode==<span class="token string">&quot;centre&quot;</span>){</span>
+<span class="source-line" data-line="351">                    rule.auto_center = <span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="352">                    <span class="token keyword">if</span>(!(ss &gt;&gt; rule.center[<span class="token number">0</span>] &gt;&gt; rule.center[<span class="token number">1</span>] &gt;&gt; rule.center[<span class="token number">2</span>])) {</span>
+<span class="source-line" data-line="353">                        <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad TORSION_DIRICHLET center. Use: center cx cy cz.&quot;</span>);</span>
+<span class="source-line" data-line="354">                    }</span>
+<span class="source-line" data-line="355">                } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="356">                    <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad TORSION_DIRICHLET center mode. Use auto or center cx cy cz.&quot;</span>);</span>
+<span class="source-line" data-line="357">                }</span>
+<span class="source-line" data-line="358"> </span>
+<span class="source-line" data-line="359">                std::string angle_unit; ss &gt;&gt; angle_unit;</span>
+<span class="source-line" data-line="360">                <span class="token keyword">const</span> std::string angle_expr = rest_trim(ss);</span>
+<span class="source-line" data-line="361">                rule.angle = make_torsion_angle_function(angle_unit, angle_expr);</span>
+<span class="source-line" data-line="362">                p.torsion_dirichlet_bcs.push_back(rule);</span>
+<span class="source-line" data-line="363">            } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;PRESSURE&quot;</span> || key==<span class="token string">&quot;PRESSURE_DIRICHLET&quot;</span> || key==<span class="token string">&quot;DIRICHLET_P&quot;</span>){</span>
+<span class="source-line" data-line="364">                std::string g; ss&gt;&gt;g; std::string expr=rest_trim(ss);</span>
+<span class="source-line" data-line="365">                <span class="token keyword">if</span>(expr.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad pressure DIRICHLET line.&quot;</span>);</span>
+<span class="source-line" data-line="366">                FieldComponentTarget target{<span class="token string">&quot;pressure&quot;</span>,g,parse_bc_selector_token(g),<span class="token number">0</span>};</span>
+<span class="source-line" data-line="367">                append_dirichlet_rule(p,target,make_scalar_function(expr));</span>
+<span class="source-line" data-line="368">            } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;NEUMANN&quot;</span> || key==<span class="token string">&quot;FIELD_NEUMANN&quot;</span> || key==<span class="token string">&quot;TRACTION&quot;</span> || key==<span class="token string">&quot;FLUX&quot;</span>){</span>
+<span class="source-line" data-line="369">                <span class="token comment">// Full generic form:</span></span>
+<span class="source-line" data-line="370">                <span class="token comment">//   NEUMANN field group component expression</span></span>
+<span class="source-line" data-line="371">                <span class="token comment">//   NEUMANN displacement RIGHT x 1.0</span></span>
+<span class="source-line" data-line="372">                <span class="token comment">// Shorthand for solid traction:</span></span>
+<span class="source-line" data-line="373">                <span class="token comment">//   TRACTION group component expression</span></span>
+<span class="source-line" data-line="374">                <span class="token comment">//   TRACTION RIGHT ux 1.0</span></span>
+<span class="source-line" data-line="375">                std::string a,b,c; ss&gt;&gt;a&gt;&gt;b&gt;&gt;c;</span>
+<span class="source-line" data-line="376">                <span class="token keyword">if</span>(a.empty() || b.empty() || c.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad NEUMANN line. Use: NEUMANN field group component expression.&quot;</span>);</span>
+<span class="source-line" data-line="377"> </span>
+<span class="source-line" data-line="378">                <span class="token keyword">const</span> std::string al=lower_copy(a);</span>
+<span class="source-line" data-line="379">                <span class="token keyword">const</span> <span class="token keyword">bool</span> explicit_field = (al==<span class="token string">&quot;velocity&quot;</span> || al==<span class="token string">&quot;displacement&quot;</span> || al==<span class="token string">&quot;pressure&quot;</span> || al==<span class="token string">&quot;temperature&quot;</span>);</span>
+<span class="source-line" data-line="380"> </span>
+<span class="source-line" data-line="381">                std::string field = explicit_field ? lower_copy(a) : std::string(<span class="token string">&quot;displacement&quot;</span>);</span>
+<span class="source-line" data-line="382">                std::string group = explicit_field ? b : a;</span>
+<span class="source-line" data-line="383">                std::string comp  = explicit_field ? c : b;</span>
+<span class="source-line" data-line="384"> </span>
+<span class="source-line" data-line="385">                std::string expr;</span>
+<span class="source-line" data-line="386">                <span class="token keyword">if</span>(explicit_field){</span>
+<span class="source-line" data-line="387">                    expr = rest_trim(ss);</span>
+<span class="source-line" data-line="388">                } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="389">                    expr = c;</span>
+<span class="source-line" data-line="390">                    std::string tail;</span>
+<span class="source-line" data-line="391">                    std::getline(ss, tail);</span>
+<span class="source-line" data-line="392">                    tail = trim_copy(tail);</span>
+<span class="source-line" data-line="393">                    <span class="token keyword">if</span>(!tail.empty()) expr += <span class="token string">&quot; &quot;</span> + tail;</span>
+<span class="source-line" data-line="394">                }</span>
+<span class="source-line" data-line="395"> </span>
+<span class="source-line" data-line="396">                <span class="token keyword">if</span>(expr.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad NEUMANN line: missing expression.&quot;</span>);</span>
+<span class="source-line" data-line="397">                p.neumann_bcs.push_back({field,group,parse_bc_selector_token(group),component_index_from_string(comp),make_scalar_function(expr)});</span>
+<span class="source-line" data-line="398">            } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="399">                <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Unknown key in boundary file: &quot;</span>+key);</span>
+<span class="source-line" data-line="400">            }</span>
+<span class="source-line" data-line="401">        }</span>
+<span class="source-line" data-line="402">    }</span>
+<span class="source-line" data-line="403">    <span class="token comment">// ------------------------------------------------------------------------</span></span>
+<span class="source-line" data-line="404">    <span class="token comment">// Solver.txt</span></span>
+<span class="source-line" data-line="405">    <span class="token comment">// ------------------------------------------------------------------------</span></span>
+<span class="source-line" data-line="406">    {</span>
+<span class="source-line" data-line="407">        std::ifstream file(solver_file);</span>
+<span class="source-line" data-line="408">        <span class="token keyword">if</span>(!file) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Cannot open solver file: &quot;</span>+solver_file);</span>
+<span class="source-line" data-line="409">        <span class="token keyword">struct</span> SolverDoubleKey { std::initializer_list&lt;<span class="token keyword">const</span> <span class="token keyword">char</span>*&gt; aliases; <span class="token keyword">double</span>* value; };</span>
+<span class="source-line" data-line="410">        <span class="token keyword">const</span> SolverDoubleKey double_keys[] = {</span>
+<span class="source-line" data-line="411">            {{<span class="token string">&quot;dt&quot;</span>,<span class="token string">&quot;time_step&quot;</span>}, &amp;p.solver.dt},</span>
+<span class="source-line" data-line="412">            {{<span class="token string">&quot;total_time&quot;</span>,<span class="token string">&quot;end_time&quot;</span>,<span class="token string">&quot;t_end&quot;</span>}, &amp;p.solver.total_time},</span>
+<span class="source-line" data-line="413">            {{<span class="token string">&quot;dt_min&quot;</span>,<span class="token string">&quot;min_dt&quot;</span>}, &amp;p.solver.dt_min},</span>
+<span class="source-line" data-line="414">            {{<span class="token string">&quot;dt_max&quot;</span>,<span class="token string">&quot;max_dt&quot;</span>}, &amp;p.solver.dt_max},</span>
+<span class="source-line" data-line="415">            {{<span class="token string">&quot;dt_growth&quot;</span>}, &amp;p.solver.dt_growth},</span>
+<span class="source-line" data-line="416">            {{<span class="token string">&quot;dt_shrink&quot;</span>}, &amp;p.solver.dt_shrink},</span>
+<span class="source-line" data-line="417">            {{<span class="token string">&quot;tol&quot;</span>}, &amp;p.solver.tol},</span>
+<span class="source-line" data-line="418">            {{<span class="token string">&quot;alpha_first_iter&quot;</span>,<span class="token string">&quot;newton_alpha_first&quot;</span>}, &amp;p.solver.alpha_first_iter},</span>
+<span class="source-line" data-line="419">            {{<span class="token string">&quot;alpha_other_iter&quot;</span>,<span class="token string">&quot;newton_alpha&quot;</span>}, &amp;p.solver.alpha_other_iter},</span>
+<span class="source-line" data-line="420">            {{<span class="token string">&quot;substep_min&quot;</span>,<span class="token string">&quot;min_load_increment&quot;</span>}, &amp;p.solver.substep_min},</span>
+<span class="source-line" data-line="421">            {{<span class="token string">&quot;substep_max&quot;</span>,<span class="token string">&quot;max_load_increment&quot;</span>}, &amp;p.solver.substep_max},</span>
+<span class="source-line" data-line="422">            {{<span class="token string">&quot;substep_growth&quot;</span>,<span class="token string">&quot;load_growth&quot;</span>}, &amp;p.solver.substep_growth},</span>
+<span class="source-line" data-line="423">            {{<span class="token string">&quot;substep_shrink&quot;</span>,<span class="token string">&quot;load_shrink&quot;</span>}, &amp;p.solver.substep_shrink},</span>
+<span class="source-line" data-line="424">            {{<span class="token string">&quot;rve_initial_substep&quot;</span>}, &amp;p.solver.rve_initial_substep},</span>
+<span class="source-line" data-line="425">            {{<span class="token string">&quot;rve_min_substep&quot;</span>}, &amp;p.solver.rve_min_substep},</span>
+<span class="source-line" data-line="426">            {{<span class="token string">&quot;rve_cutback_factor&quot;</span>}, &amp;p.solver.rve_cutback_factor},</span>
+<span class="source-line" data-line="427">            {{<span class="token string">&quot;rve_growth_factor&quot;</span>}, &amp;p.solver.rve_growth_factor},</span>
+<span class="source-line" data-line="428">            {{<span class="token string">&quot;rve_tol&quot;</span>}, &amp;p.solver.rve_tol},</span>
+<span class="source-line" data-line="429">            {{<span class="token string">&quot;rve_pair_tol&quot;</span>}, &amp;p.solver.rve_pair_tol},</span>
+<span class="source-line" data-line="430">            {{<span class="token string">&quot;pressure_pin_value&quot;</span>}, &amp;p.solver.pressure_pin_value},</span>
+<span class="source-line" data-line="431">            {{<span class="token string">&quot;stabilization_ck&quot;</span>,<span class="token string">&quot;c_k&quot;</span>}, &amp;p.solver.stabilization_Ck},</span>
+<span class="source-line" data-line="432">            {{<span class="token string">&quot;stabilization_time_order&quot;</span>,<span class="token string">&quot;time_discretized_order&quot;</span>}, &amp;p.solver.stabilization_time_order},</span>
+<span class="source-line" data-line="433">            {{<span class="token string">&quot;divergence_factor&quot;</span>,<span class="token string">&quot;newton_divergence_factor&quot;</span>}, &amp;p.solver.divergence_factor},</span>
+<span class="source-line" data-line="434">            {{<span class="token string">&quot;bc_conflict_tol&quot;</span>}, &amp;p.solver.bc_conflict_tol},</span>
+<span class="source-line" data-line="435">            {{<span class="token string">&quot;force_boundary_check_tol&quot;</span>,<span class="token string">&quot;boundary_integral_tol&quot;</span>}, &amp;p.solver.force_boundary_check_tol},</span>
+<span class="source-line" data-line="436">            {{<span class="token string">&quot;force_attack_angle_deg&quot;</span>,<span class="token string">&quot;attack_angle&quot;</span>,<span class="token string">&quot;aoa&quot;</span>}, &amp;p.solver.force_attack_angle_deg},</span>
+<span class="source-line" data-line="437">            {{<span class="token string">&quot;linear_tol&quot;</span>}, &amp;p.solver.linear.tol},</span>
+<span class="source-line" data-line="438">            {{<span class="token string">&quot;linear_atol&quot;</span>}, &amp;p.solver.linear.atol},</span>
+<span class="source-line" data-line="439">            {{<span class="token string">&quot;schur_pressure_mass_weight&quot;</span>}, &amp;p.solver.linear.schur_pressure_mass_weight},</span>
+<span class="source-line" data-line="440">            {{<span class="token string">&quot;schur_pressure_laplacian_weight&quot;</span>}, &amp;p.solver.linear.schur_pressure_laplacian_weight},</span>
+<span class="source-line" data-line="441">            {{<span class="token string">&quot;schur_pressure_shift&quot;</span>}, &amp;p.solver.linear.schur_pressure_shift},</span>
+<span class="source-line" data-line="442">            {{<span class="token string">&quot;pcd_kp_mass_shift&quot;</span>}, &amp;p.solver.linear.pcd_kp_mass_shift},</span>
+<span class="source-line" data-line="443">            {{<span class="token string">&quot;pcd_ap_mass_weight&quot;</span>}, &amp;p.solver.linear.pcd_ap_mass_weight},</span>
+<span class="source-line" data-line="444">            {{<span class="token string">&quot;pcd_ap_laplacian_weight&quot;</span>}, &amp;p.solver.linear.pcd_ap_laplacian_weight},</span>
+<span class="source-line" data-line="445">            {{<span class="token string">&quot;pcd_pressure_rtol&quot;</span>}, &amp;p.solver.linear.pcd_pressure_rtol},</span>
+<span class="source-line" data-line="446">            {{<span class="token string">&quot;matfree_jvp_check_tol&quot;</span>}, &amp;p.solver.linear.matfree_jvp_check_tol}</span>
+<span class="source-line" data-line="447">        };</span>
+<span class="source-line" data-line="448">        <span class="token keyword">struct</span> SolverIntKey { std::initializer_list&lt;<span class="token keyword">const</span> <span class="token keyword">char</span>*&gt; aliases; <span class="token keyword">int</span>* value; };</span>
+<span class="source-line" data-line="449">        <span class="token keyword">const</span> SolverIntKey int_keys[] = {</span>
+<span class="source-line" data-line="450">            {{<span class="token string">&quot;max_iter&quot;</span>}, &amp;p.solver.max_iter},</span>
+<span class="source-line" data-line="451">            {{<span class="token string">&quot;max_substeps&quot;</span>,<span class="token string">&quot;max_load_steps&quot;</span>}, &amp;p.solver.max_substeps},</span>
+<span class="source-line" data-line="452">            {{<span class="token string">&quot;pressure_pin_node&quot;</span>}, &amp;p.solver.pressure_pin_node},</span>
+<span class="source-line" data-line="453">            {{<span class="token string">&quot;residual_monitor&quot;</span>}, &amp;p.solver.residual_monitor},</span>
+<span class="source-line" data-line="454">            {{<span class="token string">&quot;residual_print_limit&quot;</span>}, &amp;p.solver.residual_print_limit},</span>
+<span class="source-line" data-line="455">            {{<span class="token string">&quot;stabilization_element_order&quot;</span>,<span class="token string">&quot;elements_order&quot;</span>}, &amp;p.solver.stabilization_element_order},</span>
+<span class="source-line" data-line="456">            {{<span class="token string">&quot;multiscale_macro_threads&quot;</span>}, &amp;p.solver.multiscale_macro_threads},</span>
+<span class="source-line" data-line="457">            {{<span class="token string">&quot;multiscale_rve_threads&quot;</span>}, &amp;p.solver.multiscale_rve_threads},</span>
+<span class="source-line" data-line="458">            {{<span class="token string">&quot;rve_max_iter&quot;</span>}, &amp;p.solver.rve_max_iter},</span>
+<span class="source-line" data-line="459">            {{<span class="token string">&quot;rve_max_substeps&quot;</span>}, &amp;p.solver.rve_max_substeps},</span>
+<span class="source-line" data-line="460">            {{<span class="token string">&quot;output_every&quot;</span>}, &amp;p.solver.output_every},</span>
+<span class="source-line" data-line="461">            {{<span class="token string">&quot;linear_max_iter&quot;</span>}, &amp;p.solver.linear.max_iter},</span>
+<span class="source-line" data-line="462">            {{<span class="token string">&quot;gmres_restart&quot;</span>}, &amp;p.solver.linear.gmres_restart},</span>
+<span class="source-line" data-line="463">            {{<span class="token string">&quot;ilu_levels&quot;</span>}, &amp;p.solver.linear.ilu_levels},</span>
+<span class="source-line" data-line="464">            {{<span class="token string">&quot;pcd_pressure_max_iter&quot;</span>}, &amp;p.solver.linear.pcd_pressure_max_iter},</span>
+<span class="source-line" data-line="465">            {{<span class="token string">&quot;pcd_kp_ilu_levels&quot;</span>}, &amp;p.solver.linear.pcd_kp_ilu_levels},</span>
+<span class="source-line" data-line="466">            {{<span class="token string">&quot;pcd_ap_ilu_levels&quot;</span>}, &amp;p.solver.linear.pcd_ap_ilu_levels},</span>
+<span class="source-line" data-line="467">            {{<span class="token string">&quot;velocity_ilu_levels&quot;</span>}, &amp;p.solver.linear.velocity_ilu_levels},</span>
+<span class="source-line" data-line="468">            {{<span class="token string">&quot;mechanical_ilu_levels&quot;</span>}, &amp;p.solver.linear.mechanical_ilu_levels},</span>
+<span class="source-line" data-line="469">            {{<span class="token string">&quot;pressure_ilu_levels&quot;</span>}, &amp;p.solver.linear.pressure_ilu_levels},</span>
+<span class="source-line" data-line="470">            {{<span class="token string">&quot;matfree_jvp_check_every&quot;</span>}, &amp;p.solver.linear.matfree_jvp_check_every}</span>
+<span class="source-line" data-line="471">        };</span>
+<span class="source-line" data-line="472">        <span class="token keyword">struct</span> SolverBoolKey { std::initializer_list&lt;<span class="token keyword">const</span> <span class="token keyword">char</span>*&gt; aliases; <span class="token keyword">bool</span>* value; };</span>
+<span class="source-line" data-line="473">        <span class="token keyword">const</span> SolverBoolKey bool_keys[] = {</span>
+<span class="source-line" data-line="474">            {{<span class="token string">&quot;adaptive_time_step&quot;</span>,<span class="token string">&quot;adaptive_dt&quot;</span>}, &amp;p.solver.adaptive_time_step},</span>
+<span class="source-line" data-line="475">            {{<span class="token string">&quot;stabilization&quot;</span>,<span class="token string">&quot;supg&quot;</span>}, &amp;p.solver.stabilization},</span>
+<span class="source-line" data-line="476">            {{<span class="token string">&quot;bc_diagnostics&quot;</span>}, &amp;p.solver.bc_diagnostics},</span>
+<span class="source-line" data-line="477">            {{<span class="token string">&quot;newton_log&quot;</span>}, &amp;p.solver.newton_log},</span>
+<span class="source-line" data-line="478">            {{<span class="token string">&quot;field_diagnostics&quot;</span>}, &amp;p.solver.field_diagnostics},</span>
+<span class="source-line" data-line="479">            {{<span class="token string">&quot;history_diagnostics&quot;</span>}, &amp;p.solver.history_diagnostics},</span>
+<span class="source-line" data-line="480">            {{<span class="token string">&quot;rve_adaptive_substep&quot;</span>,<span class="token string">&quot;rve_adaptive_substepping&quot;</span>}, &amp;p.solver.rve_adaptive_substep},</span>
+<span class="source-line" data-line="481">            {{<span class="token string">&quot;timing_diagnostics&quot;</span>}, &amp;p.solver.timing_diagnostics},</span>
+<span class="source-line" data-line="482">            {{<span class="token string">&quot;timing_per_step&quot;</span>}, &amp;p.solver.timing_per_step},</span>
+<span class="source-line" data-line="483">            {{<span class="token string">&quot;timing_csv&quot;</span>}, &amp;p.solver.timing_csv},</span>
+<span class="source-line" data-line="484">            {{<span class="token string">&quot;timing_summary&quot;</span>}, &amp;p.solver.timing_summary},</span>
+<span class="source-line" data-line="485">            {{<span class="token string">&quot;postprocess_deferred&quot;</span>,<span class="token string">&quot;deferred_postprocess&quot;</span>,<span class="token string">&quot;defer_postprocess&quot;</span>}, &amp;p.solver.postprocess_deferred},</span>
+<span class="source-line" data-line="486">            {{<span class="token string">&quot;force_output&quot;</span>,<span class="token string">&quot;drag_lift_output&quot;</span>}, &amp;p.solver.force_output},</span>
+<span class="source-line" data-line="487">            {{<span class="token string">&quot;linear_verbose&quot;</span>}, &amp;p.solver.linear.verbose},</span>
+<span class="source-line" data-line="488">            {{<span class="token string">&quot;petsc_matfree_full&quot;</span>}, &amp;p.solver.linear.petsc_matfree_full},</span>
+<span class="source-line" data-line="489">            {{<span class="token string">&quot;matfree_jvp_check&quot;</span>}, &amp;p.solver.linear.matfree_jvp_check}</span>
+<span class="source-line" data-line="490">        };</span>
+<span class="source-line" data-line="491">        <span class="token keyword">struct</span> SolverStringKey { std::initializer_list&lt;<span class="token keyword">const</span> <span class="token keyword">char</span>*&gt; aliases; std::string* value; };</span>
+<span class="source-line" data-line="492">        <span class="token keyword">const</span> SolverStringKey string_keys[] = {</span>
+<span class="source-line" data-line="493">            {{<span class="token string">&quot;output_prefix&quot;</span>}, &amp;p.solver.output_prefix},</span>
+<span class="source-line" data-line="494">            {{<span class="token string">&quot;force_boundary&quot;</span>,<span class="token string">&quot;drag_lift_boundary&quot;</span>}, &amp;p.solver.force_boundary},</span>
+<span class="source-line" data-line="495">            {{<span class="token string">&quot;solver_backend&quot;</span>}, &amp;p.solver.linear.backend},</span>
+<span class="source-line" data-line="496">            {{<span class="token string">&quot;linear_solver&quot;</span>}, &amp;p.solver.linear.linear_solver},</span>
+<span class="source-line" data-line="497">            {{<span class="token string">&quot;preconditioner&quot;</span>}, &amp;p.solver.linear.preconditioner},</span>
+<span class="source-line" data-line="498">            {{<span class="token string">&quot;block_layout&quot;</span>}, &amp;p.solver.linear.block_layout},</span>
+<span class="source-line" data-line="499">            {{<span class="token string">&quot;fieldsplit_type&quot;</span>}, &amp;p.solver.linear.fieldsplit_type},</span>
+<span class="source-line" data-line="500">            {{<span class="token string">&quot;schur_factorization&quot;</span>}, &amp;p.solver.linear.schur_factorization},</span>
+<span class="source-line" data-line="501">            {{<span class="token string">&quot;schur_precondition&quot;</span>,<span class="token string">&quot;schur_approx&quot;</span>}, &amp;p.solver.linear.schur_precondition},</span>
+<span class="source-line" data-line="502">            {{<span class="token string">&quot;velocity_pc&quot;</span>}, &amp;p.solver.linear.velocity_pc},</span>
+<span class="source-line" data-line="503">            {{<span class="token string">&quot;mechanical_pc&quot;</span>}, &amp;p.solver.linear.mechanical_pc},</span>
+<span class="source-line" data-line="504">            {{<span class="token string">&quot;pressure_pc&quot;</span>}, &amp;p.solver.linear.pressure_pc},</span>
+<span class="source-line" data-line="505">            {{<span class="token string">&quot;sub_linear_solver&quot;</span>}, &amp;p.solver.linear.sub_linear_solver},</span>
+<span class="source-line" data-line="506">            {{<span class="token string">&quot;pcd_pressure_solver&quot;</span>}, &amp;p.solver.linear.pcd_pressure_solver},</span>
+<span class="source-line" data-line="507">            {{<span class="token string">&quot;pcd_kp_solver&quot;</span>}, &amp;p.solver.linear.pcd_kp_solver},</span>
+<span class="source-line" data-line="508">            {{<span class="token string">&quot;pcd_kp_pc&quot;</span>}, &amp;p.solver.linear.pcd_kp_pc},</span>
+<span class="source-line" data-line="509">            {{<span class="token string">&quot;pcd_ap_solver&quot;</span>}, &amp;p.solver.linear.pcd_ap_solver},</span>
+<span class="source-line" data-line="510">            {{<span class="token string">&quot;pcd_ap_pc&quot;</span>}, &amp;p.solver.linear.pcd_ap_pc},</span>
+<span class="source-line" data-line="511">            {{<span class="token string">&quot;petsc_matfree_jvp_mode&quot;</span>}, &amp;p.solver.linear.petsc_matfree_jvp_mode},</span>
+<span class="source-line" data-line="512">            {{<span class="token string">&quot;petsc_matfree_pc&quot;</span>}, &amp;p.solver.linear.petsc_matfree_pc}</span>
+<span class="source-line" data-line="513">        };</span>
+<span class="source-line" data-line="514"> </span>
+<span class="source-line" data-line="515">        std::string key; std::stringstream ss;</span>
+<span class="source-line" data-line="516">        <span class="token keyword">while</span>(next_config_line(file,key,ss)){</span>
+<span class="source-line" data-line="517">            key = lower_copy(key);</span>
+<span class="source-line" data-line="518">            <span class="token keyword">bool</span> handled=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="519">            <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; item:double_keys){</span>
+<span class="source-line" data-line="520">                <span class="token keyword">if</span>(key_in(key,item.aliases)){ ss &gt;&gt; *item.value; handled=<span class="token keyword">true</span>; <span class="token keyword">break</span>; }</span>
+<span class="source-line" data-line="521">            }</span>
+<span class="source-line" data-line="522">            <span class="token keyword">if</span>(handled) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="523">            <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; item:int_keys){</span>
+<span class="source-line" data-line="524">                <span class="token keyword">if</span>(key_in(key,item.aliases)){ ss &gt;&gt; *item.value; handled=<span class="token keyword">true</span>; <span class="token keyword">break</span>; }</span>
+<span class="source-line" data-line="525">            }</span>
+<span class="source-line" data-line="526">            <span class="token keyword">if</span>(handled) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="527">            <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; item:bool_keys){</span>
+<span class="source-line" data-line="528">                <span class="token keyword">if</span>(key_in(key,item.aliases)){ *item.value = read_on_off_bool(ss,key); handled=<span class="token keyword">true</span>; <span class="token keyword">break</span>; }</span>
+<span class="source-line" data-line="529">            }</span>
+<span class="source-line" data-line="530">            <span class="token keyword">if</span>(handled) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="531">            <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; item:string_keys){</span>
+<span class="source-line" data-line="532">                <span class="token keyword">if</span>(key_in(key,item.aliases)){ ss &gt;&gt; *item.value; handled=<span class="token keyword">true</span>; <span class="token keyword">break</span>; }</span>
+<span class="source-line" data-line="533">            }</span>
+<span class="source-line" data-line="534">            <span class="token keyword">if</span>(handled) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="535"> </span>
+<span class="source-line" data-line="536">            <span class="token keyword">if</span>(key==<span class="token string">&quot;theta&quot;</span>){</span>
+<span class="source-line" data-line="537">                std::string expr = rest_trim(ss);</span>
+<span class="source-line" data-line="538">                <span class="token keyword">if</span>(expr.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad theta line.&quot;</span>);</span>
+<span class="source-line" data-line="539"> </span>
+<span class="source-line" data-line="540">                <span class="token comment">// Store the original expression.  If it contains dt, the solver</span></span>
+<span class="source-line" data-line="541">                <span class="token comment">// must re-evaluate it on every adaptive time-step attempt using</span></span>
+<span class="source-line" data-line="542">                <span class="token comment">// the current dt_step.  This matches the Python shifted-CN usage</span></span>
+<span class="source-line" data-line="543">                <span class="token comment">// theta = 0.5 + current_dt.</span></span>
+<span class="source-line" data-line="544">                p.solver.theta_expression = expr;</span>
+<span class="source-line" data-line="545">                p.solver.theta_depends_on_dt = (lower_copy(expr).find(<span class="token string">&quot;dt&quot;</span>) != std::string::npos);</span>
+<span class="source-line" data-line="546"> </span>
+<span class="source-line" data-line="547">                <span class="token comment">// Evaluate once here with the target input dt for validation and</span></span>
+<span class="source-line" data-line="548">                <span class="token comment">// for non-adaptive/static uses.  The time solver overwrites this</span></span>
+<span class="source-line" data-line="549">                <span class="token comment">// value per attempt when theta_depends_on_dt is true.</span></span>
+<span class="source-line" data-line="550">                std::string expr_eval = expr;</span>
+<span class="source-line" data-line="551">                std::string expr_low = lower_copy(expr_eval);</span>
+<span class="source-line" data-line="552">                std::size_t pos = <span class="token number">0</span>;</span>
+<span class="source-line" data-line="553">                <span class="token keyword">const</span> std::string dt_str = std::to_string(p.solver.dt);</span>
+<span class="source-line" data-line="554">                <span class="token keyword">while</span>((pos = expr_low.find(<span class="token string">&quot;dt&quot;</span>, pos)) != std::string::npos){</span>
+<span class="source-line" data-line="555">                    expr_eval.replace(pos, <span class="token number">2</span>, dt_str);</span>
+<span class="source-line" data-line="556">                    expr_low.replace(pos, <span class="token number">2</span>, dt_str);</span>
+<span class="source-line" data-line="557">                    pos += dt_str.size();</span>
+<span class="source-line" data-line="558">                }</span>
+<span class="source-line" data-line="559">                p.solver.theta = eval_scalar_function(make_scalar_function(expr_eval),<span class="token number">0.0</span>,<span class="token number">0.0</span>,<span class="token number">0.0</span>,<span class="token number">0.0</span>);</span>
+<span class="source-line" data-line="560">            }</span>
+<span class="source-line" data-line="561">            <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;residual_print_all&quot;</span>){</span>
+<span class="source-line" data-line="562">                p.solver.residual_print_all = read_on_off_bool(ss,key) ? <span class="token number">1</span> : <span class="token number">0</span>;</span>
+<span class="source-line" data-line="563">            }</span>
+<span class="source-line" data-line="564">            <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;gauss_order&quot;</span> || key==<span class="token string">&quot;quadrature_order&quot;</span>){</span>
+<span class="source-line" data-line="565">                std::string v; ss &gt;&gt; v;</span>
+<span class="source-line" data-line="566">                <span class="token keyword">if</span>(v.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad GAUSS_ORDER line.&quot;</span>);</span>
+<span class="source-line" data-line="567">                <span class="token keyword">const</span> std::string lv = lower_copy(v);</span>
+<span class="source-line" data-line="568">                <span class="token keyword">if</span>(lv==<span class="token string">&quot;auto&quot;</span> || lv==<span class="token string">&quot;default&quot;</span>) p.solver.gauss_order = -<span class="token number">1</span>;</span>
+<span class="source-line" data-line="569">                <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="570">                    p.solver.gauss_order = std::stoi(v);</span>
+<span class="source-line" data-line="571">                    <span class="token keyword">if</span>(p.solver.gauss_order &lt;= <span class="token number">0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;GAUSS_ORDER must be positive or auto.&quot;</span>);</span>
+<span class="source-line" data-line="572">                }</span>
+<span class="source-line" data-line="573">            }</span>
+<span class="source-line" data-line="574">            <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;multiscale_parallel_level&quot;</span>){</span>
+<span class="source-line" data-line="575">                ss &gt;&gt; p.solver.multiscale_parallel_level;</span>
+<span class="source-line" data-line="576">                p.solver.multiscale_parallel_level = lower_copy(p.solver.multiscale_parallel_level);</span>
+<span class="source-line" data-line="577">                <span class="token keyword">if</span>(p.solver.multiscale_parallel_level!=<span class="token string">&quot;macro&quot;</span> &amp;&amp;</span>
+<span class="source-line" data-line="578">                   p.solver.multiscale_parallel_level!=<span class="token string">&quot;rve&quot;</span> &amp;&amp;</span>
+<span class="source-line" data-line="579">                   p.solver.multiscale_parallel_level!=<span class="token string">&quot;hybrid&quot;</span>){</span>
+<span class="source-line" data-line="580">                    <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;multiscale_parallel_level must be macro, rve, or hybrid.&quot;</span>);</span>
+<span class="source-line" data-line="581">                }</span>
+<span class="source-line" data-line="582">            }</span>
+<span class="source-line" data-line="583">            <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;pcd_inner_pc&quot;</span>){</span>
+<span class="source-line" data-line="584">                ss&gt;&gt;p.solver.linear.pcd_inner_pc;</span>
+<span class="source-line" data-line="585">                p.solver.linear.pcd_kp_pc = p.solver.linear.pcd_inner_pc;</span>
+<span class="source-line" data-line="586">                p.solver.linear.pcd_ap_pc = p.solver.linear.pcd_inner_pc;</span>
+<span class="source-line" data-line="587">            }</span>
+<span class="source-line" data-line="588">            <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;pcd_inner_solver&quot;</span>){</span>
+<span class="source-line" data-line="589">                ss&gt;&gt;p.solver.linear.pcd_inner_solver;</span>
+<span class="source-line" data-line="590">                p.solver.linear.pcd_kp_solver = p.solver.linear.pcd_inner_solver;</span>
+<span class="source-line" data-line="591">                p.solver.linear.pcd_ap_solver = p.solver.linear.pcd_inner_solver;</span>
+<span class="source-line" data-line="592">            }</span>
+<span class="source-line" data-line="593">            <span class="token keyword">else</span> <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Unknown key in solver file: &quot;</span>+key);</span>
+<span class="source-line" data-line="594">        }</span>
+<span class="source-line" data-line="595">    }</span>
+<span class="source-line" data-line="596"> </span>
+<span class="source-line" data-line="597">    <span class="token comment">// ------------------------------------------------------------------------</span></span>
+<span class="source-line" data-line="598">    <span class="token comment">// Cross-file validation and defaults</span></span>
+<span class="source-line" data-line="599">    <span class="token comment">// ------------------------------------------------------------------------</span></span>
+<span class="source-line" data-line="600">    <span class="token keyword">if</span>(p.material.rho&lt;=<span class="token number">0.0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;rho must be positive.&quot;</span>);</span>
+<span class="source-line" data-line="601">    <span class="token keyword">if</span>(p.material.mu&lt;<span class="token number">0.0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;mu must be non-negative.&quot;</span>);</span>
+<span class="source-line" data-line="602">    <span class="token keyword">if</span>(p.material.structure_rho&lt;=<span class="token number">0.0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;structure_rho must be positive.&quot;</span>);</span>
+<span class="source-line" data-line="603">    <span class="token keyword">if</span>(p.material.youngs_modulus&lt;<span class="token number">0.0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;youngs_modulus must be non-negative.&quot;</span>);</span>
+<span class="source-line" data-line="604">    <span class="token keyword">if</span>(p.material.local_max_iter&lt;=<span class="token number">0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;ep_local_max_iter must be positive.&quot;</span>);</span>
+<span class="source-line" data-line="605">    <span class="token keyword">if</span>(p.material.local_tol&lt;=<span class="token number">0.0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;ep_local_tol must be positive.&quot;</span>);</span>
+<span class="source-line" data-line="606">    <span class="token keyword">if</span>(p.material.poisson_ratio&lt;=-<span class="token number">1.0</span> || p.material.poisson_ratio&gt;=<span class="token number">0.5</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;poisson_ratio must be in (-1,0.5).&quot;</span>);</span>
+<span class="source-line" data-line="607">    <span class="token keyword">if</span>(p.material.mesh_motion_coefficient&lt;<span class="token number">0.0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;mesh_motion_coefficient must be non-negative.&quot;</span>);</span>
+<span class="source-line" data-line="608">    <span class="token keyword">if</span>(p.material.mesh_motion_poisson_ratio&lt;=-<span class="token number">1.0</span> || p.material.mesh_motion_poisson_ratio&gt;=<span class="token number">0.5</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;mesh_motion_poisson_ratio must be in (-1,0.5).&quot;</span>);</span>
+<span class="source-line" data-line="609">    <span class="token keyword">if</span>(p.material.stabilization_parameter&lt;<span class="token number">0.0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;stabilization_parameter must be non-negative.&quot;</span>);</span>
+<span class="source-line" data-line="610">    {</span>
+<span class="source-line" data-line="611">        std::transform(p.material.mesh_motion_type.begin(), p.material.mesh_motion_type.end(),</span>
+<span class="source-line" data-line="612">                       p.material.mesh_motion_type.begin(),</span>
+<span class="source-line" data-line="613">                       [](<span class="token keyword">unsigned</span> <span class="token keyword">char</span> c){ <span class="token keyword">return</span> static_cast&lt;<span class="token keyword">char</span>&gt;(std::toupper(c)); });</span>
+<span class="source-line" data-line="614">        <span class="token keyword">if</span>(p.material.mesh_motion_type != <span class="token string">&quot;BH&quot;</span> &amp;&amp; p.material.mesh_motion_type != <span class="token string">&quot;HE&quot;</span>)</span>
+<span class="source-line" data-line="615">            <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;mesh_motion_type must be BH or HE.&quot;</span>);</span>
+<span class="source-line" data-line="616">    }</span>
+<span class="source-line" data-line="617">    <span class="token keyword">if</span>(p.solver.theta&lt;<span class="token number">0.0</span> || p.solver.theta&gt;<span class="token number">1.0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;theta must be in [0,1].&quot;</span>);</span>
+<span class="source-line" data-line="618">    <span class="token keyword">if</span>(p.solver.dt&lt;=<span class="token number">0.0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;dt must be positive.&quot;</span>);</span>
+<span class="source-line" data-line="619">    <span class="token keyword">if</span>(p.solver.total_time&lt;=<span class="token number">0.0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;total_time must be positive.&quot;</span>);</span>
+<span class="source-line" data-line="620">    <span class="token keyword">if</span>(p.solver.dt_max&lt;=<span class="token number">0.0</span>) p.solver.dt_max = p.solver.dt;</span>
+<span class="source-line" data-line="621"> </span>
+<span class="source-line" data-line="622">    <span class="token keyword">return</span> p;</span>
+<span class="source-line" data-line="623">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-9e22423165082e.html">← read_on_off_bool()</a><a href="fn-ce49048bcbdbc8.html">read_postprocessing_parameters() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

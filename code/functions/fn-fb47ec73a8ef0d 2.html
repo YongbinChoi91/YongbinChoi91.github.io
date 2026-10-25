@@ -1,0 +1,68 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements make reduced system workspace."><title>make_reduced_system_workspace() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../solver.html?file=solver.cpp">← core/solver/solver.cpp</a>
+<p class="eyebrow">Function detail</p><h1>make_reduced_system_workspace()</h1><p class="lead">Implements make reduced system workspace.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static ReducedSystemWorkspace make_reduced_system_workspace(const CSRMatrix &amp;K, const BoundaryData &amp;bc)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/solver/solver.cpp:622</dd></div><div><dt>Declaration</dt><dd>core/solver/solver.cpp:622</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/solver/solver.cpp#L622" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 622–676</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="622"><span class="token keyword">static</span> ReducedSystemWorkspace make_reduced_system_workspace(</span>
+<span class="source-line" data-line="623">    <span class="token keyword">const</span> CSRMatrix&amp; K,</span>
+<span class="source-line" data-line="624">    <span class="token keyword">const</span> BoundaryData&amp; bc</span>
+<span class="source-line" data-line="625">){</span>
+<span class="source-line" data-line="626">    <span class="token keyword">const</span> <span class="token keyword">int</span> ndofs = K.n_rows;</span>
+<span class="source-line" data-line="627">    <span class="token keyword">if</span>(K.n_cols != ndofs) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Reduced workspace requires a square matrix.&quot;</span>);</span>
+<span class="source-line" data-line="628"> </span>
+<span class="source-line" data-line="629">    ReducedSystemWorkspace w;</span>
+<span class="source-line" data-line="630">    w.fixed_mask.assign(ndofs,<span class="token number">0</span>);</span>
+<span class="source-line" data-line="631">    <span class="token keyword">for</span>(<span class="token keyword">int</span> d:bc.dofs){</span>
+<span class="source-line" data-line="632">        <span class="token keyword">if</span>(d&lt;<span class="token number">0</span> || d&gt;=ndofs) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Fixed DOF out of range while building reduced workspace.&quot;</span>);</span>
+<span class="source-line" data-line="633">        w.fixed_mask[d]=<span class="token number">1</span>;</span>
+<span class="source-line" data-line="634">    }</span>
+<span class="source-line" data-line="635"> </span>
+<span class="source-line" data-line="636">    w.free_dofs.reserve(std::max(<span class="token number">0</span>, ndofs-static_cast&lt;<span class="token keyword">int</span>&gt;(bc.dofs.size())));</span>
+<span class="source-line" data-line="637">    std::vector&lt;<span class="token keyword">int</span>&gt; old_to_new(ndofs,-<span class="token number">1</span>);</span>
+<span class="source-line" data-line="638">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;ndofs;++i){</span>
+<span class="source-line" data-line="639">        <span class="token keyword">if</span>(!w.fixed_mask[i]){</span>
+<span class="source-line" data-line="640">            old_to_new[i] = static_cast&lt;<span class="token keyword">int</span>&gt;(w.free_dofs.size());</span>
+<span class="source-line" data-line="641">            w.free_dofs.push_back(i);</span>
+<span class="source-line" data-line="642">        }</span>
+<span class="source-line" data-line="643">    }</span>
+<span class="source-line" data-line="644">    <span class="token keyword">if</span>(w.free_dofs.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;No free DOFs in reduced workspace.&quot;</span>);</span>
+<span class="source-line" data-line="645"> </span>
+<span class="source-line" data-line="646">    <span class="token keyword">const</span> <span class="token keyword">int</span> nf = static_cast&lt;<span class="token keyword">int</span>&gt;(w.free_dofs.size());</span>
+<span class="source-line" data-line="647">    w.Kff.n_rows = nf;</span>
+<span class="source-line" data-line="648">    w.Kff.n_cols = nf;</span>
+<span class="source-line" data-line="649">    w.Kff.row_ptr.assign(nf+<span class="token number">1</span>,<span class="token number">0</span>);</span>
+<span class="source-line" data-line="650"> </span>
+<span class="source-line" data-line="651">    <span class="token keyword">int</span> nnz=<span class="token number">0</span>;</span>
+<span class="source-line" data-line="652">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;nf;++i){</span>
+<span class="source-line" data-line="653">        <span class="token keyword">const</span> <span class="token keyword">int</span> row = w.free_dofs[i];</span>
+<span class="source-line" data-line="654">        w.Kff.row_ptr[i]=nnz;</span>
+<span class="source-line" data-line="655">        <span class="token keyword">for</span>(<span class="token keyword">int</span> p=K.row_ptr[row]; p&lt;K.row_ptr[row+<span class="token number">1</span>]; ++p){</span>
+<span class="source-line" data-line="656">            <span class="token keyword">const</span> <span class="token keyword">int</span> j = old_to_new[K.col_idx[p]];</span>
+<span class="source-line" data-line="657">            <span class="token keyword">if</span>(j&gt;=<span class="token number">0</span>) ++nnz;</span>
+<span class="source-line" data-line="658">        }</span>
+<span class="source-line" data-line="659">    }</span>
+<span class="source-line" data-line="660">    w.Kff.row_ptr[nf]=nnz;</span>
+<span class="source-line" data-line="661">    w.Kff.col_idx.reserve(nnz);</span>
+<span class="source-line" data-line="662">    w.Kff.values.assign(nnz,<span class="token number">0.0</span>);</span>
+<span class="source-line" data-line="663">    w.kff_value_from_full.reserve(nnz);</span>
+<span class="source-line" data-line="664"> </span>
+<span class="source-line" data-line="665">    <span class="token keyword">for</span>(<span class="token keyword">int</span> i=<span class="token number">0</span>;i&lt;nf;++i){</span>
+<span class="source-line" data-line="666">        <span class="token keyword">const</span> <span class="token keyword">int</span> row = w.free_dofs[i];</span>
+<span class="source-line" data-line="667">        <span class="token keyword">for</span>(<span class="token keyword">int</span> p=K.row_ptr[row]; p&lt;K.row_ptr[row+<span class="token number">1</span>]; ++p){</span>
+<span class="source-line" data-line="668">            <span class="token keyword">const</span> <span class="token keyword">int</span> j = old_to_new[K.col_idx[p]];</span>
+<span class="source-line" data-line="669">            <span class="token keyword">if</span>(j&gt;=<span class="token number">0</span>){</span>
+<span class="source-line" data-line="670">                w.Kff.col_idx.push_back(j);</span>
+<span class="source-line" data-line="671">                w.kff_value_from_full.push_back(p);</span>
+<span class="source-line" data-line="672">            }</span>
+<span class="source-line" data-line="673">        }</span>
+<span class="source-line" data-line="674">    }</span>
+<span class="source-line" data-line="675">    <span class="token keyword">return</span> w;</span>
+<span class="source-line" data-line="676">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-90c8da0ce3d5ba.html">← make_linear_settings_for_problem()</a><a href="fn-c6d08111629b79.html">residual_norm_free() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

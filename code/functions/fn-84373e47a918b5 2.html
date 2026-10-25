@@ -1,0 +1,18 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements unflatten tensor2 gradient."><title>unflatten_tensor2_gradient() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../hpx.html?file=autodiff.h">← core/hpx/autodiff.h</a>
+<p class="eyebrow">Function detail</p><h1>unflatten_tensor2_gradient()</h1><p class="lead">Implements unflatten tensor2 gradient.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>std::array&lt; std::array&lt; Scalar, C &gt;, R &gt; hpx::detail::unflatten_tensor2_gradient(const std::array&lt; Scalar, R *C &gt; &amp;g)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/hpx/autodiff.h:522</dd></div><div><dt>Declaration</dt><dd>core/hpx/autodiff.h:522</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/hpx/autodiff.h#L522" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 522–526</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="522"><span class="token keyword">inline</span> std::array&lt;std::array&lt;Scalar, C&gt;, R&gt; unflatten_tensor2_gradient(<span class="token keyword">const</span> std::array&lt;Scalar, R * C&gt;&amp; g) {</span>
+<span class="source-line" data-line="523">    std::array&lt;std::array&lt;Scalar, C&gt;, R&gt; G{};</span>
+<span class="source-line" data-line="524">    <span class="token keyword">for</span> (std::size_t i = <span class="token number">0</span>; i &lt; R; ++i) <span class="token keyword">for</span> (std::size_t j = <span class="token number">0</span>; j &lt; C; ++j) G[i][j] = g[i * C + j];</span>
+<span class="source-line" data-line="525">    <span class="token keyword">return</span> G;</span>
+<span class="source-line" data-line="526">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-7e6655a9f64b7b.html">← unflatten_vector_gradient()</a><a href="fn-6a750ead77ca8a.html">unflatten_tensor2_output_tensor2_input_gradient() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

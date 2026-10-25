@@ -1,0 +1,34 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Generate an SVG force plot from a force CSV file."><title>write_force_svg_from_csv() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=postprocess_utils.cpp">← core/io/postprocess_utils.cpp</a>
+<p class="eyebrow">Function detail</p><h1>write_force_svg_from_csv()</h1><p class="lead">Generate an SVG force plot from a force CSV file.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>void write_force_svg_from_csv(const std::string &amp;csv_filename, const std::string &amp;svg_filename)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/postprocess_utils.cpp:1380</dd></div><div><dt>Declaration</dt><dd>core/io/postprocess.h:325</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/postprocess_utils.cpp#L1380" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 1380–1400</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="1380"><span class="token keyword">void</span> write_force_svg_from_csv(<span class="token keyword">const</span> std::string&amp; csv_filename,<span class="token keyword">const</span> std::string&amp; svg_filename){</span>
+<span class="source-line" data-line="1381">    std::ifstream in(csv_filename);</span>
+<span class="source-line" data-line="1382">    <span class="token keyword">if</span>(!in) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Could not open force CSV for SVG plotting: &quot;</span>+csv_filename);</span>
+<span class="source-line" data-line="1383">    std::string line;</span>
+<span class="source-line" data-line="1384">    std::getline(in,line); <span class="token comment">// header</span></span>
+<span class="source-line" data-line="1385">    std::vector&lt;<span class="token keyword">double</span>&gt; t, drag, lift;</span>
+<span class="source-line" data-line="1386">    <span class="token keyword">while</span>(std::getline(in,line)){</span>
+<span class="source-line" data-line="1387">        <span class="token keyword">if</span>(line.empty()) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="1388">        std::stringstream ss(line);</span>
+<span class="source-line" data-line="1389">        std::vector&lt;<span class="token keyword">double</span>&gt; vals;</span>
+<span class="source-line" data-line="1390">        std::string item;</span>
+<span class="source-line" data-line="1391">        <span class="token keyword">while</span>(std::getline(ss,item,<span class="token string">&#x27;,&#x27;</span>)) vals.push_back(std::stod(item));</span>
+<span class="source-line" data-line="1392">        <span class="token keyword">if</span>(vals.size()&gt;=<span class="token number">6</span>){ t.push_back(vals[<span class="token number">0</span>]); drag.push_back(vals[<span class="token number">4</span>]); lift.push_back(vals[<span class="token number">5</span>]); }</span>
+<span class="source-line" data-line="1393">        <span class="token keyword">else</span> <span class="token keyword">if</span>(vals.size()&gt;=<span class="token number">3</span>){ t.push_back(vals[<span class="token number">0</span>]); drag.push_back(vals[<span class="token number">1</span>]); lift.push_back(vals[<span class="token number">2</span>]); }</span>
+<span class="source-line" data-line="1394">    }</span>
+<span class="source-line" data-line="1395">    <span class="token keyword">if</span>(t.empty()) <span class="token keyword">return</span>;</span>
+<span class="source-line" data-line="1396">    write_xy_svg_plot(svg_filename,<span class="token string">&quot;Drag / Lift history&quot;</span>,<span class="token string">&quot;time&quot;</span>,<span class="token string">&quot;force&quot;</span>,t,{</span>
+<span class="source-line" data-line="1397">        {<span class="token string">&quot;Drag&quot;</span>,<span class="token string">&quot;#1f77b4&quot;</span>,drag},</span>
+<span class="source-line" data-line="1398">        {<span class="token string">&quot;Lift&quot;</span>,<span class="token string">&quot;#d62728&quot;</span>,lift}</span>
+<span class="source-line" data-line="1399">    });</span>
+<span class="source-line" data-line="1400">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-aa858422b74d2e.html">← append_force_csv()</a><a href="fn-2c16b3a1a1c043.html">precompute_boundary_force() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

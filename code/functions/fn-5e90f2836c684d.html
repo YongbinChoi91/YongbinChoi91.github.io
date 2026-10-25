@@ -1,0 +1,17 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements coord dist2."><title>coord_dist2() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=postprocess_utils.cpp">← core/io/postprocess_utils.cpp</a>
+<p class="eyebrow">Function detail</p><h1>coord_dist2()</h1><p class="lead">Implements coord dist2.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static double coord_dist2(const std::array&lt; double, 3 &gt; &amp;a, const std::array&lt; double, 3 &gt; &amp;b)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/postprocess_utils.cpp:602</dd></div><div><dt>Declaration</dt><dd>core/io/postprocess_utils.cpp:602</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/postprocess_utils.cpp#L602" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 602–605</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="602"><span class="token keyword">static</span> <span class="token keyword">double</span> coord_dist2(<span class="token keyword">const</span> std::array&lt;<span class="token keyword">double</span>,<span class="token number">3</span>&gt;&amp; a,<span class="token keyword">const</span> std::array&lt;<span class="token keyword">double</span>,<span class="token number">3</span>&gt;&amp; b){</span>
+<span class="source-line" data-line="603">    <span class="token keyword">const</span> <span class="token keyword">double</span> dx=a[<span class="token number">0</span>]-b[<span class="token number">0</span>], dy=a[<span class="token number">1</span>]-b[<span class="token number">1</span>], dz=a[<span class="token number">2</span>]-b[<span class="token number">2</span>];</span>
+<span class="source-line" data-line="604">    <span class="token keyword">return</span> dx*dx+dy*dy+dz*dz;</span>
+<span class="source-line" data-line="605">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-0aa891a8b5bac1.html">← element_type_from_connectivity()</a><a href="fn-5d43acc470ac64.html">edge_coordinates_match_boundary() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

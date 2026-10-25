@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   Multi-domain Mesh &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body class="framework-detail-page">
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap wide-page-wrap">
+    <a class="back-button route-card" href="framework-mesh.html">
+     &larr; Back to Mesh / DOF Layout
+    </a>
+    <p class="eyebrow">
+     Framework / Mesh format
+    </p>
+    <h1>
+     Multi-domain Mesh
+    </h1>
+    <p class="lead">
+     A multi-domain mesh is used when coupled regions share a global problem while each domain contributes its own element connectivity.
+    </p>
+   </section>
+   <section class="doc-section section-wrap wide-page-wrap framework-detail-wide">
+    <article class="framework-hero-card">
+     <span class="tag">
+      Coupled domains
+     </span>
+     <h2>
+      Use a user-facing multi-domain description, keep the internal parser name in the example.
+     </h2>
+     <p>
+      The website describes this as a
+      <strong>
+       multi-domain mesh
+      </strong>
+      . Internally, the current shared fluid/solid format is parsed with
+      <code>
+       MESH_TYPE FSI_SHARED
+      </code>
+      , where the global node/DOF pool can be shared while each domain lists only the element rows it assembles.
+     </p>
+    </article>
+    <div class="example-grid two-col uneven">
+     <article class="detail-card">
+      <h2>
+       Small conceptual example
+      </h2>
+      <pre class="example-code"><code>DIM 2
+MESH_TYPE FSI_SHARED
+FIELDS velocity displacement pressure
+
+VELOCITY_NODES
+0 0.0 0.0
+1 1.0 0.0
+2 1.0 1.0
+3 0.0 1.0
+
+DISPLACEMENT_NODES
+0 0.0 0.0
+1 1.0 0.0
+2 1.0 1.0
+3 0.0 1.0
+
+PRESSURE_NODES
+0 0.0 0.0
+1 1.0 0.0
+2 1.0 1.0
+3 0.0 1.0
+
+DOMAIN fluid
+TYPE Fluid
+VELOCITY_ELEMENTS
+0 0 1 2 3
+PRESSURE_ELEMENTS
+0 0 1 2 3
+
+DOMAIN solid
+TYPE Solid
+DISPLACEMENT_ELEMENTS
+0 0 1 2 3</code></pre>
+     </article>
+     <article class="detail-card">
+      <h2>
+       How to read it
+      </h2>
+      <ul class="input-key-reference">
+       <li>
+        The global field tables define the available coordinates and DOF pools.
+       </li>
+       <li>
+        Each
+        <code>
+         DOMAIN
+        </code>
+        section contributes the element connectivity for its subproblem.
+       </li>
+       <li>
+        The solver still sees one
+        <code>
+         Problem
+        </code>
+        object with one global DOF vector.
+       </li>
+       <li>
+        This naming keeps the web page general enough for FSI, thermo-fluid, solid-thermal, and future coupled domains.
+       </li>
+      </ul>
+     </article>
+    </div>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="description" content="HiPaCs application entry points and runtime input-file structure.">
+ <title>Setup · HiPaCs</title>
+ <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+ <header class="topbar">
+  <a class="brand" href="../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a>
+  <button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button>
+  <nav class="top-links" aria-label="Primary navigation">
+   <a href="../index.html">Home</a><a href="../main.html">Main Page</a><a href="../framework.html">Framework</a>
+   <a href="../architecture.html">Code Structure</a><a href="../applications.html">Applications</a>
+   <a href="../gallery.html">Gallery</a><a href="../install.html">Install</a><a href="../contact.html">Contact</a>
+  </nav>
+ </header>
+ <main>
+  <section class="subpage-hero section-wrap wide-page-wrap">
+   <a class="back-button" href="../architecture.html">← Code Structure</a>
+   <p class="eyebrow">Setup</p>
+   <h1>Application and input setup</h1>
+   <p class="lead">Application drivers select the solve path and load the mesh, boundary, field, material, solver, and output configuration.</p>
+  </section>
+  <section class="doc-section section-wrap wide-page-wrap setup-detail-page">
+   <div class="section-heading">
+    <p class="eyebrow">Application entry points</p>
+    <h2>Top-level drivers</h2>
+    <p>These files coordinate input, solve, and output. Implementation details remain in the core modules.</p>
+   </div>
+   <div class="setup-driver-grid">
+    <article class="setup-file-card"><code>apps/main.cpp</code><h3>General simulation driver</h3><p>Runs the standard FEM, solid, fluid, FSI, dynamic, and VEM workflows.</p></article>
+    <article class="setup-file-card"><code>apps/multiscale_main.cpp</code><h3>Multiscale driver</h3><p>Coordinates the macro problem with microscopic RVE configuration and solves.</p></article>
+    <article class="setup-file-card"><code>apps/single_rve_pbc.cpp</code><h3>Single-RVE driver</h3><p>Runs one periodic RVE problem for direct homogenization and diagnostics.</p></article>
+   </div>
+
+   <div class="section-heading setup-input-heading">
+    <p class="eyebrow">Runtime input</p>
+    <h2>Input files and major structure</h2>
+    <p>The selected application reads these files before entering the core solve path.</p>
+   </div>
+   <div class="setup-input-grid">
+    <article class="setup-file-card setup-file-card-wide">
+     <code>ProblemMesh.txt</code><h3>Mesh and domain topology</h3><p>Defines spatial dimension, mesh type, active fields, nodes, boundary groups, domains, element types, and element connectivity.</p>
+     <ul class="setup-key-list"><li>DIM</li><li>MESH_TYPE</li><li>FIELDS</li><li>*_NODES</li><li>MIXED_BOUNDARY_*</li><li>DOMAIN / TYPE</li><li>MIXED_ELEMENTS</li></ul>
+    </article>
+    <article class="setup-file-card">
+     <code>BC.txt</code><h3>Boundary conditions</h3><p>Assigns prescribed values and loads to named mesh boundary groups and field components.</p>
+     <ul class="setup-key-list"><li>DIRICHLET</li><li>NEUMANN</li><li>boundary selector</li><li>field component</li><li>value expression</li></ul>
+    </article>
+    <article class="setup-file-card">
+     <code>DOFS_info.txt</code><h3>Field and local-state layout</h3><p>Controls active field ordering, domain participation, history variables, and optional VEM interpolation order.</p>
+     <ul class="setup-key-list"><li>field_key</li><li>domain</li><li>history</li><li>vem_order</li></ul>
+    </article>
+    <article class="setup-file-card">
+     <code>Material.txt</code><h3>Physical and material parameters</h3><p>Provides fluid, structure, constitutive, and mesh-motion constants used by the selected weak form.</p>
+     <ul class="setup-key-list"><li>rho / mu</li><li>youngs_modulus</li><li>poisson_ratio</li><li>structure_rho</li><li>mesh_motion_*</li></ul>
+    </article>
+    <article class="setup-file-card">
+     <code>Solver.txt</code><h3>Time and nonlinear/linear solve controls</h3><p>Configures quadrature, time stepping, Newton convergence, backend selection, KSP/PC, Schur options, and diagnostics.</p>
+     <ul class="setup-key-list"><li>GAUSS_ORDER</li><li>dt / total_time</li><li>max_iter / tol</li><li>solver_backend</li><li>linear_solver</li><li>preconditioner</li><li>fieldsplit_* / schur_*</li></ul>
+    </article>
+    <article class="setup-file-card">
+     <code>Postprocessing.txt</code><h3>Output and derived results</h3><p>Controls output locations and VTK, HDF5, CSV, force, minimum-Jacobian, sampling, and plot generation.</p>
+     <ul class="setup-key-list"><li>output_root</li><li>vtk_output</li><li>hdf5_output</li><li>force_output</li><li>minJ_output</li><li>hysteresis_output</li></ul>
+    </article>
+   </div>
+  </section>
+ </main>
+ <script defer src="../assets/js/main.js"></script>
+</body>
+</html>

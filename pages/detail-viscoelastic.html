@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   Finite-strain viscoelasticity with local internal metric &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap wide-page-wrap">
+    <a class="back-button route-card" href="app-solid-inelastic.html">
+     &larr; Back to Inelastic Solids
+    </a>
+    <p class="eyebrow">
+     Solid Mechanics / Inelastic / Viscoelasticity
+    </p>
+    <h1>
+     Finite-strain viscoelasticity with local internal metric
+    </h1>
+    <p class="lead">
+     This page uses the same documentation platform as the elastoplastic example, but the local state is now a
+            viscous right-Cauchy-Green-type metric. The global solve is still displacement-only; the history variables
+            live only at Gauss points and are updated by a local Newton problem.
+    </p>
+   </section>
+   <section class="doc-section section-wrap plasticity-document-section viscoelastic-document-section">
+    <div class="plasticity-document-panel viscoelastic-document-panel">
+     <div aria-label="Viscoelasticity documentation tabs" class="plasticity-tabs" role="tablist">
+      <button aria-selected="true" class="active" data-viscoelastic-tab="theory" role="tab" type="button">
+       Theory
+      </button>
+      <button aria-selected="false" data-viscoelastic-tab="simulation" role="tab" type="button">
+       Simulation
+      </button>
+     </div>
+     <div class="plasticity-tab-panel active" data-viscoelastic-panel="theory" role="tabpanel">
+      <div class="section-heading">
+       <p class="eyebrow">
+        Theory
+       </p>
+       <h2>
+        Finite-strain viscoelastic update from a local metric equation.
+       </h2>
+       <p>
+        The unknown solved by the global Newton method is the displacement field. The viscous internal variable
+                  is stored locally as a symmetric tensor \(\mathbf{C}_v\). At each Gauss point, the current deformation
+                  gradient \(\mathbf{F}\) and the previous accepted history \(\mathbf{C}_{v,n}\) define a nonlinear local
+                  residual \(\mathbf{Q}=\mathbf{0}\). Solving this local problem gives the updated history and the
+                  algorithmic stress used in the global weak form.
+       </p>
+      </div>
+      <div class="math-explain-grid theory-grid">
+       <article class="math-card">
+        <span class="tag">
+         1 &middot; Kinematics
+        </span>
+        <h3>
+         Current deformation and elastic left metric
+        </h3>
+        <div class="formula-block">
+         \[
+                    \mathbf{F}=\mathbf{I}+\nabla_0\mathbf{u}, \qquad
+                    \mathbf{C}=\mathbf{F}^{T}\mathbf{F}
+                  \]
+        </div>
+        <div class="formula-block">
+         \[
+                    \mathbf{b}_e=\mathbf{F}\mathbf{C}_v^{-1}\mathbf{F}^{T}
+                  \]
+        </div>
+        <p>
+         The total deformation is measured by \(\mathbf{F}\), while the viscous metric \(\mathbf{C}_v\)
+                    separates the elastic part through \(\mathbf{b}_e\). Initially, the history is zero, meaning
+                    \(\mathbf{C}_v=\mathbf{I}\).
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         2 &middot; History variables
+        </span>
+        <h3>
+         Stored Gauss-point metric
+        </h3>
+        <div class="formula-block">
+         \[
+                    \mathbf{C}_v(\mathbf{h})=
+                    \begin{bmatrix}
+                    1+h_{11} &amp; h_{12} &amp; 0 \\
+                    h_{12} &amp; 1+h_{22} &amp; 0 \\
+                    0 &amp; 0 &amp; 1+h_{33}
+                    \end{bmatrix}
+                    \qquad \text{plane strain}
+                  \]
+        </div>
+        <div class="formula-block">
+         \[
+                    \mathbf{h}_{2D}=\begin{bmatrix}
+                    h_{11} \\
+                    h_{22} \\
+                    h_{33} \\
+                    h_{12}
+                    \end{bmatrix}
+                    =
+                    \begin{bmatrix}
+                    C_{v,11}-1 \\
+                    C_{v,22}-1 \\
+                    C_{v,33}-1 \\
+                    C_{v,12}
+                    \end{bmatrix}
+                  \]
+        </div>
+        <p>
+         The website shows the history in tensor form first, matching the plasticity page style. The code stores
+                    the independent entries as a compact Gauss-point vector only for memory layout. At initialization
+                    \(\mathbf{h}=\mathbf{0}\), so \(\mathbf{C}_v=\mathbf{I}\).
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         3 &middot; Stress
+        </span>
+        <h3>
+         Kirchhoff stress from the elastic metric
+        </h3>
+        <div class="formula-block">
+         \[
+                    \boldsymbol{\tau}=2\mathbf{b}_e\frac{\partial \psi(\mathbf{b}_e)}{\partial \mathbf{b}_e}
+                  \]
+        </div>
+        <div class="formula-block">
+         \[
+                    \boldsymbol{\tau}=p\mathbf{I}+\mu J_b^{-1/3}
+                    \left(\mathbf{b}_e-\frac{\operatorname{tr}(\mathbf{b}_e)}{3}\mathbf{I}\right),
+                    \qquad p=\frac{\kappa}{2}(J_b-1)
+                  \]
+        </div>
+        <p>
+         The model uses a compressible Neo-Hookean-type Kirchhoff stress, but it is evaluated on the elastic
+                    metric \(\mathbf{b}_e\), not directly on the total \(\mathbf{F}\mathbf{F}^T\).
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         4 &middot; Local residual
+        </span>
+        <h3>
+         Viscous flow equation
+        </h3>
+        <div class="formula-block">
+         \[
+                    \dot{\mathbf{C}}_v\approx\frac{\mathbf{C}_v-\mathbf{C}_{v,n}}{\Delta t}
+                  \]
+        </div>
+        <div class="formula-block">
+         \[
+                    \mathbf{d}_v=\operatorname{sym}\left(
+                    \frac{1}{2}\mathbf{F}^{-T}\dot{\mathbf{C}}_v\mathbf{C}^{-1}\mathbf{F}^{T}
+                    \right)
+                  \]
+        </div>
+        <div class="formula-block">
+         \[
+                    \mathbf{Q}=-\operatorname{dev}\left(\boldsymbol{\tau}-\eta\mathbf{d}_v\right),
+                    \qquad \det(\mathbf{C}_v)-1=0
+                  \]
+        </div>
+        <p>
+         The deviatoric balance drives the viscous evolution, while the determinant constraint keeps the
+                    internal metric volume-preserving. The viscosity \(\eta\) controls the relaxation speed and hysteresis
+                    width.
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         5 &middot; Consistent tangent
+        </span>
+        <h3>
+         Implicit differentiation of the local solve
+        </h3>
+        <div class="formula-block">
+         \[
+                    \mathbf{Q}(\mathbf{F},\mathbf{h})=\mathbf{0}, \qquad
+                    \frac{d\mathbf{h}}{d\mathbf{F}}
+                    =-\mathbf{Q}_{\mathbf{h}}^{-1}\mathbf{Q}_{\mathbf{F}}
+                  \]
+        </div>
+        <p>
+         The local Newton problem is solved in double precision. Then the derivative of the converged history
+                    with respect to \(\mathbf{F}\) is injected into the AD variables, so the global tangent includes the
+                    hidden dependence \(\mathbf{h}(\mathbf{F})\).
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         6 &middot; Weak form
+        </span>
+        <h3>
+         Global displacement residual
+        </h3>
+        <div class="formula-block">
+         \[
+                    G_e=\int_{\Omega_e}\mathbf{P}(\mathbf{F},\mathbf{h}(\mathbf{F})):
+                    \nabla_0\delta\mathbf{u}\;dV
+                  \]
+        </div>
+        <p>
+         After the local update, the element contributes the same scalar weak-form potential style used by the
+                    other solid models. AD extracts the residual and the global Newton tangent from this scalar expression.
+        </p>
+       </article>
+      </div>
+      <div class="example-grid two-col">
+       <article class="detail-card">
+        <h2>
+         Why this belongs in the inelastic section
+        </h2>
+        <p>
+         The response depends on the loading history and the time step. Even if the global unknown vector has
+                    only displacement DOFs, each integration point carries memory through \(\mathbf{C}_{v,n}\).
+        </p>
+       </article>
+       <article class="detail-card">
+        <h2>
+         What visitors should notice
+        </h2>
+        <p>
+         Plasticity and viscoelasticity share the same platform: declare history variables, solve a local
+                    residual, recover the consistent tangent, assemble through the generic CSR path, and plot the global
+                    response through the same postprocessing module.
+        </p>
+       </article>
+      </div>
+     </div>
+     <div class="plasticity-tab-panel" data-viscoelastic-panel="simulation" role="tabpanel">
+      <div class="section-heading actual-code-intro">
+       <p class="eyebrow">
+        Simulation
+       </p>
+       <h2>
+        Input files and implementation flow for the cyclic example.
+       </h2>
+       <p>
+        This section explains how the theory is connected to the actual C++ run. The example uses a
+                  displacement-only mesh, a four-variable viscoelastic history declaration, cyclic displacement control,
+                  local-history diagnostics, and hysteresis postprocessing.
+       </p>
+      </div>
+      <div class="example-grid two-col">
+       <article class="detail-card">
+        <span class="tag">
+         DOFS_info.txt
+        </span>
+        <h2>
+         Declare global and local variables separately.
+        </h2>
+        <pre class="example-code"><code>field_key displacement
+history viscoelastic 4</code></pre>
+        <p>
+         The first line creates the global displacement DOFs. The second line creates four local history values
+                    at every Gauss point; these values are never assembled as global unknowns.
+        </p>
+       </article>
+       <article class="detail-card">
+        <span class="tag">
+         Material.txt
+        </span>
+        <h2>
+         Use elastic constants plus viscosity.
+        </h2>
+        <pre class="example-code"><code>YOUNGS_MODULUS 200.0
+POISSON_RATIO 0.3
+VISCO_ELASTIC_ETA 50
+LOCAL_RESIDUAL_TOL 1.0e-10
+LOCAL_MAX_ITER 25</code></pre>
+        <p>
+         \(E\) and \(\nu\) define the equilibrium elastic response. \(\eta\) controls the rate-dependent
+                    part of the material and therefore the size of the hysteresis loop.
+        </p>
+       </article>
+      </div>
+      <div class="example-grid two-col">
+       <article class="detail-card">
+        <span class="tag">
+         BC.txt
+        </span>
+        <h2>
+         Cyclic displacement loading.
+        </h2>
+        <pre class="example-code"><code>DIRICHLET LEFT ux 0.0
+DIRICHLET BOTTOM uy 0.0
+DIRICHLET TOP uy piecewise_cycle(4.0; 0,0; 1.0,0.15; 2.0,0; 3.0,-0.15; 4.0,0)</code></pre>
+        <p>
+         The horizontal motion is fixed on the left, the bottom vertical motion is fixed, and the top boundary
+                    receives a periodic vertical displacement over a four-second cycle.
+        </p>
+       </article>
+       <article class="detail-card">
+        <span class="tag">
+         Postprocessing.txt
+        </span>
+        <h2>
+         Write the hysteresis curve directly.
+        </h2>
+        <pre class="example-code"><code>hysteresis_output on
+hysteresis_x_axis prescribed TOP uy 1.0
+hysteresis_y_axis reaction BOTTOM uy 1.0</code></pre>
+        <p>
+         The x-axis follows the prescribed top displacement and the y-axis stores the bottom reaction force.
+                    This gives a clean force-displacement loop for the viscoelastic response.
+        </p>
+       </article>
+      </div>
+      <div class="example-grid two-col local-equation-grid">
+       <article class="detail-card">
+        <span class="tag">
+         Local residual Q
+        </span>
+        <h2>
+         The Gauss-point equation is written explicitly.
+        </h2>
+        <p>
+         In the simulation page the hidden algorithm should be visible: the code first builds
+                    \(\mathbf{C}_v\), \(\mathbf{C}_{v,n}\), \(\mathbf{C}=\mathbf{F}^T\mathbf{F}\),
+                    \(\dot{\mathbf{C}}_v\), \(\mathbf{b}_e\), \(\boldsymbol{\tau}\), and
+                    \(\mathbf{d}_v\). Then it solves the residual
+                    \(\mathbf{Q}(\mathbf{F},\mathbf{h})=\mathbf{0}\) for the updated history.
+        </p>
+        <div class="formula-block">
+         \[
+                    \mathbf{Q}_{dev}=-\operatorname{dev}\left(\boldsymbol{\tau}-\eta\mathbf{d}_v\right),
+                    \qquad Q_{vol}=\det(\mathbf{C}_v)-1
+                  \]
+        </div>
+        <div class="formula-block">
+         \[
+                    \mathbf{Q}_{2D}=\{Z_{11},\;Z_{22},\;\det(\mathbf{C}_v)-1,\;Z_{12}\},
+                    \quad \mathbf{Z}=\mathbf{Q}_{dev}
+                  \]
+        </div>
+       </article>
+       <article class="detail-card">
+        <span class="tag">
+         Stress recovery
+        </span>
+        <h2>
+         After local convergence, P is evaluated from the updated metric.
+        </h2>
+        <p>
+         Once local Newton converges, the trial history \(\mathbf{h}_{n+1}\) is inserted back into the
+                    AD graph using \(d\mathbf{h}/d\mathbf{F}\). The code then reconstructs \(\mathbf{C}_v\), computes
+                    \(\mathbf{b}_e\), evaluates \(\boldsymbol{\tau}\), and finally obtains the first Piola stress.
+        </p>
+        <div class="formula-block">
+         \[
+                    \mathbf{P}=\boldsymbol{\tau}\mathbf{F}^{-T},
+                    \qquad
+                    G_e=\int_{\Omega_e}\mathbf{P}:\nabla_0\delta\mathbf{u}\;dV
+                  \]
+        </div>
+       </article>
+      </div>
+      <div class="actual-code-stack">
+       <details class="code-details" open="">
+        <summary>
+         1. The active model is displacement-only.
+        </summary>
+        <pre class="example-code"><code>const char* active_constitutive_model_name() {
+    return "viscoelastic_solid_displacement_history";
+}
+
+std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
+    (void)mesh;
+    return {"displacement"};
+}</code></pre>
+       </details>
+       <details class="code-details">
+        <summary>
+         2. Material parameters are read into the local viscoelastic model.
+        </summary>
+        <pre class="example-code"><code>m.E = params.material.youngs_modulus;
+m.nu = params.material.poisson_ratio;
+m.eta = params.material.visco_elastic_eta;
+m.local_tol = params.material.local_tol;
+m.local_max_iter = params.material.local_max_iter;</code></pre>
+       </details>
+       <details class="code-details">
+        <summary>
+         3. At each Gauss point, the previous accepted history is used as the local state.
+        </summary>
+        <pre class="example-code"><code>if (gh.h_n.size() &lt; required_history) {
+    gh.h_n.assign(required_history, 0.0);
+    gh.h_trial.assign(required_history, 0.0);
+}
+
+const Mat3T&lt;double&gt; F_double =
+    hpx::deformation_gradient_array&lt;double&gt;(dim, dN, u_double);</code></pre>
+       </details>
+       <details class="code-details">
+        <summary>
+         4. The local residual Q is the actual algorithm, not just a black-box update.
+        </summary>
+        <pre class="example-code"><code>const auto Cv = Cv_from_hT&lt;T&gt;(h, dim);
+const auto Cv_n = Cv_from_hT&lt;T&gt;(h_n, dim);
+const auto C = hpx::right_cauchy_green3&lt;T&gt;(F);
+const auto dCdt = (Cv - Cv_n) / dt;
+
+const auto be  = F * inverse(Cv) * transpose(F);
+const auto tau = tau_from_beT&lt;T&gt;(be, mat);
+const auto dv  = sym(0.5 * inverse(transpose(F)) * dCdt * inverse(C) * transpose(F));
+
+const auto Z = -dev(tau - eta * dv);
+Q_2D = {Z11, Z22, det(Cv) - 1, Z12};</code></pre>
+        <p>
+         This is the part that makes the viscoelastic section comparable to plasticity: the local unknown is
+                    \(\mathbf{h}\), and the Gauss-point Newton solve drives \(\mathbf{Q}\) to zero before the global
+                    residual is assembled.
+        </p>
+       </details>
+       <details class="code-details">
+        <summary>
+         5. Local Newton solves Q_h &Delta;h = -Q with a positivity line search.
+        </summary>
+        <pre class="example-code"><code>for (int it = 0; it &lt; mat.local_max_iter; ++it) {
+    const Vector Q = local_Q_viscoelastic(F, h_n, h, dim, dt, mat);
+    const Matrix Q_h = local_Q_h_sacado(F, h_n, h, dim, dt, mat);
+    const Vector dh = solve_dense(Q_h, -Q);
+
+    // line search: accept only positive det(Cv) and non-increasing |Q|
+    h = h + alpha * dh;
+
+    if (norm(Qnew) &lt; local_tol || norm(dh) &lt; local_tol)
+        return h;
+}</code></pre>
+       </details>
+       <details class="code-details">
+        <summary>
+         6. The implicit tangent exposes h(F) to the global AD tangent.
+        </summary>
+        <pre class="example-code"><code>Q(F, h(F)) = 0
+Q_F + Q_h * dh_dF = 0
+
+dh_dF = - inverse(Q_h) * Q_F
+
+const std::vector&lt;Scalar&gt; h_ad = make_algorithmic_h_ad(
+    F_ad, F_double, gh.h_n, upd.h, dim, state.dt, mat
+);</code></pre>
+        <p>
+         Without this step, the global tangent would see the updated history as a constant and the Newton
+                    matrix would miss the local relaxation sensitivity.
+        </p>
+       </details>
+       <details class="code-details">
+        <summary>
+         7. P is recovered from the converged local metric and inserted into G.
+        </summary>
+        <pre class="example-code"><code>const auto Cv_ad = Cv_from_hT&lt;Scalar&gt;(h_ad, dim);
+const auto be = F_ad * inverse(Cv_ad) * transpose(F_ad);
+const auto tau = tau_from_beT&lt;Scalar&gt;(be, mat);
+const auto P_ad = tau * inverse(transpose(F_ad));
+
+G += P_ad[i][A] * grad_test[i][A] * dV;</code></pre>
+        <p>
+         This is the final bridge from the local viscoelastic algorithm to the global finite-element residual:
+                    \(\mathbf{P}\) is not guessed directly; it is computed after solving \(\mathbf{Q}=0\).
+        </p>
+       </details>
+       <details class="code-details">
+        <summary>
+         8. Local diagnostics can report residual and iteration count.
+        </summary>
+        <pre class="example-code"><code>history_diagnostics on</code></pre>
+        <p>
+         For this model, diagnostics are useful for checking whether the internal metric update is converging
+                    consistently over the whole mesh and whether the viscosity/time-step choice makes the local solve hard.
+        </p>
+       </details>
+      </div>
+      <div class="download-section compact-download-section">
+       <div class="math-explain-grid theory-grid"><article class="math-card wide"><span class="tag">Strong form</span><div class="formula-block">\[-\operatorname{Div}\mathbf P(\mathbf F,\mathbf C_v)=\mathbf0\quad\text{in }\Omega_0.\]</div></article><article class="math-card wide"><span class="tag">Boundary conditions</span><div class="formula-block">\[\mathbf u=\bar{\mathbf u}(t)\text{ on }\Gamma_D,\qquad \mathbf P\mathbf N=\bar{\mathbf t}\text{ on }\Gamma_N.\]</div><p>The cyclic displacement and support groups are defined in <code>input/BC.txt</code>.</p></article></div>
+       <div class="section-heading compact-heading"><p class="eyebrow">Equation-to-code mapping</p><h2>Rate-dependent quantities in the constitutive weak form.</h2></div>
+       <div class="equation-code-table-wrap"><table class="equation-code-table"><thead><tr><th>Mathematical quantity</th><th>Meaning</th><th>Code identifier</th><th>Source function</th></tr></thead><tbody><tr><td>\(\mathbf F\)</td><td>Deformation gradient</td><td><code>F</code></td><td><code>weak_scalar_viscoelastic_solid</code></td></tr><tr><td>\(\mathbf C_v\)</td><td>Viscous internal metric</td><td><code>Cv</code></td><td><code>local_Qg_residual</code></td></tr><tr><td>\(\mathbf h_n\)</td><td>Accepted history</td><td><code>h_n</code></td><td><code>local_Qg_residual</code></td></tr><tr><td>\(\mathbf Q\)</td><td>Local evolution residual</td><td><code>Q</code></td><td><code>local_Qg_residual</code></td></tr><tr><td>\(G_e\)</td><td>Global element weak form</td><td><code>G</code></td><td><code>weak_scalar_viscoelastic_solid</code></td></tr></tbody></table></div>
+       <div class="example-run-panel">
+        <p class="eyebrow">Build and run</p><h2>Copy the verified viscoelastic example into the FEM slots.</h2>
+        <pre><code>cp FEM/models/weak_form.cpp FEM/models/weak_form.cpp.bak
+cp -R FEM/input FEM/input.bak
+cp Web/examples/viscoelastic/weak_form.cpp FEM/models/weak_form.cpp
+cp Web/examples/viscoelastic/input/*.txt FEM/input/
+make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
+       </div>
+       <div class="section-heading compact-heading">
+        <p class="eyebrow">
+         Download input files
+        </p>
+        <h2>
+         All text files used by this viscoelastic example.
+        </h2>
+        <p>
+         These files are included in the website package under
+         <code>
+          examples/viscoelastic/input/
+         </code>
+         .
+        </p>
+       </div>
+       <div class="download-grid">
+        <a class="download-card" download="" href="../examples/viscoelastic/input/ProblemMesh.txt">
+         <span class="tag">
+          mesh
+         </span>
+         <h3>
+          ProblemMesh.txt
+         </h3>
+         <p>
+          Displacement mesh and boundary groups used by the cyclic inelastic example.
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/viscoelastic/input/DOFS_info.txt">
+         <span class="tag">
+          dofs
+         </span>
+         <h3>
+          DOFS_info.txt
+         </h3>
+         <p>
+          Declares
+          <code>
+           field_key displacement
+          </code>
+          and
+          <code>
+           history viscoelastic 4
+          </code>
+          .
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/viscoelastic/input/BC.txt">
+         <span class="tag">
+          bc
+         </span>
+         <h3>
+          BC.txt
+         </h3>
+         <p>
+          Applies the cyclic TOP displacement and support constraints.
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/viscoelastic/input/Material.txt">
+         <span class="tag">
+          material
+         </span>
+         <h3>
+          Material.txt
+         </h3>
+         <p>
+          Defines
+          <code>
+           E
+          </code>
+          ,
+          <code>
+           &nu;
+          </code>
+          , viscosity
+          <code>
+           &eta;
+          </code>
+          , and local Newton controls.
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/viscoelastic/input/Solver.txt">
+         <span class="tag">
+          solver
+         </span>
+         <h3>
+          Solver.txt
+         </h3>
+         <p>
+          Controls time step, adaptive stepping, Newton tolerance, and history diagnostics.
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/viscoelastic/input/Postprocessing.txt">
+         <span class="tag">
+          output
+         </span>
+         <h3>
+          Postprocessing.txt
+         </h3>
+         <p>
+          Enables hysteresis CSV/SVG output from prescribed displacement and reaction force.
+         </p>
+        </a>
+        <a class="download-card" download="" href="../examples/viscoelastic/weak_form.cpp">
+         <span class="tag">
+          model
+         </span>
+         <h3>
+          weak_form.cpp
+         </h3>
+         <p>
+          Verified finite-strain viscoelastic weak form synchronized from the runnable model.
+         </p>
+        </a>
+       </div>
+       <button class="example-zip-button" disabled type="button">Download complete example (.zip) — coming after final validation</button>
+      </div>
+     </div>
+    </div>
+   </section>
+   <section class="doc-section section-wrap cook-page example-result-pending">
+    <p class="eyebrow">Result</p><h2>Result pending validation</h2><p>The final deformation or hysteresis figure will be added after the full solid verification run.</p>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

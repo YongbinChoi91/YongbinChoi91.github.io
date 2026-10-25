@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   Space / Shape Functions / Quadrature &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap wide-page-wrap">
+    <a class="back-button route-card" href="../architecture.html">
+     &larr; Back to Code Structure
+    </a>
+    <p class="eyebrow">
+     Framework / FE space
+    </p>
+    <h1>
+     Space / Shape Functions / Quadrature
+    </h1>
+    <p class="lead">
+     Reference element topology, shape functions, quadrature rules, and Jacobian data are centralized here.
+    </p>
+   </section>
+   <section class="doc-section section-wrap wide-page-wrap framework-detail-wide">
+    <article class="framework-hero-card">
+     <span class="tag">
+      Purpose
+     </span>
+     <h2>
+      What this module does
+     </h2>
+     <p>
+      The space layer provides the geometric and interpolation data used by weak forms, boundary tractions, and postprocessing.
+     </p>
+    </article>
+    <div class="framework-detail-grid">
+     <article class="detail-card">
+      <h2>
+       Main files
+      </h2>
+      <ul class="clean-list code-list">
+       <li>
+        <code>
+         space.cpp
+        </code>
+       </li>
+       <li>
+        <code>
+         mesh.h
+        </code>
+       </li>
+       <li>
+        <code>
+         fem_utils.h
+        </code>
+       </li>
+      </ul>
+     </article>
+     <article class="detail-card">
+      <h2>
+       Key structures
+      </h2>
+      <ul class="clean-list code-list">
+       <li>
+        <code>
+         ElementType
+        </code>
+       </li>
+       <li>
+        <code>
+         ShapeData
+        </code>
+       </li>
+       <li>
+        <code>
+         GaussPoint
+        </code>
+       </li>
+       <li>
+        <code>
+         JacobianData
+        </code>
+       </li>
+       <li>
+        <code>
+         ElementGeometry
+        </code>
+       </li>
+      </ul>
+     </article>
+     <article class="detail-card">
+      <h2>
+       Key functions
+      </h2>
+      <p class="function-map-intro">
+       Click a function name to open its implementation-oriented code explanation.
+      </p>
+      <ul class="clean-list function-link-list code-list">
+       <li>
+        <a class="function-link route-card" href="../code/space.html">
+         <code>
+          vtk_cell_type()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/space.html">
+         <code>
+          reference_node_coord()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/space.html">
+         <code>
+          reference_edges()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/space.html">
+         <code>
+          gauss_rule()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/space.html">
+         <code>
+          compute_shape()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/space.html">
+         <code>
+          compute_jacobian_data()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/space.html">
+         <code>
+          compute_dN_dx()
+         </code>
+        </a>
+       </li>
+      </ul>
+     </article>
+    </div>
+    <div class="framework-wide-layout">
+     <article class="detail-card">
+      <h2>
+       Data flow
+      </h2>
+      <div class="flow-stack">
+       <span>
+        ElementGeometry
+       </span>
+       <span>
+        ShapeData
+       </span>
+       <span>
+        JacobianData
+       </span>
+       <span>
+        Gauss integration
+       </span>
+      </div>
+     </article>
+     <article class="detail-card">
+      <h2>
+       Design point
+      </h2>
+      <ul class="clean-list">
+       <li>
+        Supports T3/T6, Q4/Q9, Tet4/Tet10, H8/H20/H27, and Polygon.
+       </li>
+       <li>
+        Keeps boundary-edge topology consistent with assembly and postprocessing.
+       </li>
+       <li>
+        Uses exact polynomial Hessian path where needed for stabilization.
+       </li>
+      </ul>
+     </article>
+    </div>
+    <div class="function-map-promo detail-card">
+     <span class="tag">
+      Function map
+     </span>
+     <h2>
+      Open the implementation-level code view.
+     </h2>
+     <p>
+      Inspect selected functions from this module with role, mathematical meaning, and C++ snippets.
+     </p>
+     <a class="button primary route-card" href="../code/space.html">
+      Open Space function map &rarr;
+     </a>
+    </div>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

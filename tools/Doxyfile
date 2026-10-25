@@ -1,0 +1,22 @@
+PROJECT_NAME           = "HiPaCs Core"
+OUTPUT_DIRECTORY       = .generated/doxygen
+INPUT                  = ../core
+RECURSIVE              = YES
+FILE_PATTERNS           = *.h *.cpp
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = YES
+EXTRACT_PRIVATE        = YES
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+PREDEFINED             = "__attribute__(x)="
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+REFERENCES_RELATION    = YES
+REFERENCED_BY_RELATION = YES
+GENERATE_HTML          = NO
+GENERATE_XML           = YES
+XML_OUTPUT             = xml
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_LOGFILE           = .generated/doxygen-warnings.log

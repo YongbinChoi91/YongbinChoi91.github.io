@@ -1,0 +1,22 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements print history diagnostics line."><title>print_history_diagnostics_line() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../solver.html?file=solver.cpp">← core/solver/solver.cpp</a>
+<p class="eyebrow">Function detail</p><h1>print_history_diagnostics_line()</h1><p class="lead">Implements print history diagnostics line.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static void print_history_diagnostics_line(const HistoryLocalDiagnostics &amp;h)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/solver/solver.cpp:836</dd></div><div><dt>Declaration</dt><dd>core/solver/solver.cpp:836</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/solver/solver.cpp#L836" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 836–844</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="836"><span class="token keyword">static</span> <span class="token keyword">void</span> print_history_diagnostics_line(<span class="token keyword">const</span> HistoryLocalDiagnostics&amp; h){</span>
+<span class="source-line" data-line="837">    <span class="token keyword">if</span>(!h.active) <span class="token keyword">return</span>;</span>
+<span class="source-line" data-line="838">    std::cout &lt;&lt; <span class="token string">&quot;, history[&quot;</span> &lt;&lt; h.name &lt;&lt; <span class="token string">&quot;]: Local Residual=&quot;</span> &lt;&lt; h.max_residual</span>
+<span class="source-line" data-line="839">              &lt;&lt; <span class="token string">&quot;, Local Iter=&quot;</span> &lt;&lt; h.max_iterations;</span>
+<span class="source-line" data-line="840">            <span class="token comment">//   &lt;&lt; &quot;, yielded=&quot; &lt;&lt; h.yielded_gp_count &lt;&lt; &quot;/&quot; &lt;&lt; h.total_gp_count;</span></span>
+<span class="source-line" data-line="841">    <span class="token comment">// if(h.worst_element&gt;=0){</span></span>
+<span class="source-line" data-line="842">    <span class="token comment">//     std::cout &lt;&lt; &quot;, worst=d&quot; &lt;&lt; h.worst_domain &lt;&lt; &quot;/e&quot; &lt;&lt; h.worst_element &lt;&lt; &quot;/gp&quot; &lt;&lt; h.worst_gp;</span></span>
+<span class="source-line" data-line="843">    <span class="token comment">// }</span></span>
+<span class="source-line" data-line="844">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-083813e686dd20.html">← print_generic_field_update_diagnostics()</a><a href="fn-ca342341a4e5ca.html">print_full_newton_monitor() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

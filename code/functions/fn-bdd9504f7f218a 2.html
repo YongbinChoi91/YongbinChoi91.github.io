@@ -1,0 +1,320 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Reads a mixed finite-element mesh and its field-specific connectivity."><title>read_mixed_mesh() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../mesh.html?file=mesh_reader.cpp">← core/mesh/mesh_reader.cpp</a>
+<p class="eyebrow">Function detail</p><h1>read_mixed_mesh()</h1><p class="lead">Reads a mixed finite-element mesh and its field-specific connectivity.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>FieldMesh read_mixed_mesh(const std::string &amp;filename, bool vem_taylor_hood)</code></p><p>filename Path to the problem mesh file. Parsed field mesh with nodes, elements, domains, and field layouts.</p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/mesh/mesh_reader.cpp:143</dd></div><div><dt>Declaration</dt><dd>core/mesh/mesh_reader.h:8</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/mesh/mesh_reader.cpp#L143" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 143–449</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="143">FieldMesh read_mixed_mesh(<span class="token keyword">const</span> std::string&amp; filename, <span class="token keyword">bool</span> vem_taylor_hood_from_dofs){</span>
+<span class="source-line" data-line="144">    FieldMesh mesh;</span>
+<span class="source-line" data-line="145">    std::ifstream file(filename);</span>
+<span class="source-line" data-line="146">    <span class="token keyword">if</span>(!file) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Could not open mesh file: &quot;</span>+filename);</span>
+<span class="source-line" data-line="147"> </span>
+<span class="source-line" data-line="148">    std::string line, section;</span>
+<span class="source-line" data-line="149">    <span class="token keyword">bool</span> dim_set=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="150">    <span class="token keyword">int</span> detected_dim=<span class="token number">0</span>;</span>
+<span class="source-line" data-line="151">    <span class="token keyword">bool</span> fields_line_seen=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="152">    <span class="token keyword">bool</span> fields_declares_velocity=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="153">    <span class="token keyword">bool</span> fields_declares_displacement=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="154">    <span class="token keyword">bool</span> fields_declares_pressure=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="155">    <span class="token keyword">bool</span> vem_taylor_hood_mesh=vem_taylor_hood_from_dofs;</span>
+<span class="source-line" data-line="156">    <span class="token keyword">while</span>(std::getline(file,line)){</span>
+<span class="source-line" data-line="157">        <span class="token keyword">if</span>(!line.empty() &amp;&amp; line.back()==<span class="token string">&#x27;\r&#x27;</span>) line.pop_back();</span>
+<span class="source-line" data-line="158">        <span class="token keyword">const</span> <span class="token keyword">auto</span> comment=line.find(<span class="token string">&#x27;#&#x27;</span>);</span>
+<span class="source-line" data-line="159">        <span class="token keyword">if</span>(comment!=std::string::npos) line=line.substr(<span class="token number">0</span>,comment);</span>
+<span class="source-line" data-line="160">        line=trim_copy(line);</span>
+<span class="source-line" data-line="161">        <span class="token keyword">if</span>(line.empty()) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="162"> </span>
+<span class="source-line" data-line="163">        std::stringstream head(line);</span>
+<span class="source-line" data-line="164">        std::string first; head &gt;&gt; first;</span>
+<span class="source-line" data-line="165"> </span>
+<span class="source-line" data-line="166">        <span class="token keyword">if</span>(first==<span class="token string">&quot;DIM&quot;</span>){</span>
+<span class="source-line" data-line="167">            head &gt;&gt; mesh.dim;</span>
+<span class="source-line" data-line="168">            <span class="token keyword">if</span>(mesh.dim!=<span class="token number">2</span> &amp;&amp; mesh.dim!=<span class="token number">3</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;DIM must be 2 or 3 in field mesh.&quot;</span>);</span>
+<span class="source-line" data-line="169">            detected_dim=mesh.dim;</span>
+<span class="source-line" data-line="170">            dim_set=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="171">            <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="172">        }</span>
+<span class="source-line" data-line="173">        <span class="token keyword">if</span>(first==<span class="token string">&quot;FIELDS&quot;</span>){</span>
+<span class="source-line" data-line="174">            fields_line_seen=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="175">            std::string field;</span>
+<span class="source-line" data-line="176">            <span class="token keyword">while</span>(head &gt;&gt; field){</span>
+<span class="source-line" data-line="177">                <span class="token keyword">const</span> std::string f=lower_copy(field);</span>
+<span class="source-line" data-line="178">                <span class="token keyword">if</span>(f==<span class="token string">&quot;velocity&quot;</span>) fields_declares_velocity=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="179">                <span class="token keyword">else</span> <span class="token keyword">if</span>(f==<span class="token string">&quot;displacement&quot;</span>) fields_declares_displacement=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="180">                <span class="token keyword">else</span> <span class="token keyword">if</span>(f==<span class="token string">&quot;pressure&quot;</span>) fields_declares_pressure=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="181">            }</span>
+<span class="source-line" data-line="182">            <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="183">        }</span>
+<span class="source-line" data-line="184">        <span class="token keyword">if</span>(first==<span class="token string">&quot;MESH_TYPE&quot;</span>){</span>
+<span class="source-line" data-line="185">            std::string mesh_type; head &gt;&gt; mesh_type;</span>
+<span class="source-line" data-line="186">            <span class="token keyword">const</span> std::string mt=lower_copy(mesh_type);</span>
+<span class="source-line" data-line="187">            <span class="token keyword">if</span>(mt==<span class="token string">&quot;vem_taylor_hood&quot;</span> || mt==<span class="token string">&quot;vem_taylorhood&quot;</span>) vem_taylor_hood_mesh=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="188">            <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="189">        }</span>
+<span class="source-line" data-line="190">        <span class="token keyword">if</span>(first==<span class="token string">&quot;VELOCITY_ELEMENT&quot;</span> || first==<span class="token string">&quot;DISPLACEMENT_ELEMENT&quot;</span> || first==<span class="token string">&quot;PRESSURE_ELEMENT&quot;</span>){</span>
+<span class="source-line" data-line="191">            <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="192">        }</span>
+<span class="source-line" data-line="193">        <span class="token keyword">if</span>(is_field_mesh_section(first)){</span>
+<span class="source-line" data-line="194">            section=first;</span>
+<span class="source-line" data-line="195">            <span class="token keyword">const</span> std::string vg=velocity_boundary_name_from_section(section);</span>
+<span class="source-line" data-line="196">            <span class="token keyword">const</span> std::string ug=displacement_boundary_name_from_section(section);</span>
+<span class="source-line" data-line="197">            <span class="token keyword">const</span> std::string pg=pressure_boundary_name_from_section(section);</span>
+<span class="source-line" data-line="198">            <span class="token keyword">if</span>(!vg.empty()) mesh.velocity_boundaries[vg];</span>
+<span class="source-line" data-line="199">            <span class="token keyword">if</span>(!ug.empty()) mesh.displacement_boundaries[ug];</span>
+<span class="source-line" data-line="200">            <span class="token keyword">if</span>(!pg.empty()) mesh.pressure_boundaries[pg];</span>
+<span class="source-line" data-line="201">            <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="202">        }</span>
+<span class="source-line" data-line="203">        <span class="token keyword">if</span>(section.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Data line before any field mesh section: &quot;</span>+line);</span>
+<span class="source-line" data-line="204"> </span>
+<span class="source-line" data-line="205">        std::stringstream ss(line);</span>
+<span class="source-line" data-line="206">        <span class="token keyword">if</span>(section==<span class="token string">&quot;VELOCITY_NODES&quot;</span> || section==<span class="token string">&quot;NODES_V&quot;</span> || section==<span class="token string">&quot;NODES&quot;</span>){</span>
+<span class="source-line" data-line="207">            <span class="token keyword">int</span> id=-<span class="token number">1</span>; read_nonnegative_id(ss,id,<span class="token string">&quot;velocity node&quot;</span>);</span>
+<span class="source-line" data-line="208">            std::vector&lt;<span class="token keyword">double</span>&gt; vals; <span class="token keyword">double</span> q; <span class="token keyword">while</span>(ss&gt;&gt;q) vals.push_back(q);</span>
+<span class="source-line" data-line="209">            <span class="token keyword">if</span>(vals.size()!=<span class="token number">2</span> &amp;&amp; vals.size()!=<span class="token number">3</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Velocity node line needs id x y [z].&quot;</span>);</span>
+<span class="source-line" data-line="210">            <span class="token keyword">if</span>(detected_dim==<span class="token number">0</span>) detected_dim=static_cast&lt;<span class="token keyword">int</span>&gt;(vals.size());</span>
+<span class="source-line" data-line="211">            <span class="token keyword">if</span>(static_cast&lt;<span class="token keyword">int</span>&gt;(vals.size())!=detected_dim) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Mixed node dimensions are inconsistent.&quot;</span>);</span>
+<span class="source-line" data-line="212">            <span class="token keyword">if</span>(id&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.velocity_nodes.size())) mesh.velocity_nodes.resize(id+<span class="token number">1</span>);</span>
+<span class="source-line" data-line="213">            mesh.velocity_nodes[id].x={{vals[<span class="token number">0</span>],vals[<span class="token number">1</span>], vals.size()==<span class="token number">3</span>?vals[<span class="token number">2</span>]:<span class="token number">0.0</span>}};</span>
+<span class="source-line" data-line="214">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(section==<span class="token string">&quot;DISPLACEMENT_NODES&quot;</span> || section==<span class="token string">&quot;NODES_U&quot;</span>){</span>
+<span class="source-line" data-line="215">            <span class="token keyword">int</span> id=-<span class="token number">1</span>; read_nonnegative_id(ss,id,<span class="token string">&quot;displacement node&quot;</span>);</span>
+<span class="source-line" data-line="216">            std::vector&lt;<span class="token keyword">double</span>&gt; vals; <span class="token keyword">double</span> q; <span class="token keyword">while</span>(ss&gt;&gt;q) vals.push_back(q);</span>
+<span class="source-line" data-line="217">            <span class="token keyword">if</span>(vals.size()!=<span class="token number">2</span> &amp;&amp; vals.size()!=<span class="token number">3</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Displacement node line needs id x y [z].&quot;</span>);</span>
+<span class="source-line" data-line="218">            <span class="token keyword">if</span>(detected_dim==<span class="token number">0</span>) detected_dim=static_cast&lt;<span class="token keyword">int</span>&gt;(vals.size());</span>
+<span class="source-line" data-line="219">            <span class="token keyword">if</span>(static_cast&lt;<span class="token keyword">int</span>&gt;(vals.size())!=detected_dim) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Mixed node dimensions are inconsistent.&quot;</span>);</span>
+<span class="source-line" data-line="220">            <span class="token keyword">if</span>(id&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.displacement_nodes.size())) mesh.displacement_nodes.resize(id+<span class="token number">1</span>);</span>
+<span class="source-line" data-line="221">            mesh.displacement_nodes[id].x={{vals[<span class="token number">0</span>],vals[<span class="token number">1</span>], vals.size()==<span class="token number">3</span>?vals[<span class="token number">2</span>]:<span class="token number">0.0</span>}};</span>
+<span class="source-line" data-line="222">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(section==<span class="token string">&quot;PRESSURE_NODES&quot;</span> || section==<span class="token string">&quot;NODES_P&quot;</span>){</span>
+<span class="source-line" data-line="223">            <span class="token keyword">int</span> id=-<span class="token number">1</span>; read_nonnegative_id(ss,id,<span class="token string">&quot;pressure node&quot;</span>);</span>
+<span class="source-line" data-line="224">            std::vector&lt;<span class="token keyword">double</span>&gt; vals; <span class="token keyword">double</span> q; <span class="token keyword">while</span>(ss&gt;&gt;q) vals.push_back(q);</span>
+<span class="source-line" data-line="225">            <span class="token keyword">if</span>(vals.size()!=<span class="token number">2</span> &amp;&amp; vals.size()!=<span class="token number">3</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Pressure node line needs id x y [z].&quot;</span>);</span>
+<span class="source-line" data-line="226">            <span class="token keyword">if</span>(detected_dim==<span class="token number">0</span>) detected_dim=static_cast&lt;<span class="token keyword">int</span>&gt;(vals.size());</span>
+<span class="source-line" data-line="227">            <span class="token keyword">if</span>(static_cast&lt;<span class="token keyword">int</span>&gt;(vals.size())!=detected_dim) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Mixed node dimensions are inconsistent.&quot;</span>);</span>
+<span class="source-line" data-line="228">            <span class="token keyword">if</span>(id&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.pressure_nodes.size())) mesh.pressure_nodes.resize(id+<span class="token number">1</span>);</span>
+<span class="source-line" data-line="229">            mesh.pressure_nodes[id].x={{vals[<span class="token number">0</span>],vals[<span class="token number">1</span>], vals.size()==<span class="token number">3</span>?vals[<span class="token number">2</span>]:<span class="token number">0.0</span>}};</span>
+<span class="source-line" data-line="230">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(section==<span class="token string">&quot;VELOCITY_ELEMENTS&quot;</span> || section==<span class="token string">&quot;ELEMENTS_V&quot;</span> || section==<span class="token string">&quot;ELEMENTS&quot;</span>){</span>
+<span class="source-line" data-line="231">            <span class="token keyword">int</span> id=-<span class="token number">1</span>; read_nonnegative_id(ss,id,<span class="token string">&quot;velocity element&quot;</span>);</span>
+<span class="source-line" data-line="232">            std::vector&lt;<span class="token keyword">int</span>&gt; conn; <span class="token keyword">int</span> n; <span class="token keyword">while</span>(ss&gt;&gt;n) conn.push_back(n);</span>
+<span class="source-line" data-line="233">            <span class="token keyword">if</span>(conn.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Empty velocity element connectivity.&quot;</span>);</span>
+<span class="source-line" data-line="234">            <span class="token keyword">if</span>(id&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.velocity_elements.size())) mesh.velocity_elements.resize(id+<span class="token number">1</span>);</span>
+<span class="source-line" data-line="235">            mesh.velocity_elements[id]=reorder_quad_python_to_cpp(conn);</span>
+<span class="source-line" data-line="236">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(section==<span class="token string">&quot;DISPLACEMENT_ELEMENTS&quot;</span> || section==<span class="token string">&quot;ELEMENTS_U&quot;</span>){</span>
+<span class="source-line" data-line="237">            <span class="token keyword">int</span> id=-<span class="token number">1</span>; read_nonnegative_id(ss,id,<span class="token string">&quot;displacement element&quot;</span>);</span>
+<span class="source-line" data-line="238">            std::vector&lt;<span class="token keyword">int</span>&gt; conn; <span class="token keyword">int</span> n; <span class="token keyword">while</span>(ss&gt;&gt;n) conn.push_back(n);</span>
+<span class="source-line" data-line="239">            <span class="token keyword">if</span>(conn.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Empty displacement element connectivity.&quot;</span>);</span>
+<span class="source-line" data-line="240">            <span class="token keyword">if</span>(id&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.displacement_elements.size())) mesh.displacement_elements.resize(id+<span class="token number">1</span>);</span>
+<span class="source-line" data-line="241">            mesh.displacement_elements[id]=reorder_quad_python_to_cpp(conn);</span>
+<span class="source-line" data-line="242">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(section==<span class="token string">&quot;PRESSURE_ELEMENTS&quot;</span> || section==<span class="token string">&quot;ELEMENTS_P&quot;</span>){</span>
+<span class="source-line" data-line="243">            <span class="token keyword">int</span> id=-<span class="token number">1</span>; read_nonnegative_id(ss,id,<span class="token string">&quot;pressure element&quot;</span>);</span>
+<span class="source-line" data-line="244">            std::vector&lt;<span class="token keyword">int</span>&gt; conn; <span class="token keyword">int</span> n; <span class="token keyword">while</span>(ss&gt;&gt;n) conn.push_back(n);</span>
+<span class="source-line" data-line="245">            <span class="token keyword">if</span>(conn.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Empty pressure element connectivity.&quot;</span>);</span>
+<span class="source-line" data-line="246">            <span class="token keyword">if</span>(id&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.pressure_elements.size())) mesh.pressure_elements.resize(id+<span class="token number">1</span>);</span>
+<span class="source-line" data-line="247">            mesh.pressure_elements[id]=reorder_quad_python_to_cpp(conn);</span>
+<span class="source-line" data-line="248">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(section==<span class="token string">&quot;MIXED_ELEMENTS&quot;</span>){</span>
+<span class="source-line" data-line="249">            std::vector&lt;std::string&gt; parts;</span>
+<span class="source-line" data-line="250">            std::size_t start=<span class="token number">0</span>;</span>
+<span class="source-line" data-line="251">            <span class="token keyword">while</span>(<span class="token keyword">true</span>){</span>
+<span class="source-line" data-line="252">                <span class="token keyword">const</span> <span class="token keyword">auto</span> bar=line.find(<span class="token string">&#x27;|&#x27;</span>,start);</span>
+<span class="source-line" data-line="253">                parts.push_back(trim_copy(line.substr(start, bar==std::string::npos ? std::string::npos : bar-start)));</span>
+<span class="source-line" data-line="254">                <span class="token keyword">if</span>(bar==std::string::npos) <span class="token keyword">break</span>;</span>
+<span class="source-line" data-line="255">                start=bar+<span class="token number">1</span>;</span>
+<span class="source-line" data-line="256">            }</span>
+<span class="source-line" data-line="257"> </span>
+<span class="source-line" data-line="258">            <span class="token keyword">const</span> <span class="token keyword">bool</span> displacement_only_mixed =</span>
+<span class="source-line" data-line="259">                (parts.size()==<span class="token number">1</span> &amp;&amp; fields_line_seen &amp;&amp;</span>
+<span class="source-line" data-line="260">                 fields_declares_displacement &amp;&amp;</span>
+<span class="source-line" data-line="261">                 !fields_declares_velocity &amp;&amp; !fields_declares_pressure);</span>
+<span class="source-line" data-line="262"> </span>
+<span class="source-line" data-line="263">            <span class="token keyword">if</span>(displacement_only_mixed){</span>
+<span class="source-line" data-line="264">                std::stringstream uss(parts[<span class="token number">0</span>]);</span>
+<span class="source-line" data-line="265">                <span class="token keyword">int</span> id=-<span class="token number">1</span>; read_nonnegative_id(uss,id,<span class="token string">&quot;displacement-only mixed element&quot;</span>);</span>
+<span class="source-line" data-line="266">                std::vector&lt;<span class="token keyword">int</span>&gt; u_conn; <span class="token keyword">int</span> n;</span>
+<span class="source-line" data-line="267">                <span class="token keyword">while</span>(uss&gt;&gt;n) u_conn.push_back(n);</span>
+<span class="source-line" data-line="268">                <span class="token keyword">if</span>(u_conn.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Displacement-only MIXED_ELEMENTS row has empty displacement connectivity.&quot;</span>);</span>
+<span class="source-line" data-line="269">                <span class="token keyword">if</span>(id&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.displacement_elements.size())) mesh.displacement_elements.resize(id+<span class="token number">1</span>);</span>
+<span class="source-line" data-line="270">                mesh.displacement_elements[id]=reorder_quad_python_to_cpp(u_conn);</span>
+<span class="source-line" data-line="271">                fields_declares_displacement=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="272">            } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="273">                <span class="token keyword">if</span>(parts.size()!=<span class="token number">2</span> &amp;&amp; parts.size()!=<span class="token number">3</span>)</span>
+<span class="source-line" data-line="274">                    <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;MIXED_ELEMENTS row must be &#x27;id v... | p...&#x27;, &#x27;id v... | u... | p...&#x27;, or for FIELDS displacement: &#x27;id u...&#x27;.&quot;</span>);</span>
+<span class="source-line" data-line="275">                std::stringstream vss(parts[<span class="token number">0</span>]);</span>
+<span class="source-line" data-line="276">                <span class="token keyword">int</span> id=-<span class="token number">1</span>; read_nonnegative_id(vss,id,<span class="token string">&quot;mixed element&quot;</span>);</span>
+<span class="source-line" data-line="277">                std::vector&lt;<span class="token keyword">int</span>&gt; v_conn,u_conn,p_conn; <span class="token keyword">int</span> n;</span>
+<span class="source-line" data-line="278">                <span class="token keyword">while</span>(vss&gt;&gt;n) v_conn.push_back(n);</span>
+<span class="source-line" data-line="279">                <span class="token keyword">if</span>(parts.size()==<span class="token number">3</span>){</span>
+<span class="source-line" data-line="280">                    std::stringstream uss(parts[<span class="token number">1</span>]);</span>
+<span class="source-line" data-line="281">                    <span class="token keyword">while</span>(uss&gt;&gt;n) u_conn.push_back(n);</span>
+<span class="source-line" data-line="282">                    std::stringstream pss(parts[<span class="token number">2</span>]);</span>
+<span class="source-line" data-line="283">                    <span class="token keyword">while</span>(pss&gt;&gt;n) p_conn.push_back(n);</span>
+<span class="source-line" data-line="284">                } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="285">                    std::stringstream pss(parts[<span class="token number">1</span>]);</span>
+<span class="source-line" data-line="286">                    <span class="token keyword">while</span>(pss&gt;&gt;n) p_conn.push_back(n);</span>
+<span class="source-line" data-line="287">                }</span>
+<span class="source-line" data-line="288">                <span class="token keyword">if</span>(v_conn.empty() || p_conn.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Mixed element row has empty velocity or pressure connectivity.&quot;</span>);</span>
+<span class="source-line" data-line="289">                <span class="token keyword">if</span>(parts.size()==<span class="token number">3</span> &amp;&amp; u_conn.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Mixed Hamilton element row has empty displacement connectivity.&quot;</span>);</span>
+<span class="source-line" data-line="290">                <span class="token keyword">if</span>(id&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.velocity_elements.size())){</span>
+<span class="source-line" data-line="291">                    mesh.velocity_elements.resize(id+<span class="token number">1</span>);</span>
+<span class="source-line" data-line="292">                    mesh.pressure_elements.resize(id+<span class="token number">1</span>);</span>
+<span class="source-line" data-line="293">                    <span class="token keyword">if</span>(parts.size()==<span class="token number">3</span>) mesh.displacement_elements.resize(id+<span class="token number">1</span>);</span>
+<span class="source-line" data-line="294">                }</span>
+<span class="source-line" data-line="295">                mesh.velocity_elements[id]=reorder_quad_python_to_cpp(v_conn);</span>
+<span class="source-line" data-line="296">                <span class="token keyword">if</span>(parts.size()==<span class="token number">3</span>){</span>
+<span class="source-line" data-line="297">                    <span class="token keyword">if</span>(id&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.displacement_elements.size())) mesh.displacement_elements.resize(id+<span class="token number">1</span>);</span>
+<span class="source-line" data-line="298">                    mesh.displacement_elements[id]=reorder_quad_python_to_cpp(u_conn);</span>
+<span class="source-line" data-line="299">                    fields_declares_displacement=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="300">                }</span>
+<span class="source-line" data-line="301">                mesh.pressure_elements[id]=reorder_quad_python_to_cpp(p_conn);</span>
+<span class="source-line" data-line="302">            }</span>
+<span class="source-line" data-line="303">        } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="304">            <span class="token keyword">const</span> std::string vg=velocity_boundary_name_from_section(section);</span>
+<span class="source-line" data-line="305">            <span class="token keyword">const</span> std::string ug=displacement_boundary_name_from_section(section);</span>
+<span class="source-line" data-line="306">            <span class="token keyword">const</span> std::string pg=pressure_boundary_name_from_section(section);</span>
+<span class="source-line" data-line="307">            <span class="token keyword">if</span>(!vg.empty() || !ug.empty() || !pg.empty()){</span>
+<span class="source-line" data-line="308">                BoundaryEntity ent; ss &gt;&gt; ent.element_id;</span>
+<span class="source-line" data-line="309">                <span class="token keyword">if</span>(ss.fail() || ent.element_id&lt;<span class="token number">0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad boundary entity id in field mesh.&quot;</span>);</span>
+<span class="source-line" data-line="310">                <span class="token keyword">int</span> n; <span class="token keyword">while</span>(ss&gt;&gt;n) ent.node_ids.push_back(n);</span>
+<span class="source-line" data-line="311">                <span class="token keyword">if</span>(ent.node_ids.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Boundary entity has no nodes in field mesh.&quot;</span>);</span>
+<span class="source-line" data-line="312">                <span class="token keyword">if</span>(!vg.empty()) mesh.velocity_boundaries[vg].push_back(ent);</span>
+<span class="source-line" data-line="313">                <span class="token keyword">else</span> <span class="token keyword">if</span>(!ug.empty()) mesh.displacement_boundaries[ug].push_back(ent);</span>
+<span class="source-line" data-line="314">                <span class="token keyword">else</span> mesh.pressure_boundaries[pg].push_back(ent);</span>
+<span class="source-line" data-line="315">            } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="316">                <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Unknown field mesh section: &quot;</span>+section);</span>
+<span class="source-line" data-line="317">            }</span>
+<span class="source-line" data-line="318">        }</span>
+<span class="source-line" data-line="319">    }</span>
+<span class="source-line" data-line="320"> </span>
+<span class="source-line" data-line="321">    <span class="token keyword">if</span>(!dim_set &amp;&amp; detected_dim==<span class="token number">0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;No nodes found in field mesh.&quot;</span>);</span>
+<span class="source-line" data-line="322">    <span class="token keyword">if</span>(detected_dim!=<span class="token number">0</span>) mesh.dim=detected_dim;</span>
+<span class="source-line" data-line="323">    <span class="token keyword">if</span>(mesh.dim!=<span class="token number">2</span> &amp;&amp; mesh.dim!=<span class="token number">3</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Field mesh dimension must be 2 or 3.&quot;</span>);</span>
+<span class="source-line" data-line="324"> </span>
+<span class="source-line" data-line="325">    <span class="token keyword">const</span> <span class="token keyword">bool</span> has_velocity_block = !mesh.velocity_nodes.empty() || !mesh.velocity_elements.empty();</span>
+<span class="source-line" data-line="326">    <span class="token keyword">const</span> <span class="token keyword">bool</span> has_pressure_block = !mesh.pressure_nodes.empty() || !mesh.pressure_elements.empty();</span>
+<span class="source-line" data-line="327">    <span class="token keyword">const</span> <span class="token keyword">bool</span> displacement_only_mesh =</span>
+<span class="source-line" data-line="328">        fields_line_seen &amp;&amp; fields_declares_displacement &amp;&amp;</span>
+<span class="source-line" data-line="329">        !fields_declares_velocity &amp;&amp; !fields_declares_pressure &amp;&amp;</span>
+<span class="source-line" data-line="330">        !has_velocity_block &amp;&amp; !has_pressure_block;</span>
+<span class="source-line" data-line="331"> </span>
+<span class="source-line" data-line="332">    <span class="token keyword">if</span>(!displacement_only_mesh){</span>
+<span class="source-line" data-line="333">        <span class="token keyword">if</span>(mesh.velocity_nodes.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Field mesh has no velocity nodes.&quot;</span>);</span>
+<span class="source-line" data-line="334">        <span class="token keyword">if</span>(mesh.pressure_nodes.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Field mesh has no pressure nodes.&quot;</span>);</span>
+<span class="source-line" data-line="335">        <span class="token keyword">if</span>(mesh.velocity_elements.empty() || mesh.pressure_elements.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Field mesh needs velocity and pressure elements.&quot;</span>);</span>
+<span class="source-line" data-line="336">        <span class="token keyword">if</span>(mesh.velocity_elements.size()!=mesh.pressure_elements.size()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Velocity/pressure element count mismatch.&quot;</span>);</span>
+<span class="source-line" data-line="337">    }</span>
+<span class="source-line" data-line="338"> </span>
+<span class="source-line" data-line="339">    <span class="token keyword">bool</span> has_nonempty_displacement_elements=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="340">    <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; e:mesh.displacement_elements){</span>
+<span class="source-line" data-line="341">        <span class="token keyword">if</span>(!e.empty()){ has_nonempty_displacement_elements=<span class="token keyword">true</span>; <span class="token keyword">break</span>; }</span>
+<span class="source-line" data-line="342">    }</span>
+<span class="source-line" data-line="343"> </span>
+<span class="source-line" data-line="344">    <span class="token comment">// Default behavior:</span></span>
+<span class="source-line" data-line="345">    <span class="token comment">//   - v|p meshes run as classical field mesh.</span></span>
+<span class="source-line" data-line="346">    <span class="token comment">//   - v|u|p meshes, or FIELDS ... displacement ..., activate Hamilton kinematics.</span></span>
+<span class="source-line" data-line="347">    <span class="token comment">//   - orphan displacement nodes are ignored unless displacement was explicitly requested.</span></span>
+<span class="source-line" data-line="348">    <span class="token keyword">if</span>(!fields_declares_displacement &amp;&amp; !has_nonempty_displacement_elements){</span>
+<span class="source-line" data-line="349">        mesh.displacement_nodes.clear();</span>
+<span class="source-line" data-line="350">        mesh.displacement_elements.clear();</span>
+<span class="source-line" data-line="351">        mesh.displacement_boundaries.clear();</span>
+<span class="source-line" data-line="352">        mesh.displacement_type = ElementType::Unknown;</span>
+<span class="source-line" data-line="353">    } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="354">        <span class="token keyword">if</span>(mesh.displacement_nodes.empty() || !has_nonempty_displacement_elements)</span>
+<span class="source-line" data-line="355">            <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Displacement field is requested, but displacement nodes/elements are incomplete.&quot;</span>);</span>
+<span class="source-line" data-line="356">        <span class="token keyword">if</span>(!displacement_only_mesh &amp;&amp; mesh.displacement_elements.size()!=mesh.velocity_elements.size())</span>
+<span class="source-line" data-line="357">            <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Velocity/displacement element count mismatch.&quot;</span>);</span>
+<span class="source-line" data-line="358">        <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; e:mesh.displacement_elements)</span>
+<span class="source-line" data-line="359">            <span class="token keyword">if</span>(e.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Empty displacement connectivity in Hamilton mixed element.&quot;</span>);</span>
+<span class="source-line" data-line="360">    }</span>
+<span class="source-line" data-line="361"> </span>
+<span class="source-line" data-line="362">    <span class="token keyword">if</span>(vem_taylor_hood_mesh){</span>
+<span class="source-line" data-line="363">        <span class="token keyword">constexpr</span> <span class="token keyword">double</span> coordinate_tol2=<span class="token number">1.0e-20</span>;</span>
+<span class="source-line" data-line="364">        <span class="token keyword">for</span>(<span class="token keyword">int</span> e=<span class="token number">0</span>;e&lt;static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.velocity_elements.size());++e){</span>
+<span class="source-line" data-line="365">            <span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; ve=mesh.velocity_elements[e];</span>
+<span class="source-line" data-line="366">            <span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; pe=mesh.pressure_elements[e];</span>
+<span class="source-line" data-line="367">            <span class="token keyword">if</span>(ve.size()&lt;<span class="token number">6</span> || (ve.size()%<span class="token number">2</span>)!=<span class="token number">0</span> || pe.size()!=ve.size()/<span class="token number">2</span>){</span>
+<span class="source-line" data-line="368">                <span class="token keyword">throw</span> std::runtime_error(</span>
+<span class="source-line" data-line="369">                    <span class="token string">&quot;Invalid VEM Taylor-Hood connectivity at element &quot;</span>+std::to_string(e)</span>
+<span class="source-line" data-line="370">                    +<span class="token string">&quot;: expected alternating quadratic velocity slots and one pressure node per vertex.&quot;</span></span>
+<span class="source-line" data-line="371">                );</span>
+<span class="source-line" data-line="372">            }</span>
+<span class="source-line" data-line="373">            <span class="token keyword">for</span>(std::size_t a=<span class="token number">0</span>;a&lt;pe.size();++a){</span>
+<span class="source-line" data-line="374">                <span class="token keyword">const</span> <span class="token keyword">int</span> vnode=ve[<span class="token number">2</span>*a];</span>
+<span class="source-line" data-line="375">                <span class="token keyword">const</span> <span class="token keyword">int</span> pnode=pe[a];</span>
+<span class="source-line" data-line="376">                <span class="token keyword">if</span>(vnode&lt;<span class="token number">0</span> || vnode&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.velocity_nodes.size())</span>
+<span class="source-line" data-line="377">                   || pnode&lt;<span class="token number">0</span> || pnode&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.pressure_nodes.size())){</span>
+<span class="source-line" data-line="378">                    <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Invalid VEM Taylor-Hood node id at element &quot;</span>+std::to_string(e)+<span class="token string">&quot;.&quot;</span>);</span>
+<span class="source-line" data-line="379">                }</span>
+<span class="source-line" data-line="380">                <span class="token keyword">const</span> <span class="token keyword">double</span> dx=mesh.velocity_nodes[vnode].x[<span class="token number">0</span>]-mesh.pressure_nodes[pnode].x[<span class="token number">0</span>];</span>
+<span class="source-line" data-line="381">                <span class="token keyword">const</span> <span class="token keyword">double</span> dy=mesh.velocity_nodes[vnode].x[<span class="token number">1</span>]-mesh.pressure_nodes[pnode].x[<span class="token number">1</span>];</span>
+<span class="source-line" data-line="382">                <span class="token keyword">if</span>(dx*dx+dy*dy&gt;coordinate_tol2){</span>
+<span class="source-line" data-line="383">                    std::ostringstream os;</span>
+<span class="source-line" data-line="384">                    os &lt;&lt; <span class="token string">&quot;Invalid VEM Taylor-Hood mesh at element &quot;</span> &lt;&lt; e</span>
+<span class="source-line" data-line="385">                       &lt;&lt; <span class="token string">&quot;, vertex &quot;</span> &lt;&lt; a &lt;&lt; <span class="token string">&quot;: velocity node &quot;</span> &lt;&lt; vnode</span>
+<span class="source-line" data-line="386">                       &lt;&lt; <span class="token string">&quot; and pressure node &quot;</span> &lt;&lt; pnode</span>
+<span class="source-line" data-line="387">                       &lt;&lt; <span class="token string">&quot; do not have coincident coordinates.&quot;</span>;</span>
+<span class="source-line" data-line="388">                    <span class="token keyword">throw</span> std::runtime_error(os.str());</span>
+<span class="source-line" data-line="389">                }</span>
+<span class="source-line" data-line="390">            }</span>
+<span class="source-line" data-line="391">        }</span>
+<span class="source-line" data-line="392">    }</span>
+<span class="source-line" data-line="393"> </span>
+<span class="source-line" data-line="394">    <span class="token comment">// The Python exporter may keep the full global node table in each DOMAIN</span></span>
+<span class="source-line" data-line="395">    <span class="token comment">// while only a subset of those nodes is used by the domain&#x27;s elements.</span></span>
+<span class="source-line" data-line="396">    <span class="token comment">// Compact each domain to the actually active nodes so the reported node/DOF</span></span>
+<span class="source-line" data-line="397">    <span class="token comment">// counts and the linear system contain only the needed field unknowns.</span></span>
+<span class="source-line" data-line="398">    compact_mixed_mesh_to_active_nodes(mesh);</span>
+<span class="source-line" data-line="399"> </span>
+<span class="source-line" data-line="400">    <span class="token keyword">const</span> <span class="token keyword">bool</span> allow_displacement_polygon = displacement_only_mesh &amp;&amp; has_displacement_field(mesh);</span>
+<span class="source-line" data-line="401">    <span class="token keyword">if</span>(!mesh.velocity_elements.empty()) mesh.velocity_type = vem_taylor_hood_mesh</span>
+<span class="source-line" data-line="402">        ? ElementType::Polygon</span>
+<span class="source-line" data-line="403">        : infer_field_element_type(mesh.velocity_elements, mesh.dim, <span class="token keyword">false</span>);</span>
+<span class="source-line" data-line="404">    <span class="token keyword">if</span>(has_displacement_field(mesh)) mesh.displacement_type = infer_field_element_type(mesh.displacement_elements, mesh.dim, allow_displacement_polygon);</span>
+<span class="source-line" data-line="405">    <span class="token keyword">if</span>(!mesh.pressure_elements.empty()) mesh.pressure_type = vem_taylor_hood_mesh</span>
+<span class="source-line" data-line="406">        ? ElementType::Polygon</span>
+<span class="source-line" data-line="407">        : infer_field_element_type(mesh.pressure_elements, mesh.dim, <span class="token keyword">false</span>);</span>
+<span class="source-line" data-line="408">    <span class="token keyword">if</span>((!mesh.velocity_elements.empty() &amp;&amp; mesh.velocity_type==ElementType::Unknown) ||</span>
+<span class="source-line" data-line="409">       (!mesh.pressure_elements.empty() &amp;&amp; mesh.pressure_type==ElementType::Unknown) ||</span>
+<span class="source-line" data-line="410">       (has_displacement_field(mesh) &amp;&amp; mesh.displacement_type==ElementType::Unknown)) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Unsupported field mesh element type.&quot;</span>);</span>
+<span class="source-line" data-line="411"> </span>
+<span class="source-line" data-line="412">    <span class="token keyword">const</span> <span class="token keyword">bool</span> velocity_polygonal = (mesh.velocity_type==ElementType::Polygon);</span>
+<span class="source-line" data-line="413">    <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; e:mesh.velocity_elements){</span>
+<span class="source-line" data-line="414">        <span class="token keyword">if</span>(!velocity_polygonal &amp;&amp; e.size()!=mesh.velocity_elements.front().size()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Mixed velocity element types are not supported.&quot;</span>);</span>
+<span class="source-line" data-line="415">        <span class="token keyword">if</span>(velocity_polygonal &amp;&amp; (e.size()&lt;<span class="token number">6</span> || (e.size()%<span class="token number">2</span>)!=<span class="token number">0</span>)) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Quadratic velocity VEM connectivity must be [v0,m0,v1,m1,...].&quot;</span>);</span>
+<span class="source-line" data-line="416">        <span class="token keyword">for</span>(<span class="token keyword">int</span> nid:e) <span class="token keyword">if</span>(nid&lt;<span class="token number">0</span> || nid&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.velocity_nodes.size())) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Invalid velocity node id in element connectivity.&quot;</span>);</span>
+<span class="source-line" data-line="417">    }</span>
+<span class="source-line" data-line="418">    <span class="token keyword">if</span>(has_displacement_field(mesh)){</span>
+<span class="source-line" data-line="419">        <span class="token keyword">const</span> <span class="token keyword">bool</span> displacement_polygonal = (mesh.displacement_type==ElementType::Polygon);</span>
+<span class="source-line" data-line="420">        <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; e:mesh.displacement_elements){</span>
+<span class="source-line" data-line="421">            <span class="token keyword">if</span>(!displacement_polygonal &amp;&amp; e.size()!=mesh.displacement_elements.front().size()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Mixed displacement element types are not supported.&quot;</span>);</span>
+<span class="source-line" data-line="422">            <span class="token keyword">if</span>(displacement_polygonal &amp;&amp; e.size()&lt;<span class="token number">3</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;A polygonal VEM displacement element needs at least three vertices.&quot;</span>);</span>
+<span class="source-line" data-line="423">            <span class="token keyword">for</span>(<span class="token keyword">int</span> nid:e) <span class="token keyword">if</span>(nid&lt;<span class="token number">0</span> || nid&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.displacement_nodes.size())) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Invalid displacement node id in element connectivity.&quot;</span>);</span>
+<span class="source-line" data-line="424">        }</span>
+<span class="source-line" data-line="425">    }</span>
+<span class="source-line" data-line="426">    <span class="token keyword">const</span> <span class="token keyword">bool</span> pressure_polygonal = (mesh.pressure_type==ElementType::Polygon);</span>
+<span class="source-line" data-line="427">    <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; e:mesh.pressure_elements){</span>
+<span class="source-line" data-line="428">        <span class="token keyword">if</span>(!pressure_polygonal &amp;&amp; e.size()!=mesh.pressure_elements.front().size()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Mixed pressure element types are not supported.&quot;</span>);</span>
+<span class="source-line" data-line="429">        <span class="token keyword">if</span>(pressure_polygonal &amp;&amp; e.size()&lt;<span class="token number">3</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Linear pressure VEM polygon needs at least three vertices.&quot;</span>);</span>
+<span class="source-line" data-line="430">        <span class="token keyword">for</span>(<span class="token keyword">int</span> nid:e) <span class="token keyword">if</span>(nid&lt;<span class="token number">0</span> || nid&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.pressure_nodes.size())) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Invalid pressure node id in element connectivity.&quot;</span>);</span>
+<span class="source-line" data-line="431">    }</span>
+<span class="source-line" data-line="432">    <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; kv:mesh.velocity_boundaries){</span>
+<span class="source-line" data-line="433">        <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; ent:kv.second){</span>
+<span class="source-line" data-line="434">            <span class="token keyword">for</span>(<span class="token keyword">int</span> nid:ent.node_ids) <span class="token keyword">if</span>(nid&lt;<span class="token number">0</span> || nid&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.velocity_nodes.size())) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Invalid velocity boundary node id in group: &quot;</span>+kv.first);</span>
+<span class="source-line" data-line="435">        }</span>
+<span class="source-line" data-line="436">    }</span>
+<span class="source-line" data-line="437">    <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; kv:mesh.displacement_boundaries){</span>
+<span class="source-line" data-line="438">        <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; ent:kv.second){</span>
+<span class="source-line" data-line="439">            <span class="token keyword">for</span>(<span class="token keyword">int</span> nid:ent.node_ids) <span class="token keyword">if</span>(nid&lt;<span class="token number">0</span> || nid&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.displacement_nodes.size())) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Invalid displacement boundary node id in group: &quot;</span>+kv.first);</span>
+<span class="source-line" data-line="440">        }</span>
+<span class="source-line" data-line="441">    }</span>
+<span class="source-line" data-line="442">    <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; kv:mesh.pressure_boundaries){</span>
+<span class="source-line" data-line="443">        <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; ent:kv.second){</span>
+<span class="source-line" data-line="444">            <span class="token keyword">for</span>(<span class="token keyword">int</span> nid:ent.node_ids) <span class="token keyword">if</span>(nid&lt;<span class="token number">0</span> || nid&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(mesh.pressure_nodes.size())) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Invalid pressure boundary node id in group: &quot;</span>+kv.first);</span>
+<span class="source-line" data-line="445">        }</span>
+<span class="source-line" data-line="446">    }</span>
+<span class="source-line" data-line="447"> </span>
+<span class="source-line" data-line="448">    <span class="token keyword">return</span> mesh;</span>
+<span class="source-line" data-line="449">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-b88ea2a7c8d7aa.html">← compact_mixed_mesh_to_active_nodes()</a><a href="fn-c8998acca8e78d.html">read_mixed_mesh() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   Single RVE problem with periodic boundary conditions &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="example-page section-wrap cook-page">
+    <a class="back-button route-card" href="app-multiscale.html">
+     &larr; Back to Multiscale
+    </a>
+    <p class="eyebrow">
+     Multiscale / Single RVE problem
+    </p>
+    <h1>
+     Single RVE problem with periodic boundary conditions
+    </h1>
+    <p class="lead">
+     A standalone RVE page for prescribed macro deformation gradient, periodic constraints, augmented KKT solve, homogenized Piola stress, and finite-difference verification of the tangent sensitivity.
+    </p>
+   </section>
+   <section class="doc-section section-wrap cook-page">
+    <div class="section-heading"><p class="eyebrow">Choose a discretization</p><h2>Three independently documented and downloadable RVE examples.</h2></div>
+    <div class="application-grid">
+     <a class="app-card route-card" href="detail-single-rve-fem.html"><div class="app-body"><span class="tag">FEM</span><h3>Single RVE · FEM</h3><p>Standard finite-element micro equilibrium with periodic constraints.</p><span class="text-link">Open example &rarr;</span></div></a>
+     <a class="app-card route-card" href="detail-single-rve-vem.html"><div class="app-body"><span class="tag">Linear VEM</span><h3>Single RVE · Linear VEM</h3><p>First-order polygonal projection and stabilization.</p><span class="text-link">Open example &rarr;</span></div></a>
+     <a class="app-card route-card" href="detail-single-rve-vem-quadratic.html"><div class="app-body"><span class="tag">Quadratic VEM</span><h3>Single RVE · Quadratic VEM</h3><p>Second-order polygonal projection and DOFI stabilization.</p><span class="text-link">Open example &rarr;</span></div></a>
+    </div>
+   </section>
+<!-- GENERATED:RVE_OVERVIEW:START -->
+<section id="rve-sensitivity-overview" class="doc-section section-wrap cook-page rve-verification">
+<div class="section-heading"><p class="eyebrow">Finite-difference verification</p><h2>Check the transferred sensitivity against solved RVE responses.</h2><p>All three elastic examples use the same prescribed deformation and perturbation sweep. Every perturbed RVE is re-equilibrated before taking a central difference of its integrated Piola stress.</p></div>
+<figure class="rve-error-figure"><img src="../assets/images/rve-sensitivity-comparison.svg" width="1100" height="620" loading="lazy" alt="Measured sensitivity relative-error curves for FEM, linear VEM, and quadratic VEM over eight central-difference perturbation sizes."/><figcaption>The curves measure agreement of each implementation with its own finite-difference response. They are not a comparison of FE and VE discretization accuracy.</figcaption></figure>
+<div class="section-heading compact-heading"><h3>Same representative perturbation: \(\varepsilon=10^{-6}\)</h3></div>
+<div class="equation-code-table-wrap"><table class="equation-code-table"><thead><tr><th>RVE</th><th>Relative Frobenius error</th><th>Maximum absolute component error</th><th>Details</th></tr></thead><tbody><tr><th scope="row"><a href="detail-single-rve-fem.html#sensitivity-verification">FEM</a></th><td>8.077e-11</td><td>1.579e-08</td><td><a href="detail-single-rve-fem.html#sensitivity-verification">Graph and component table →</a></td></tr><tr><th scope="row"><a href="detail-single-rve-vem.html#sensitivity-verification">VEM k=1</a></th><td>9.966e-11</td><td>1.477e-08</td><td><a href="detail-single-rve-vem.html#sensitivity-verification">Graph and component table →</a></td></tr><tr><th scope="row"><a href="detail-single-rve-vem-quadratic.html#sensitivity-verification">VEM k=2</a></th><td>8.211e-11</td><td>1.258e-08</td><td><a href="detail-single-rve-vem-quadratic.html#sensitivity-verification">Graph and component table →</a></td></tr></tbody></table></div>
+<p>\(\bar{\mathbf F}=\begin{bmatrix}1.015&amp;0.02\\0.005&amp;1.01\end{bmatrix}\), RVE tolerance \(10^{-12}\), 65 equilibrium solves per example. Small nonzero errors reflect finite-difference truncation, solver convergence, and floating-point precision.</p>
+<p><a href="../assets/images/rve-sensitivity-comparison.svg" download>Download comparison graph (SVG)</a></p></section>
+<!-- GENERATED:RVE_OVERVIEW:END -->
+   <section class="doc-section section-wrap cook-page hyperelastic-document-section">
+    <div class="plasticity-document-panel hyperelastic-document-panel">
+     <div aria-label="Single RVE documentation tabs" class="plasticity-tabs" role="tablist">
+      <button aria-selected="true" class="active" data-rve-tab="theory" role="tab" type="button">
+       Theory
+      </button>
+      <button aria-selected="false" data-rve-tab="simulation" role="tab" type="button">
+       Simulation
+      </button>
+     </div>
+     <div class="plasticity-tab-panel active" data-rve-panel="theory" role="tabpanel">
+      <div class="section-heading">
+       <p class="eyebrow">
+        Theory
+       </p>
+       <h2>
+        Periodic micro fluctuation problem.
+       </h2>
+       <p>
+        The RVE receives a macro deformation gradient and solves for a periodic fluctuation field. The averaged Piola stress is then used as the macro constitutive response.
+       </p>
+      </div>
+      <div class="math-explain-grid theory-grid">
+       <article class="math-card">
+        <span class="tag">
+         1 &middot; Macro input
+        </span>
+        <h3>
+         Prescribed deformation gradient
+        </h3>
+        <div class="formula-block">
+         \[\mathbf{F}_M = \begin{bmatrix} F_{11} &amp; F_{12} \ F_{21} &amp; F_{22} \end{bmatrix}\]
+        </div>
+        <p>
+         The standalone RVE run is driven by command-line or input-file values for the macro deformation gradient.
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         2 &middot; Micro split
+        </span>
+        <h3>
+         Affine part plus periodic fluctuation
+        </h3>
+        <div class="formula-block">
+         \[\mathbf{u}(\mathbf{X}) = (\mathbf{F}_M-\mathbf{I})\mathbf{X} + \mathbf{w}(\mathbf{X}), \qquad \mathbf{w}^{+}=\mathbf{w}^{-}\]
+        </div>
+        <p>
+         Periodic boundary constraints enforce matching fluctuation values on paired RVE boundaries, while one anchor removes rigid-body motion.
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         3 &middot; Homogenization
+        </span>
+        <h3>
+         Volume-averaged Piola stress
+        </h3>
+        <div class="formula-block">
+         \[\bar{\mathbf{P}} = \frac{1}{|\Omega_{RVE}|}\int_{\Omega_{RVE}} \mathbf{P}\,dV\]
+        </div>
+        <p>
+         The code stores both the integrated stress and the volume-normalized average, which is useful for ACEFEM-style comparisons.
+        </p>
+       </article>
+       <article class="math-card">
+        <span class="tag">
+         4 &middot; Sensitivity
+        </span>
+        <h3>
+         Macro tangent data
+        </h3>
+        <div class="formula-block">
+         \[\mathbb{C}_{iA aB}=\frac{\partial}{\partial F_{aB}}\int_{\Omega_{RVE}} P_{iA}\,dV\]
+        </div>
+        <p>
+         When enabled, the sensitivity convention is integrated-Piola first; volume normalization can be applied later when needed by the macro formulation.
+        </p>
+       </article>
+      </div>
+     </div>
+     <div class="plasticity-tab-panel" data-rve-panel="simulation" role="tabpanel">
+      <div class="section-heading">
+       <p class="eyebrow">
+        Simulation
+       </p>
+       <h2>
+        PBC pairing, sparse KKT solve, and RVE outputs.
+       </h2>
+       <p>
+        The simulation side shows how the micro problem is assembled and solved. The strongest implementation point is that the augmented PBC matrix is built directly in sparse form.
+       </p>
+      </div>
+      <div class="cook-workflow">
+       <article>
+        <span>
+         1
+        </span>
+        <h3>
+         Read micro problem
+        </h3>
+        <p>
+         Micro mesh, DOFs, material parameters, and solver settings are read into a normal
+         <code>
+          Problem
+         </code>
+         .
+        </p>
+       </article>
+       <article>
+        <span>
+         2
+        </span>
+        <h3>
+         Build PBC pairs
+        </h3>
+        <p>
+         Left/right and bottom/top boundary nodes are paired with a coordinate tolerance.
+        </p>
+       </article>
+       <article>
+        <span>
+         3
+        </span>
+        <h3>
+         Add anchor
+        </h3>
+        <p>
+         Anchor constraints remove rigid-body modes from the periodic fluctuation field.
+        </p>
+       </article>
+       <article>
+        <span>
+         4
+        </span>
+        <h3>
+         Assemble Kuu
+        </h3>
+        <p>
+         The generic assembly path builds the micro equilibrium residual and tangent.
+        </p>
+       </article>
+       <article>
+        <span>
+         5
+        </span>
+        <h3>
+         Solve KKT
+        </h3>
+        <p>
+         Displacement corrections and Lagrange multiplier corrections are solved together.
+        </p>
+       </article>
+       <article>
+        <span>
+         6
+        </span>
+        <h3>
+         Average response
+        </h3>
+        <p>
+         Integrated Piola stress, averaged stress, and optional sensitivity data are written to CSV.
+        </p>
+       </article>
+      </div>
+      <div class="example-grid two-col local-equation-grid">
+       <article class="detail-card">
+        <span class="tag">
+         Sparse KKT system
+        </span>
+        <h2>
+         Periodic constraints are solved as an augmented saddle-point system.
+        </h2>
+        <div class="equation-box block-matrix-equation">
+         <span class="matrix-block two-by-two">
+          <span>
+           K
+           <sub>
+            uu
+           </sub>
+          </span>
+          <span>
+           C
+           <sup>
+            T
+           </sup>
+          </span>
+          <span>
+           C
+          </span>
+          <span>
+           0
+          </span>
+         </span>
+         <span class="matrix-times">
+          &times;
+         </span>
+         <span class="matrix-block vector-block">
+          <span>
+           &Delta;u
+          </span>
+          <span>
+           &Delta;&lambda;
+          </span>
+         </span>
+         <span class="matrix-equals">
+          =
+         </span>
+         <span class="matrix-minus">
+          &minus;
+         </span>
+         <span class="matrix-block vector-block">
+          <span>
+           R
+           <sub>
+            u
+           </sub>
+          </span>
+          <span>
+           R
+           <sub>
+            c
+           </sub>
+          </span>
+         </span>
+        </div>
+        <p>
+         Instead of allocating a dense augmented matrix, the implementation preserves the CSR graph of
+         <code>
+          Kuu
+         </code>
+         and appends only the sparse constraint rows and columns.
+        </p>
+       </article>
+       <article class="detail-card">
+        <span class="tag">
+         Implementation link
+        </span>
+        <h2>
+         Relevant functions
+        </h2>
+        <ul class="clean-list function-link-list code-list">
+         <li>
+          <a class="function-link route-card" href="../code/multiscale.html">
+           <code>
+            build_square_rve_pbc_constraints()
+           </code>
+          </a>
+         </li>
+         <li>
+          <a class="function-link route-card" href="../code/multiscale.html">
+           <code>
+            solve_rve_pbc_augmented()
+           </code>
+          </a>
+         </li>
+         <li>
+          <a class="function-link route-card" href="../code/multiscale.html">
+           <code>
+            make_augmented_matrix_pattern()
+           </code>
+          </a>
+         </li>
+         <li>
+          <a class="function-link route-card" href="../code/multiscale.html">
+           <code>
+            compute_rve_macro_response()
+           </code>
+          </a>
+         </li>
+        </ul>
+       </article>
+      </div>
+      <div class="actual-code-stack">
+       <details class="code-details" open="">
+        <summary>
+         Standalone RVE execution pattern
+        </summary>
+        <pre class="example-code"><code>RveSolveOptions opt;
+opt.Fmacro = {{ {F11, F12}, {F21, F22} }};
+opt.pair_tol = 1.0e-8;
+opt.vtk_output = "output/rve_solution.vtk";
+opt.csv_output = "output/rve_macro_response.csv";
+
+RveSolveResult result = solve_rve_pbc_augmented(
+    micro_problem, micro_params, opt
+);
+
+// result.macro.intP, result.macro.Pbar, result.sensitivity</code></pre>
+       </details>
+      </div>
+     </div>
+    </div>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

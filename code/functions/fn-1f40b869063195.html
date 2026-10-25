@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Scatter one dense element residual/tangent into the global residual and CSR values using precomputed CSR entry indices."><title>assemble_element_system_csr() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../assembly.html?file=assembly.cpp">← core/assembly/assembly.cpp</a>
+<p class="eyebrow">Function detail</p><h1>assemble_element_system_csr()</h1><p class="lead">Scatter one dense element residual/tangent into the global residual and CSR values using precomputed CSR entry indices.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>void assemble_element_system_csr(const ElementSystem &amp;es, const std::vector&lt; int &gt; &amp;dofs, const std::vector&lt; int &gt; &amp;idx, Vector &amp;R, CSRMatrix &amp;K)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/assembly/assembly.cpp:186</dd></div><div><dt>Declaration</dt><dd>core/assembly/assembly.h:131</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/assembly/assembly.cpp#L186" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 186–196</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="186"><span class="token keyword">void</span> assemble_element_system_csr(<span class="token keyword">const</span> ElementSystem&amp; es,<span class="token keyword">const</span> std::vector&lt;<span class="token keyword">int</span>&gt;&amp; dofs,</span>
+<span class="source-line" data-line="187">                                        <span class="token keyword">const</span> std::vector&lt;<span class="token keyword">int</span>&gt;&amp; idx,Vector&amp; R,CSRMatrix&amp; K){</span>
+<span class="source-line" data-line="188">    <span class="token keyword">const</span> <span class="token keyword">int</span> n=static_cast&lt;<span class="token keyword">int</span>&gt;(dofs.size());</span>
+<span class="source-line" data-line="189">    <span class="token keyword">if</span>(static_cast&lt;<span class="token keyword">int</span>&gt;(es.residual.size())!=n || static_cast&lt;<span class="token keyword">int</span>&gt;(es.tangent.size())!=n*n || static_cast&lt;<span class="token keyword">int</span>&gt;(idx.size())!=n*n)</span>
+<span class="source-line" data-line="190">        <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad element system size.&quot;</span>);</span>
+<span class="source-line" data-line="191">    <span class="token keyword">for</span>(<span class="token keyword">int</span> a=<span class="token number">0</span>;a&lt;n;++a){</span>
+<span class="source-line" data-line="192">        R[dofs[a]] += es.residual[a];</span>
+<span class="source-line" data-line="193">        <span class="token keyword">const</span> <span class="token keyword">int</span> row = a*n;</span>
+<span class="source-line" data-line="194">        <span class="token keyword">for</span>(<span class="token keyword">int</span> b=<span class="token number">0</span>;b&lt;n;++b) K.values[idx[row+b]] += es.tangent[row+b];</span>
+<span class="source-line" data-line="195">    }</span>
+<span class="source-line" data-line="196">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-4296d7908cef2c.html">← gather_local_past_dofs_into()</a><a href="fn-0e5a327f6027de.html">is_supported_continuum_domain() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

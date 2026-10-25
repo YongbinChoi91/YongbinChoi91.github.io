@@ -1,0 +1,36 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements remap boundary map."><title>remap_boundary_map() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../mesh.html?file=mesh_reader.cpp">← core/mesh/mesh_reader.cpp</a>
+<p class="eyebrow">Function detail</p><h1>remap_boundary_map()</h1><p class="lead">Implements remap boundary map.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static std::map&lt; std::string, std::vector&lt; BoundaryEntity &gt; &gt; remap_boundary_map(const std::map&lt; std::string, std::vector&lt; BoundaryEntity &gt; &gt; &amp;in, const std::vector&lt; int &gt; &amp;map)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/mesh/mesh_reader.cpp:91</dd></div><div><dt>Declaration</dt><dd>core/mesh/mesh_reader.cpp:91</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/mesh/mesh_reader.cpp#L91" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 91–113</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="91"><span class="token keyword">static</span> std::map&lt;std::string,std::vector&lt;BoundaryEntity&gt;&gt; remap_boundary_map(</span>
+<span class="source-line" data-line="92">    <span class="token keyword">const</span> std::map&lt;std::string,std::vector&lt;BoundaryEntity&gt;&gt;&amp; in,</span>
+<span class="source-line" data-line="93">    <span class="token keyword">const</span> std::vector&lt;<span class="token keyword">int</span>&gt;&amp; map</span>
+<span class="source-line" data-line="94">){</span>
+<span class="source-line" data-line="95">    std::map&lt;std::string,std::vector&lt;BoundaryEntity&gt;&gt; out;</span>
+<span class="source-line" data-line="96">    <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; kv:in){</span>
+<span class="source-line" data-line="97">        <span class="token keyword">auto</span>&amp; dst=out[kv.first];</span>
+<span class="source-line" data-line="98">        <span class="token keyword">for</span>(<span class="token keyword">const</span> <span class="token keyword">auto</span>&amp; ent:kv.second){</span>
+<span class="source-line" data-line="99">            BoundaryEntity r;</span>
+<span class="source-line" data-line="100">            r.element_id=ent.element_id;</span>
+<span class="source-line" data-line="101">            <span class="token keyword">bool</span> keep=<span class="token keyword">true</span>;</span>
+<span class="source-line" data-line="102">            <span class="token keyword">for</span>(<span class="token keyword">int</span> old:ent.node_ids){</span>
+<span class="source-line" data-line="103">                <span class="token keyword">if</span>(old&lt;<span class="token number">0</span> || old&gt;=static_cast&lt;<span class="token keyword">int</span>&gt;(map.size()) || map[old]&lt;<span class="token number">0</span>){</span>
+<span class="source-line" data-line="104">                    keep=<span class="token keyword">false</span>;</span>
+<span class="source-line" data-line="105">                    <span class="token keyword">break</span>;</span>
+<span class="source-line" data-line="106">                }</span>
+<span class="source-line" data-line="107">                r.node_ids.push_back(map[old]);</span>
+<span class="source-line" data-line="108">            }</span>
+<span class="source-line" data-line="109">            <span class="token keyword">if</span>(keep) dst.push_back(std::move(r));</span>
+<span class="source-line" data-line="110">        }</span>
+<span class="source-line" data-line="111">    }</span>
+<span class="source-line" data-line="112">    <span class="token keyword">return</span> out;</span>
+<span class="source-line" data-line="113">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-3c6b08b5a364aa.html">← remap_element_connectivity()</a><a href="fn-b88ea2a7c8d7aa.html">compact_mixed_mesh_to_active_nodes() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

@@ -1,0 +1,23 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements clear trial material history store."><title>clear_trial_material_history_store() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../space.html?file=weak_form.h">← core/space/weak_form.h</a>
+<p class="eyebrow">Function detail</p><h1>clear_trial_material_history_store()</h1><p class="lead">Implements clear trial material history store.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Public</span>
+<h2>Signature</h2><p class="function-signature"><code>void clear_trial_material_history_store(MaterialHistoryStore &amp;history)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/space/weak_form.h:240</dd></div><div><dt>Declaration</dt><dd>core/space/weak_form.h:240</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/space/weak_form.h#L240" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 240–249</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="240"><span class="token keyword">inline</span> <span class="token keyword">void</span> clear_trial_material_history_store(MaterialHistoryStore&amp; history) {</span>
+<span class="source-line" data-line="241">    <span class="token keyword">for</span> (<span class="token keyword">auto</span>&amp; dh : history.domains) {</span>
+<span class="source-line" data-line="242">        <span class="token keyword">for</span> (<span class="token keyword">auto</span>&amp; eh : dh.elements) {</span>
+<span class="source-line" data-line="243">            <span class="token keyword">for</span> (<span class="token keyword">auto</span>&amp; gh : eh.gp) {</span>
+<span class="source-line" data-line="244">                gh.h_trial = gh.h_n;</span>
+<span class="source-line" data-line="245">                gh.state_trial = gh.state_n;</span>
+<span class="source-line" data-line="246">            }</span>
+<span class="source-line" data-line="247">        }</span>
+<span class="source-line" data-line="248">    }</span>
+<span class="source-line" data-line="249">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-55651957399fa4.html">← commit_material_history_store()</a><a href="fn-8e91c485a1c68b.html">active_constitutive_model_name() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

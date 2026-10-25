@@ -1,0 +1,27 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements primary postprocess field."><title>primary_postprocess_field() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../io.html?file=postprocess_hdf5.cpp">← core/io/postprocess_hdf5.cpp</a>
+<p class="eyebrow">Function detail</p><h1>primary_postprocess_field()</h1><p class="lead">Implements primary postprocess field.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>static const FieldInfo * primary_postprocess_field(const FieldMesh &amp;mesh, const std::vector&lt; std::string &gt; &amp;field_names)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/io/postprocess_hdf5.cpp:652</dd></div><div><dt>Declaration</dt><dd>core/io/postprocess_hdf5.cpp:652</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/io/postprocess_hdf5.cpp#L652" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 652–665</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="652"><span class="token keyword">static</span> <span class="token keyword">const</span> FieldInfo* primary_postprocess_field(</span>
+<span class="source-line" data-line="653">    <span class="token keyword">const</span> FieldMesh&amp; mesh,</span>
+<span class="source-line" data-line="654">    <span class="token keyword">const</span> std::vector&lt;std::string&gt;&amp; field_names</span>
+<span class="source-line" data-line="655">){</span>
+<span class="source-line" data-line="656">    <span class="token keyword">const</span> DofLayout&amp; layout = get_cached_dof_layout(mesh);</span>
+<span class="source-line" data-line="657">    <span class="token keyword">for</span>(<span class="token keyword">const</span> std::string&amp; name:field_names){</span>
+<span class="source-line" data-line="658">        <span class="token keyword">const</span> <span class="token keyword">int</span> fid = find_field_index(layout,name,<span class="token keyword">false</span>);</span>
+<span class="source-line" data-line="659">        <span class="token keyword">if</span>(fid&gt;=<span class="token number">0</span> &amp;&amp; !layout.fields[fid].elements.empty()) <span class="token keyword">return</span> &amp;layout.fields[fid];</span>
+<span class="source-line" data-line="660">    }</span>
+<span class="source-line" data-line="661">    <span class="token keyword">for</span>(<span class="token keyword">const</span> FieldInfo&amp; field:layout.fields){</span>
+<span class="source-line" data-line="662">        <span class="token keyword">if</span>(!field.elements.empty()) <span class="token keyword">return</span> &amp;field;</span>
+<span class="source-line" data-line="663">    }</span>
+<span class="source-line" data-line="664">    <span class="token keyword">return</span> <span class="token keyword">nullptr</span>;</span>
+<span class="source-line" data-line="665">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-ea71d3d9b41981.html">← collect_history_gauss_points()</a><a href="fn-794cc3c0121be3.html">reset_hdf5_solid_gauss_point_snapshots() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

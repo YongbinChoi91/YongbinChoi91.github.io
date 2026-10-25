@@ -1,0 +1,86 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Implements read dofs info."><title>read_dofs_info() · HiPaCs</title>
+<link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body><header class="topbar"><a class="brand" href="../../index.html"><span class="brand-mark">HC</span><span>HiPaCs</span></a><button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="top-links" aria-label="Primary navigation"><a href="../../index.html">Home</a><a href="../../main.html">Main Page</a><a href="../../framework.html">Framework</a><a href="../../architecture.html">Code Structure</a><a href="../../applications.html">Applications</a><a href="../../gallery.html">Gallery</a><a href="../../install.html">Install</a><a href="../../contact.html">Contact</a></nav></header>
+<main><section class="subpage-hero section-wrap wide-page-wrap function-source-hero"><a class="back-button" href="../space.html?file=field_layout.cpp">← core/space/field_layout.cpp</a>
+<p class="eyebrow">Function detail</p><h1>read_dofs_info()</h1><p class="lead">Implements read dofs info.</p></section>
+<section class="doc-section section-wrap wide-page-wrap function-source-page"><div class="function-meta-card"><span class="tag">Internal</span>
+<h2>Signature</h2><p class="function-signature"><code>DofsInfo read_dofs_info(const std::string &amp;filename)</code></p>
+<dl class="source-location-list"><div><dt>Implementation</dt><dd>core/space/field_layout.cpp:245</dd></div><div><dt>Declaration</dt><dd>core/space/field_layout.cpp:245</dd></div></dl>
+<a class="text-link" href="https://github.com/YongbinChoi91/HiPaCs/blob/main/core/space/field_layout.cpp#L245" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+<div class="source-code-card"><div class="source-code-heading"><h2>Full implementation</h2><span>lines 245–317</span></div>
+<pre class="source-code-light"><code class="language-cpp"><span class="source-line" data-line="245">DofsInfo read_dofs_info(<span class="token keyword">const</span> std::string&amp; filename){</span>
+<span class="source-line" data-line="246">    std::ifstream file(filename);</span>
+<span class="source-line" data-line="247">    <span class="token keyword">if</span>(!file) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Could not open DOFS info file: &quot;</span>+filename);</span>
+<span class="source-line" data-line="248">    DofsInfo info;</span>
+<span class="source-line" data-line="249">    std::string current_domain;</span>
+<span class="source-line" data-line="250">    std::string line;</span>
+<span class="source-line" data-line="251">    <span class="token keyword">while</span>(std::getline(file,line)){</span>
+<span class="source-line" data-line="252">        <span class="token keyword">if</span>(!line.empty() &amp;&amp; line.back()==<span class="token string">&#x27;\r&#x27;</span>) line.pop_back();</span>
+<span class="source-line" data-line="253">        <span class="token keyword">const</span> <span class="token keyword">auto</span> comment=line.find(<span class="token string">&#x27;#&#x27;</span>);</span>
+<span class="source-line" data-line="254">        <span class="token keyword">if</span>(comment!=std::string::npos) line=line.substr(<span class="token number">0</span>,comment);</span>
+<span class="source-line" data-line="255">        line=trim_copy(line);</span>
+<span class="source-line" data-line="256">        <span class="token keyword">if</span>(line.empty()) <span class="token keyword">continue</span>;</span>
+<span class="source-line" data-line="257">        std::stringstream ss(line);</span>
+<span class="source-line" data-line="258">        std::string key; ss &gt;&gt; key;</span>
+<span class="source-line" data-line="259">        key=lower_copy(key);</span>
+<span class="source-line" data-line="260">        <span class="token keyword">if</span>(key==<span class="token string">&quot;field_key&quot;</span> || key==<span class="token string">&quot;field_keys&quot;</span> || key==<span class="token string">&quot;fields&quot;</span>){</span>
+<span class="source-line" data-line="261">            std::string f;</span>
+<span class="source-line" data-line="262">            <span class="token keyword">while</span>(ss &gt;&gt; f){</span>
+<span class="source-line" data-line="263">                f=lower_copy(f);</span>
+<span class="source-line" data-line="264">                <span class="token keyword">if</span>(string_vector_contains(info.field_order,f)) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Duplicate field in DOFS_info.txt: &quot;</span>+f);</span>
+<span class="source-line" data-line="265">                info.field_order.push_back(f);</span>
+<span class="source-line" data-line="266">            }</span>
+<span class="source-line" data-line="267">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;domain&quot;</span> || key==<span class="token string">&quot;domain_name&quot;</span>){</span>
+<span class="source-line" data-line="268">            std::string name; ss &gt;&gt; name;</span>
+<span class="source-line" data-line="269">            <span class="token keyword">if</span>(name.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;DOFS_info domain declaration must be: domain &lt;name&gt;.&quot;</span>);</span>
+<span class="source-line" data-line="270">            info.domain_name=name;</span>
+<span class="source-line" data-line="271">            current_domain=normalize_domain_key(name);</span>
+<span class="source-line" data-line="272">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;history&quot;</span> || key==<span class="token string">&quot;history_variable&quot;</span> || key==<span class="token string">&quot;history_variables&quot;</span> || key==<span class="token string">&quot;histories&quot;</span>){</span>
+<span class="source-line" data-line="273">            std::string name;</span>
+<span class="source-line" data-line="274">            <span class="token keyword">int</span> nvars=<span class="token number">0</span>;</span>
+<span class="source-line" data-line="275">            <span class="token keyword">if</span>(key==<span class="token string">&quot;history_variables&quot;</span> || key==<span class="token string">&quot;history_variable&quot;</span>){</span>
+<span class="source-line" data-line="276">                <span class="token comment">// Accept either:</span></span>
+<span class="source-line" data-line="277">                <span class="token comment">//   history_variables 5</span></span>
+<span class="source-line" data-line="278">                <span class="token comment">//   history_variables plasticity 5</span></span>
+<span class="source-line" data-line="279">                std::string a,b; ss &gt;&gt; a;</span>
+<span class="source-line" data-line="280">                <span class="token keyword">if</span>(a.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;Bad history_variables line in DOFS_info.txt.&quot;</span>);</span>
+<span class="source-line" data-line="281">                std::stringstream as(a);</span>
+<span class="source-line" data-line="282">                <span class="token keyword">if</span>(as &gt;&gt; nvars &amp;&amp; as.eof()){</span>
+<span class="source-line" data-line="283">                    name=<span class="token string">&quot;history&quot;</span>;</span>
+<span class="source-line" data-line="284">                } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="285">                    name=lower_copy(a);</span>
+<span class="source-line" data-line="286">                    ss &gt;&gt; nvars;</span>
+<span class="source-line" data-line="287">                }</span>
+<span class="source-line" data-line="288">            } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="289">                ss &gt;&gt; name &gt;&gt; nvars;</span>
+<span class="source-line" data-line="290">                name=lower_copy(name);</span>
+<span class="source-line" data-line="291">            }</span>
+<span class="source-line" data-line="292">            <span class="token keyword">if</span>(name.empty() || nvars&lt;=<span class="token number">0</span>) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;History declaration must be: history &lt;name&gt; &lt;positive_nvars&gt;.&quot;</span>);</span>
+<span class="source-line" data-line="293">            <span class="token keyword">if</span>(!current_domain.empty()){</span>
+<span class="source-line" data-line="294">                add_history_spec(info.domain_histories[current_domain],{name,nvars},<span class="token string">&quot;domain &quot;</span>+current_domain);</span>
+<span class="source-line" data-line="295">            } <span class="token keyword">else</span> {</span>
+<span class="source-line" data-line="296">                add_history_spec(info.histories,{name,nvars},<span class="token string">&quot;global scope&quot;</span>);</span>
+<span class="source-line" data-line="297">            }</span>
+<span class="source-line" data-line="298">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;vem&quot;</span> || key==<span class="token string">&quot;vem_order&quot;</span> || key==<span class="token string">&quot;vem_type&quot;</span>){</span>
+<span class="source-line" data-line="299">            std::string order; ss &gt;&gt; order;</span>
+<span class="source-line" data-line="300">            <span class="token keyword">if</span>(order.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;VEM declaration must be: VEM linear|quadratic or VEM_ORDER 1|2.&quot;</span>);</span>
+<span class="source-line" data-line="301">            <span class="token keyword">if</span>(lower_copy(order)==<span class="token string">&quot;vem&quot;</span>){</span>
+<span class="source-line" data-line="302">                ss &gt;&gt; order;</span>
+<span class="source-line" data-line="303">                <span class="token keyword">if</span>(order.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;VEM declaration must include linear/quadratic or 1/2.&quot;</span>);</span>
+<span class="source-line" data-line="304">            }</span>
+<span class="source-line" data-line="305">            info.vem_order=parse_vem_order_token(order);</span>
+<span class="source-line" data-line="306">        } <span class="token keyword">else</span> <span class="token keyword">if</span>(key==<span class="token string">&quot;type&quot;</span>){</span>
+<span class="source-line" data-line="307">            std::string family; ss &gt;&gt; family;</span>
+<span class="source-line" data-line="308">            <span class="token keyword">if</span>(lower_copy(family)==<span class="token string">&quot;vem&quot;</span>){</span>
+<span class="source-line" data-line="309">                std::string order; ss &gt;&gt; order;</span>
+<span class="source-line" data-line="310">                <span class="token keyword">if</span>(order.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;TYPE VEM declaration must include linear/quadratic or 1/2.&quot;</span>);</span>
+<span class="source-line" data-line="311">                info.vem_order=parse_vem_order_token(order);</span>
+<span class="source-line" data-line="312">            }</span>
+<span class="source-line" data-line="313">        }</span>
+<span class="source-line" data-line="314">    }</span>
+<span class="source-line" data-line="315">    <span class="token keyword">if</span>(info.field_order.empty()) <span class="token keyword">throw</span> std::runtime_error(<span class="token string">&quot;DOFS_info.txt must contain a line like: field_key velocity displacement pressure&quot;</span>);</span>
+<span class="source-line" data-line="316">    <span class="token keyword">return</span> info;</span>
+<span class="source-line" data-line="317">}</span></code></pre></div>
+<nav class="function-sequence" aria-label="Adjacent functions"><a href="fn-0ae823ffdc0ce1.html">← history_specs_for_domain()</a><a href="fn-b6c72dd1a54ae8.html">read_dofs_field_order() →</a></nav></section></main>
+<script defer src="../../assets/js/main.js"></script></body></html>

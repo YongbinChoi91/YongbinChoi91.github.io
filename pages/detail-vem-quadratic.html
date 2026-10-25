@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   Quadratic VEM examples &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body>
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="example-page section-wrap cook-page">
+    <a class="back-button route-card" href="app-vem.html">
+     &larr; Back to VEM
+    </a>
+    <p class="eyebrow">
+     VEM / Quadratic VEM
+    </p>
+    <h1>
+     Quadratic polygonal VEM example
+    </h1>
+    <p class="lead">
+     A runnable 2D displacement example using quadratic projection, internal quadrature, and DOFI stabilization.
+    </p>
+   </section>
+   <section class="doc-section section-wrap cook-page">
+    <div class="section-heading">
+     <p class="eyebrow">Strong form</p>
+     <h2>Finite-strain equilibrium on a polygonal domain.</h2>
+    </div>
+    <div class="math-explain-grid theory-grid">
+     <article class="math-card wide">
+      <div class="formula-block large-formula">\[-\operatorname{Div}\mathbf P(\mathbf F)=\mathbf 0\quad\text{in }\Omega_0,
+      \qquad \mathbf F=\mathbf I+\nabla_0\mathbf u.\]</div>
+     </article>
+     <article class="math-card wide">
+      <span class="tag">Boundary conditions</span>
+      <div class="formula-block">\[\mathbf u=\bar{\mathbf u}\text{ on }\Gamma_D,
+      \qquad \mathbf P\mathbf N=\bar{\mathbf t}\text{ on }\Gamma_N.\]</div>
+      <p>The polygon boundary groups and actual prescribed values are listed in <code>input/BC.txt</code>.</p>
+     </article>
+     <article class="math-card wide">
+      <span class="tag">Weak form</span>
+      <div class="formula-block large-formula">\[G_E=
+      \int_E \mathbf P(\mathbf F(\Pi^\nabla\mathbf u)): \nabla_0(\Pi^\nabla\delta\mathbf u)\,dV
+      +S_E((I-\Pi)\mathbf u,(I-\Pi)\delta\mathbf u).\]</div>
+      <p>The consistency term is integrated at the cached internal quadrature points. The DOFI term controls the projection-null component.</p>
+     </article>
+    </div>
+    <div class="section-heading compact-heading">
+     <p class="eyebrow">Equation-to-code mapping</p>
+     <h2>The implementation follows the projected weak form directly.</h2>
+    </div>
+    <div class="equation-code-table-wrap">
+     <table class="equation-code-table">
+      <thead><tr><th>Mathematical quantity</th><th>Meaning</th><th>Code identifier</th><th>Source function</th></tr></thead>
+      <tbody>
+       <tr><td>\(\Pi^\nabla\mathbf u\)</td><td>Quadratic projection</td><td><code>u_pi</code></td><td><code>weak_scalar_vem</code></td></tr>
+       <tr><td>\(\Pi^\nabla\delta\mathbf u\)</td><td>Projected test field</td><td><code>du_pi</code></td><td><code>weak_scalar_vem</code></td></tr>
+       <tr><td>\(\nabla\Pi\mathbf u\)</td><td>Projected gradient</td><td><code>grad_u</code></td><td><code>weak_scalar_vem</code></td></tr>
+       <tr><td>\(S_E\)</td><td>DOFI stabilization</td><td><code>dofi_stabilization</code></td><td><code>dofi_stabilization</code></td></tr>
+       <tr><td>\(G_E\)</td><td>Element weak form</td><td><code>G</code></td><td><code>weak_scalar_vem</code></td></tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="example-run-panel">
+     <p class="eyebrow">Build and run</p>
+     <h2>Copy the verified model and input snapshot into the FEM slots.</h2>
+     <pre><code>cp FEM/models/weak_form.cpp FEM/models/weak_form.cpp.bak
+cp -R FEM/input FEM/input.bak
+cp Web/examples/vem-quadratic/weak_form.cpp FEM/models/weak_form.cpp
+cp Web/examples/vem-quadratic/input/*.txt FEM/input/
+make -C FEM MODEL_SRC=models/weak_form.cpp USE_VEM=1 run</code></pre>
+    </div>
+    <div class="section-heading compact-heading">
+     <p class="eyebrow">Download input files</p>
+     <h2>Files synchronized from the runnable quadratic VEM case.</h2>
+    </div>
+    <div class="download-grid">
+     <a class="download-card" download href="../examples/vem-quadratic/input/ProblemMesh.txt"><span class="tag">mesh</span><h3>ProblemMesh.txt</h3></a>
+     <a class="download-card" download href="../examples/vem-quadratic/input/DOFS_info.txt"><span class="tag">dofs</span><h3>DOFS_info.txt</h3></a>
+     <a class="download-card" download href="../examples/vem-quadratic/input/BC.txt"><span class="tag">bc</span><h3>BC.txt</h3></a>
+     <a class="download-card" download href="../examples/vem-quadratic/input/Material.txt"><span class="tag">material</span><h3>Material.txt</h3></a>
+     <a class="download-card" download href="../examples/vem-quadratic/input/Solver.txt"><span class="tag">solver</span><h3>Solver.txt</h3></a>
+     <a class="download-card" download href="../examples/vem-quadratic/input/Postprocessing.txt"><span class="tag">output</span><h3>Postprocessing.txt</h3></a>
+     <a class="download-card" download href="../examples/vem-quadratic/weak_form.cpp"><span class="tag">model</span><h3>weak_form.cpp</h3></a>
+    </div>
+    <button class="example-zip-button" disabled type="button">Download complete example (.zip) — coming after final validation</button>
+   </section>
+   <section class="doc-section section-wrap cook-page example-result-pending">
+    <p class="eyebrow">Result</p><h2>Result pending validation</h2>
+    <p>The final quadratic VEM displacement image will be added here after the full solid verification run.</p>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>

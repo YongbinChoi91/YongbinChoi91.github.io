@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="HiPaCs documentation website for solid mechanics, fluid mechanics, FSI, multiscale FEM/RVE, VEM, and automatic-differentiation-based weak forms." name="description"/>
+  <title>
+   Input / Configuration &middot; HiPaCs
+  </title>
+  <link href="../assets/css/styles.css" rel="stylesheet"/>
+  <script src="../assets/js/mathjax-config.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+ </head>
+ <body class="framework-detail-page">
+  <header class="topbar">
+   <a aria-label="HiPaCs home" class="brand" href="../index.html">
+    <span class="brand-mark">
+     HC
+    </span>
+    <span>
+     HiPaCs
+    </span>
+   </a>
+   <button aria-expanded="false" aria-label="Open navigation" class="menu-button" type="button">
+    <span>
+    </span>
+    <span>
+    </span>
+    <span>
+    </span>
+   </button>
+   <nav aria-label="Primary navigation" class="top-links">
+    <a class="" href="../index.html">
+     Home
+    </a>
+    <a class="" href="../main.html">
+     Main Page
+    </a>
+    <a class="" href="../framework.html">
+     Framework
+    </a>
+    <a class="" href="../architecture.html">
+     Code Structure
+    </a>
+    <a class="" href="../applications.html">
+     Applications
+    </a>
+    <a class="" href="../gallery.html">
+     Gallery
+    </a>
+    <a class="" href="../install.html">
+     Install
+    </a>
+    <a class="" href="../contact.html">
+     Contact
+    </a>
+   </nav>
+  </header>
+  <main id="top">
+   <section class="subpage-hero section-wrap wide-page-wrap">
+    <a class="back-button route-card" href="../framework.html">
+     &larr; Back to Framework
+    </a>
+    <p class="eyebrow">
+     Framework / Input layer
+    </p>
+    <h1>
+     Input / Configuration
+    </h1>
+    <p class="lead">
+     Text input files are converted into the runtime Problem and ProblemParameters objects used by the solver.
+    </p>
+   </section>
+   <section class="doc-section section-wrap wide-page-wrap framework-detail-wide">
+    <article class="framework-hero-card">
+     <span class="tag">
+      Purpose
+     </span>
+     <h2>
+      What this module does
+     </h2>
+     <p>
+      This module is the user-facing entry point of the code. It reads mesh, DOF, material, boundary-condition, solver, and postprocessing files, then prints a startup summary before calling the unified solver.
+     </p>
+    </article>
+    <div class="framework-wide-layout">
+     <article class="detail-card"><span class="tag">Configuration contract</span><h2>Inputs describe the problem, not the algorithm implementation</h2><p>Mesh and problem files define geometry and domains; DOF input selects fields; material and boundary inputs define constitutive data and constraints; solver and postprocessing inputs control execution and results.</p></article>
+     <article class="detail-card"><span class="tag">Basic algorithm</span><h2>Parse, validate, then construct</h2><div class="flow-stack"><span>Read text inputs</span><span>Validate keys and references</span><span>Build Problem + parameters</span><span>Pass immutable setup to the solve path</span></div></article>
+    </div>
+    <div class="input-format-grid">
+     <article class="detail-card"><span class="tag">BC.txt</span><h2>Boundary conditions</h2><ul class="input-key-reference"><li><code>DIRICHLET</code><span>Boundary group, component, and prescribed expression.</span></li><li><code>PRESSURE_DIRICHLET</code><span>Optional pressure constraint.</span></li></ul><pre class="example-code"><code>DIRICHLET INLET vx u_bar*parabolic_profile
+DIRICHLET INLET vy 0.0
+
+DIRICHLET WALLS vx 0.0
+DIRICHLET WALLS vy 0.0</code></pre></article>
+     <article class="detail-card"><span class="tag">Material.txt</span><h2>Material and model constants</h2><ul class="input-key-reference"><li><code>rho / mu</code><span>Density and viscosity.</span></li><li><code>youngs_modulus</code><span>Solid stiffness parameter.</span></li><li><code>poisson_ratio</code><span>Solid compressibility parameter.</span></li></ul><pre class="example-code"><code># Fluid
+rho 1e3
+mu 1e-3
+
+# Solid
+youngs_modulus 5.0e6
+poisson_ratio 0.3</code></pre></article>
+     <article class="detail-card"><span class="tag">Solver.txt</span><h2>Nonlinear and linear controls</h2><ul class="input-key-reference"><li><code>solver_backend</code><span>UMFPACK, PETSc, or optional Pardiso.</span></li><li><code>linear_solver</code><span>Direct or Krylov method.</span></li><li><code>dt / total_time</code><span>Time-integration range.</span></li><li><code>max_iter / tol</code><span>Newton convergence controls.</span></li></ul><pre class="example-code"><code>solver_backend petsc
+linear_solver fgmres
+preconditioner fieldsplit
+
+dt 0.01
+total_time 5.0
+
+max_iter 20
+tol 1e-8</code></pre></article>
+     <article class="detail-card"><span class="tag">Postprocessing.txt</span><h2>Result and visualization controls</h2><ul class="input-key-reference"><li><code>output_root</code><span>Root output directory.</span></li><li><code>hdf5_output</code><span>Structured result database switch.</span></li><li><code>vtk_output</code><span>Visualization output switch.</span></li><li><code>vtk_interval</code><span>Accepted-step output cadence.</span></li></ul><pre class="example-code"><code>output_root ./output
+hdf5_output on
+
+vtk_output on
+vtk_interval 1
+
+final_dofs_output on</code></pre></article>
+     <a class="detail-card route-card input-format-card" href="framework-dofs-info.html"><span class="tag">DOFS_info.txt</span><h2>Fields and local history</h2><p>Open the formatted field-order, domain, VEM-order, and history-variable reference.</p><span class="text-link">Open DOF input &rarr;</span></a>
+     <a class="detail-card route-card input-format-card" href="framework-mesh.html"><span class="tag">ProblemMesh.txt</span><h2>Single- and multi-domain mesh</h2><p>Open the formatted geometry, connectivity, domain, and boundary-section reference.</p><span class="text-link">Open mesh input &rarr;</span></a>
+    </div>
+    <div class="framework-detail-grid implementation-summary">
+     <article class="detail-card">
+      <h2>
+       Main files
+      </h2>
+      <ul class="clean-list code-list">
+       <li>
+        <code>
+         main.cpp
+        </code>
+       </li>
+       <li>
+        <code>
+         mesh.cpp
+        </code>
+       </li>
+       <li>
+        <code>
+         mesh.h
+        </code>
+       </li>
+      </ul>
+     </article>
+     <article class="detail-card">
+      <h2>
+       Key structures
+      </h2>
+      <ul class="clean-list code-list">
+       <li>
+        <code>
+         ProblemParameters
+        </code>
+       </li>
+       <li>
+        <code>
+         MaterialParameters
+        </code>
+       </li>
+       <li>
+        <code>
+         LinearSolverSettings
+        </code>
+       </li>
+       <li>
+        <code>
+         ScalarFunction
+        </code>
+       </li>
+       <li>
+        <code>
+         DofsInfo
+        </code>
+       </li>
+      </ul>
+     </article>
+     <article class="detail-card">
+      <h2>
+       Key functions
+      </h2>
+      <p class="function-map-intro">
+       Click a function name to open its implementation-oriented code explanation.
+      </p>
+      <ul class="clean-list function-link-list code-list">
+       <li>
+        <a class="function-link route-card" href="../code/mesh.html">
+         <code>
+          read_dofs_info()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/mesh.html">
+         <code>
+          read_mixed_mesh()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/mesh.html">
+         <code>
+          read_multi_domain_problem()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/io.html">
+         <code>
+          make_scalar_function()
+         </code>
+        </a>
+       </li>
+       <li>
+        <a class="function-link route-card" href="../code/io.html">
+         <code>
+          print_*_summary()
+         </code>
+        </a>
+       </li>
+      </ul>
+     </article>
+    </div>
+    <div class="framework-wide-layout">
+     <article class="detail-card">
+      <h2>
+       Data flow
+      </h2>
+      <div class="flow-stack">
+       <span>
+        Input text files
+       </span>
+       <span>
+        Problem + ProblemParameters
+       </span>
+       <span>
+        Mesh / DOF layout
+       </span>
+       <span>
+        Solver driver
+       </span>
+      </div>
+     </article>
+     <article class="detail-card">
+      <h2>
+       Design point
+      </h2>
+      <ul class="clean-list">
+       <li>
+        Keep user configuration text-based and reproducible.
+       </li>
+       <li>
+        Allow scalar expressions such as sin, min, max, piecewise, and piecewise_cycle.
+       </li>
+       <li>
+        Keep install/build choices separated from runtime solver choices.
+       </li>
+      </ul>
+     </article>
+    </div>
+    <aside class="detail-card extension-point"><span class="tag">Extension point</span><h2>Add configuration without coupling it to numerics</h2><p>New model controls should be parsed into validated problem data. Assembly and solver algorithms should consume that data through the existing problem contract.</p><a class="text-link" href="../architecture.html">Open Code Structure &rarr;</a></aside>
+    <div class="function-map-promo detail-card">
+     <span class="tag">
+      Function map
+     </span>
+     <h2>
+      Open the implementation-level code view.
+     </h2>
+     <p>
+      Inspect selected functions from this module with role, mathematical meaning, and C++ snippets.
+     </p>
+     <a class="button primary route-card" href="../code/io.html">
+      Open Input function map &rarr;
+     </a>
+    </div>
+   </section>
+  </main>
+  <script defer="True" src="../assets/js/main.js">
+  </script>
+ </body>
+</html>
