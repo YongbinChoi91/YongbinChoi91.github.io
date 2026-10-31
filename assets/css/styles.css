@@ -3945,83 +3945,79 @@ mjx-container[display="true"] {
   }
 }
 
-/* Home: readable introduction alongside a full simulation frame. */
+/* Home: a large identity above the full-width simulation. */
 .video-hero {
-  padding: clamp(28px, 4.5vw, 72px) clamp(18px, 4vw, 64px);
-  background: radial-gradient(ellipse at 85% 30%, #183d50 0%, transparent 60%), #0b1c29;
+  padding: clamp(36px, 5vw, 72px) clamp(18px, 4vw, 64px) clamp(32px, 5vw, 72px);
+  background: radial-gradient(ellipse at 50% 0%, #20465b 0%, transparent 64%), #0b1c29;
 }
 
 .video-hero-content {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-  align-items: center;
-  gap: clamp(24px, 3vw, 48px);
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(36px, 4.5vw, 64px);
   width: min(1440px, 100%);
   margin: 0 auto;
 }
 
 .video-hero .landing-copy {
-  padding: clamp(28px, 3.2vw, 48px);
-  border: 1px solid #e2e9ef;
-  border-radius: 24px;
-  background: #f8fafc;
-  box-shadow: 0 20px 60px #0002;
+  min-width: 0;
+  text-align: center;
 }
 
 .video-hero .landing-copy > .eyebrow {
-  margin-bottom: 28px;
-  color: #276b92;
+  margin-bottom: 14px;
+  color: #a9c8d9;
   font-size: 11px;
-  letter-spacing: .12em;
+  letter-spacing: .22em;
 }
 
 .video-hero h1 {
-  margin-bottom: 24px;
-  color: #132b3d;
-  font-size: clamp(38px, 3.7vw, 60px);
-  line-height: 1.08;
-  letter-spacing: -.045em;
-  text-wrap: balance;
+  max-width: none;
+  margin: 0 0 20px;
+  color: #f5f9fc;
+  font-size: clamp(88px, 13vw, 192px);
+  font-weight: 800;
+  line-height: .95;
+  letter-spacing: -.065em;
 }
 
 .video-hero .lead {
-  color: #40546a;
-  font-size: clamp(16px, 1.35vw, 19px);
-  line-height: 1.65;
-}
-
-.landing-hero-detail {
-  margin: 18px 0 0;
-  color: #657386;
-  font-size: 14px;
+  max-width: 800px;
+  margin: 0 auto;
+  color: #bdd0dc;
+  font-size: clamp(15px, 1.5vw, 21px);
+  line-height: 1.6;
+  text-wrap: balance;
 }
 
 .video-hero .hero-actions {
-  gap: 10px;
-  margin-top: 30px;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
 }
 
 .video-hero .button {
   gap: 12px;
-  min-height: 48px;
-  padding: 12px 18px;
+  min-height: 44px;
+  padding: 10px 18px;
   font-size: 13px;
 }
 
-.video-hero .button.primary { background: #174b68; }
-.video-hero .button.secondary { background: transparent; border-color: #cbd6e0; }
-.video-hero .button:hover { box-shadow: 0 6px 18px #174b6826; }
+.video-hero .button.primary { background: #eaf4fa; color: #12334a; box-shadow: 0 8px 28px #0002; }
+.video-hero .button.secondary { color: #e3eef5; background: transparent; border-color: #6f94aa80; }
+.video-hero .button:hover { box-shadow: 0 6px 24px #85c5e333; }
 
 .landing-source-link {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-top: 24px;
-  color: #52687b;
+  padding: 10px 14px;
+  color: #bdd0dc;
   font-size: 13px;
 }
 
-.landing-source-link:hover { color: #174b68; text-decoration: underline; }
+.landing-source-link:hover { color: #fff; text-decoration: underline; }
 
 .landing-simulation { min-width: 0; margin: 0; }
 
@@ -4097,24 +4093,21 @@ mjx-container[display="true"] {
 .landing-applications { padding-top: 72px; padding-bottom: 88px; }
 .landing-applications .landing-summary { padding: clamp(24px, 4vw, 42px); }
 
-@media (max-width: 1000px) {
-  .video-hero { padding: 32px 24px 40px; }
-  .video-hero-content { grid-template-columns: 1fr; max-width: 760px; gap: 32px; }
-  .video-hero h1 { max-width: 620px; font-size: clamp(40px, 6vw, 58px); }
-  .video-hero .landing-copy { padding: 32px; }
-}
-
-@media (max-width: 520px) {
-  .video-hero { padding: 20px 18px 32px; }
-  .video-hero .landing-copy { padding: 28px 24px; border-radius: 18px; }
-  .video-hero .landing-copy > .eyebrow { margin-bottom: 22px; font-size: 10px; }
-  .video-hero h1 { font-size: clamp(34px, 9vw, 44px); }
-  .video-hero .hero-actions { flex-direction: column; }
-  .video-hero .hero-actions .button { width: 100%; }
+@media (max-width: 760px) {
+  .video-hero { padding: 36px 18px; }
+  .video-hero-content { gap: 36px; }
+  .video-hero h1 { font-size: clamp(80px, 20vw, 144px); }
+  .video-hero .landing-copy > .eyebrow { font-size: 10px; }
   .landing-simulation-heading { font-size: 9px; letter-spacing: .08em; }
   .landing-video-frame { border-radius: 12px; }
   .landing-simulation-caption { padding-top: 18px; }
   .landing-applications { padding-top: 36px; padding-bottom: 48px; }
+}
+
+@media (max-width: 380px) {
+  .video-hero .hero-actions { gap: 8px; }
+  .video-hero .button { padding: 10px 12px; font-size: 12px; }
+  .landing-source-link { padding: 8px; }
 }
 
 /* Installation guide */
