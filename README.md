@@ -43,6 +43,21 @@ The legacy standalone mappings in `sync_examples.py` predate these snapshots;
 do not run an unrestricted sync over the curated standalone examples. Use the
 explicit multiscale/Single RVE case selections below for those branches.
 
+## Gallery media
+
+`gallery.html` lists the five selected results from `Video/Gallery/` with
+All, Solid, Fluid, and FSI filters. Cards load WebP thumbnails only. The native
+dialog loads one full image or video when selected; closing it stops playback
+and releases the video source. `assets/js/gallery.js` owns this interaction.
+
+The three large 4K recordings have separate H.264 copies in
+`Video/Gallery/web/`, with 30 fps and fast-start metadata. Airfoil uses 1080p
+at CRF 23; the dense-mesh FSI recordings use 720p at CRF 25 with a 2.4 Mb/s
+maximum video bitrate. Original
+recordings remain unchanged locally. Publish the optimized copies, thumbnails,
+`Fluid/Newtonian.mp4`, and `Solid/Torsion.png`; omit the large original recordings
+and the local compression utility from the website upload.
+
 ## Synchronize runnable examples
 
 ```sh

@@ -4328,3 +4328,46 @@ pre.source-code-light { max-height: 760px; margin: 0; padding: 1.35rem 0; overfl
 }
 .example-input-details summary { cursor: pointer; font-weight: 600; }
 .example-input-details pre { overflow-x: auto; }
+
+/* Gallery: lightweight previews, category filters, and one focused viewer. */
+.gallery-section { padding-top: 0; padding-bottom: 80px; }
+.gallery-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+.gallery-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.gallery-filters button { padding: 10px 22px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: #52687b; font: inherit; font-size: 14px; font-weight: 650; cursor: pointer; }
+.gallery-filters button[aria-pressed="true"] { background: #163e55; border-color: #163e55; color: #fff; }
+.gallery-filters button:hover { border-color: #276b92; }
+.gallery-result-count { margin: 0; font-size: 13px; }
+.gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.gallery-card { display: flex; flex-direction: column; min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: #fff; box-shadow: 0 6px 24px #172a3a06; transition: transform .2s, box-shadow .2s; }
+.gallery-card[hidden] { display: none; }
+.gallery-card:hover { transform: translateY(-4px); box-shadow: 0 16px 36px #172a3a14; }
+.gallery-card-preview { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-bottom: 1px solid #edf1f5; background: #fff; }
+.gallery-card-preview img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.gallery-media-badge { position: absolute; right: 12px; bottom: 12px; padding: 5px 10px; border-radius: 999px; background: #102b3de8; color: #fff; font-size: 10px; letter-spacing: .04em; }
+.gallery-card-body { display: flex; flex-direction: column; flex: 1; padding: 22px; }
+.gallery-card-body .eyebrow { margin-bottom: 8px; font-size: 10px; }
+.gallery-card-body h2 { margin-bottom: 10px; font-size: 22px; line-height: 1.25; }
+.gallery-card-body > p:not(.eyebrow) { margin-bottom: 24px; font-size: 14px; }
+.gallery-card-action { display: flex; justify-content: space-between; gap: 16px; margin-top: auto; color: #276b92; font-size: 12px; font-weight: 650; }
+.gallery-card:focus-visible, .gallery-filters button:focus-visible, .gallery-viewer a:focus-visible, .gallery-viewer button:focus-visible { outline: 3px solid #4c9fc7; outline-offset: 4px; }
+.gallery-viewer { width: min(1240px, calc(100% - 40px)); max-width: none; max-height: 94vh; max-height: 94svh; padding: 0; overflow: auto; border: 1px solid #ffffff30; border-radius: 20px; background: #102333; color: #f4f8fb; box-shadow: 0 32px 100px #0005; }
+.gallery-viewer::backdrop { background: #05111cde; backdrop-filter: blur(8px); }
+.gallery-viewer-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 26px; }
+.gallery-viewer-header .eyebrow { margin-bottom: 5px; color: #a0c0d2; font-size: 10px; }
+.gallery-viewer-header h2 { margin: 0; font-size: clamp(20px, 3vw, 28px); }
+.gallery-viewer-close { display: grid; place-items: center; flex-shrink: 0; width: 40px; height: 40px; border: 1px solid #7898ac66; border-radius: 50%; background: transparent; color: #fff; font: inherit; font-size: 28px; cursor: pointer; }
+.gallery-viewer-stage { display: grid; place-items: center; background: #fff; }
+.gallery-viewer-stage img, .gallery-viewer-stage video { display: block; width: 100%; max-height: 70vh; max-height: 70svh; object-fit: contain; }
+.gallery-viewer-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 18px 26px; font-size: 13px; }
+.gallery-viewer-footer p { margin: 0; color: #b4c9d7; }
+.gallery-viewer-footer a { color: #e3eef5; text-decoration: underline; text-underline-offset: 4px; }
+body.gallery-viewer-open { overflow: hidden; }
+@media (max-width: 1000px) { .gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) {
+  .gallery-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .gallery-filters button { padding: 9px 18px; font-size: 13px; }
+  .gallery-toolbar { gap: 14px; }
+  .gallery-viewer { width: calc(100% - 20px); border-radius: 14px; }
+  .gallery-viewer-header, .gallery-viewer-footer { padding: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .gallery-card { transition: none; } }

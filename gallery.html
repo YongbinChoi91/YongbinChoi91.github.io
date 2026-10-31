@@ -45,7 +45,7 @@
     <a class="" href="applications.html">
      Applications
     </a>
-    <a class="" href="gallery.html">
+    <a class="active" aria-current="page" href="gallery.html">
      Gallery
     </a>
     <a class="" href="install.html">
@@ -68,45 +68,95 @@
      Gallery
     </h1>
     <p class="lead">
-     A dedicated result-gallery space for future screenshots, VTK captures, benchmark figures, and animations.
+     Explore solid mechanics, fluid flow, and fluid–structure interaction. Select a result to view it in detail.
     </p>
    </section>
-   <section class="doc-section section-wrap" id="gallery">
-    <div class="section-heading">
-     <p class="eyebrow">
-      Gallery
-     </p>
-     <h2>
-      Result gallery placeholder.
-     </h2>
-     <p>
-      When simulation figures are ready, this area can become a filtered image grid for solid, fluid,
-              FSI, multiscale, and VEM examples.
-     </p>
+   <section class="doc-section section-wrap gallery-section" id="gallery" aria-label="Simulation results">
+    <div class="gallery-toolbar">
+     <div class="gallery-filters" role="group" aria-label="Filter results by application">
+      <button type="button" data-gallery-filter="All" aria-pressed="true" aria-controls="gallery-grid">All</button>
+      <button type="button" data-gallery-filter="Solid" aria-pressed="false" aria-controls="gallery-grid">Solid</button>
+      <button type="button" data-gallery-filter="Fluid" aria-pressed="false" aria-controls="gallery-grid">Fluid</button>
+      <button type="button" data-gallery-filter="FSI" aria-pressed="false" aria-controls="gallery-grid">FSI</button>
+     </div>
+     <p class="gallery-result-count" role="status" aria-live="polite" aria-atomic="true">5 results</p>
     </div>
-    <div class="gallery-placeholder">
-     <div>
-      FEM
-     </div>
-     <div>
-      VEM
-     </div>
-     <div>
-      Multiphysics
-     </div>
-     <div>
-      Multiscale
-     </div>
-     <div>
-      RVE
-     </div>
-     <div>
-      Benchmark
-     </div>
+    <div class="gallery-grid" id="gallery-grid">
+     <a class="gallery-card" href="Video/Gallery/Solid/Torsion.png" data-gallery-category="Solid" data-media-type="image" aria-haspopup="dialog">
+      <div class="gallery-card-preview">
+       <img src="Video/Gallery/web/torsion.webp" alt="Torsion" width="960" height="540" loading="lazy" decoding="async"/>
+       <span class="gallery-media-badge">↗ Image</span>
+      </div>
+      <div class="gallery-card-body">
+       <p class="eyebrow">Solid</p>
+       <h2>Torsion</h2>
+       <p>Large-deformation torsion of a solid.</p>
+       <span class="gallery-card-action">View image <span aria-hidden="true">↗</span></span>
+      </div>
+     </a>
+     <a class="gallery-card" href="Video/Gallery/Fluid/Newtonian.mp4" data-gallery-category="Fluid" data-media-type="video" aria-haspopup="dialog">
+      <div class="gallery-card-preview">
+       <img src="Video/Gallery/web/newtonian.webp" alt="Newtonian flow" width="960" height="540" loading="lazy" decoding="async"/>
+       <span class="gallery-media-badge">▶ Video</span>
+      </div>
+      <div class="gallery-card-body">
+       <p class="eyebrow">Fluid</p>
+       <h2>Newtonian flow</h2>
+       <p>Flow around a circular obstacle.</p>
+       <span class="gallery-card-action">Play video <span aria-hidden="true">↗</span></span>
+      </div>
+     </a>
+     <a class="gallery-card" href="Video/Gallery/web/airfoil.mp4" data-gallery-category="Fluid" data-media-type="video" aria-haspopup="dialog">
+      <div class="gallery-card-preview">
+       <img src="Video/Gallery/web/airfoil.webp" alt="Airfoil flow" width="960" height="540" loading="lazy" decoding="async"/>
+       <span class="gallery-media-badge">▶ Video</span>
+      </div>
+      <div class="gallery-card-body">
+       <p class="eyebrow">Fluid</p>
+       <h2>Airfoil flow</h2>
+       <p>Flow field around an airfoil.</p>
+       <span class="gallery-card-action">Play video <span aria-hidden="true">↗</span></span>
+      </div>
+     </a>
+     <a class="gallery-card" href="Video/Gallery/web/vem-fsi-2d.mp4" data-gallery-category="FSI" data-media-type="video" aria-haspopup="dialog">
+      <div class="gallery-card-preview">
+       <img src="Video/Gallery/web/vem-fsi-2d.webp" alt="2D VEM–FSI" width="960" height="540" loading="lazy" decoding="async"/>
+       <span class="gallery-media-badge">▶ Video</span>
+      </div>
+      <div class="gallery-card-body">
+       <p class="eyebrow">FSI</p>
+       <h2>2D VEM–FSI</h2>
+       <p>Fluid–structure interaction with polygonal elements.</p>
+       <span class="gallery-card-action">Play video <span aria-hidden="true">↗</span></span>
+      </div>
+     </a>
+     <a class="gallery-card" href="Video/Gallery/web/neohook-3d.mp4" data-gallery-category="FSI" data-media-type="video" aria-haspopup="dialog">
+      <div class="gallery-card-preview">
+       <img src="Video/Gallery/web/neohook-3d.webp" alt="3D Neo-Hookean FSI" width="960" height="540" loading="lazy" decoding="async"/>
+       <span class="gallery-media-badge">▶ Video</span>
+      </div>
+      <div class="gallery-card-body">
+       <p class="eyebrow">FSI</p>
+       <h2>3D Neo-Hookean FSI</h2>
+       <p>Three-dimensional fluid–structure interaction.</p>
+       <span class="gallery-card-action">Play video <span aria-hidden="true">↗</span></span>
+      </div>
+     </a>
     </div>
    </section>
+   <dialog class="gallery-viewer" aria-labelledby="gallery-viewer-title">
+    <div class="gallery-viewer-content">
+     <header class="gallery-viewer-header">
+      <div><p class="eyebrow" id="gallery-viewer-category"></p><h2 id="gallery-viewer-title"></h2></div>
+      <button class="gallery-viewer-close" type="button" aria-label="Close viewer" autofocus>×</button>
+     </header>
+     <div class="gallery-viewer-stage"></div>
+     <footer class="gallery-viewer-footer"><p id="gallery-viewer-description"></p><a id="gallery-viewer-file" target="_blank" rel="noopener">Open media <span aria-hidden="true">↗</span></a></footer>
+    </div>
+   </dialog>
   </main>
   <script defer="True" src="assets/js/main.js">
   </script>
+  <script defer src="assets/js/gallery.js"></script>
  </body>
 </html>
