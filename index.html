@@ -57,40 +57,31 @@
    </nav>
   </header>
   <main id="top">
-   <section class="video-hero">
-    <video aria-label="Newtonian fluid simulation produced with HiPaCs" autoplay loop muted playsinline poster="Video/Newtonian-poster.webp" preload="metadata">
-     <source src="Video/Newtonian.mp4" type="video/mp4"/>
-    </video>
-    <div aria-hidden="true" class="video-hero-shade">
-    </div>
-    <div class="video-hero-content section-wrap">
+   <section class="video-hero" aria-labelledby="landing-title">
+    <div class="video-hero-content">
      <div class="hero-copy landing-copy">
-     <p class="eyebrow">
-      HiPaCs &middot; Modern C++ finite element solver
-     </p>
-     <h1>
-      Generic C++ FEM/VEM framework for nonlinear mechanics, multiphysics, and multiscale analysis.
-     </h1>
-     <p class="lead">
-      A research-oriented C++ finite element framework built around local weak forms,
-              automatic differentiation, reusable assembly, nonlinear solvers, and a clean
-              postprocessing pipeline.
-     </p>
-     <div class="hero-actions">
-      <a class="button primary route-card" href="main.html">
-       Enter Main Page
-      </a>
-      <a class="button secondary route-card" href="install.html">
-       Install guide
-      </a>
-      <a class="button secondary" href="https://github.com/YongbinChoi91/HAEFEM" rel="noopener" target="_blank">
-       GitHub
-      </a>
+      <p class="eyebrow">HiPaCs / Computational mechanics</p>
+      <h1 id="landing-title">One framework.<br/>Many scales of mechanics.</h1>
+      <p class="lead">A modern C++ FEM/VEM framework for nonlinear mechanics, multiphysics, and multiscale analysis.</p>
+      <p class="landing-hero-detail">From local weak forms to coupled simulations, powered by automatic differentiation.</p>
+      <div class="hero-actions">
+       <a class="button primary route-card" href="main.html">Explore the framework <span aria-hidden="true">&rarr;</span></a>
+       <a class="button secondary route-card" href="install.html">Install guide</a>
+      </div>
+      <a class="landing-source-link" href="https://github.com/YongbinChoi91/HAEFEM" rel="noopener" target="_blank">View source on GitHub <span aria-hidden="true">&nearr;</span></a>
      </div>
-     </div>
-     <p class="video-hero-label">
-      Newtonian flow simulation
-     </p>
+     <figure class="landing-simulation">
+      <div class="landing-simulation-heading"><span>Simulation showcase</span><span>01 / Fluid mechanics</span></div>
+      <div class="landing-video-frame">
+       <video aria-label="Newtonian flow around a cylinder simulated with HiPaCs" autoplay loop muted playsinline controls poster="Video/Newtonian-poster.webp" preload="metadata">
+        <source src="Video/Newtonian.mp4" type="video/mp4"/>
+       </video>
+      </div>
+      <figcaption class="landing-simulation-caption">
+       <div><p class="eyebrow">Incompressible flow &middot; HiPaCs</p><h2>See the mechanics in motion.</h2></div>
+       <a class="landing-simulation-link route-card" href="pages/detail-navier-stokes.html">Explore this example <span aria-hidden="true">&nearr;</span></a>
+      </figcaption>
+     </figure>
     </div>
    </section>
    <section class="landing-applications section-wrap">
