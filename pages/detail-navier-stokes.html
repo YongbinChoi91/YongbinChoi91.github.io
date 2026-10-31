@@ -72,10 +72,11 @@
             solid pages: first the governing equations, then the actual C++ weak-form implementation and input files.
     </p>
    </section>
+<section class="doc-section section-wrap cook-page updated-example-overview"><figure class="updated-example-result"><video controls playsinline preload="metadata" aria-label="2D incompressible flow"><source src="../examples/incompressible-flow/Incompressible.mp4" type="video/mp4"/>Your browser cannot play this video. <a href="../examples/incompressible-flow/Incompressible.mp4">Download MP4</a>.</video><figcaption><h2>2D incompressible flow</h2><p>2D velocity–pressure formulation. rho = 1, mu = 0.001, u_bar = 2; ramped parabolic inlet, no slip on WALLS/CIRCLE, zero outlet pressure. Initial dt = 0.01; final time = 5.</p></figcaption></figure></section>
 
    <section class="doc-section section-wrap cook-page hyperelastic-document-section" id="incompressible-flow-model">
     <div class="plasticity-document-panel hyperelastic-document-panel">
-     <div aria-label="3D incompressible flow documentation tabs" class="plasticity-tabs" role="tablist">
+     <div aria-label="2D incompressible flow documentation tabs" class="plasticity-tabs" role="tablist">
       <button aria-selected="true" class="active" data-fluid-tab="theory" role="tab" type="button">
        Theory
       </button>
@@ -113,7 +114,7 @@
          \[\mathbf{v}=\bar{\mathbf{v}}\ \text{on }\Gamma_v,
          \qquad \boldsymbol{\sigma}\mathbf{n}=\bar{\mathbf{t}}\ \text{on }\Gamma_t.\]
         </div>
-        <p>The 3D inlet, wall, obstacle, and outlet groups and their actual values are defined by <code>input/BC.txt</code>.</p>
+        <p>The 2D inlet, wall, obstacle, and outlet groups and their actual values are defined by <code>input/BC.txt</code>.</p>
        </article>
        <article class="math-card">
         <span class="tag">
@@ -223,7 +224,20 @@ p(\mathbf{x},t) \in \mathbb{R}
        </table>
       </div>
      </div>
-     <div class="plasticity-tab-panel" data-fluid-panel="simulation" role="tabpanel">
+     <div class="plasticity-tab-panel" data-fluid-panel="simulation" role="tabpanel"><div class="updated-example-inputs"><h3>Input conditions</h3><details class="example-input-details"><summary>BC.txt</summary><pre><code>DIRICHLET INLET vx u_bar*parabolic_profile*sin(pi*min(t,2.0)/(2.0*2.0))
+DIRICHLET INLET vy 0.0
+DIRICHLET WALLS vx 0.0
+DIRICHLET WALLS vy 0.0
+DIRICHLET CIRCLE vx 0.0
+DIRICHLET CIRCLE vy 0.0
+PRESSURE_DIRICHLET OUTLET 0.0</code></pre></details><details class="example-input-details"><summary>Material.txt</summary><pre><code>rho 1
+mu 1e-3
+stabilization_parameter 1.0
+u_bar 2.0</code></pre></details><details class="example-input-details"><summary>DOFS_info.txt</summary><pre><code>field_key velocity pressure</code></pre></details><details class="example-input-details"><summary>Solver.txt</summary><pre><code>solver_backend umfpack
+dt 0.01
+total_time 5.0
+theta 1.0
+adaptive_dt on</code></pre></details></div>
       <div class="section-heading">
        <p class="eyebrow">
         Simulation
@@ -235,7 +249,7 @@ p(\mathbf{x},t) \in \mathbb{R}
         The simulation tab follows the nonlinear solid page style: short workflow cards first, then real C++
                   code blocks from
         <code>
-         weak_form.cpp
+         weak_form_NSE.cpp
         </code>
         . The fluid weak form is still a scalar
         <code>
@@ -377,30 +391,13 @@ p(\mathbf{x},t) \in \mathbb{R}
        </p>
       </div>
       <div class="actual-code-stack">
-       <details class="code-details" open="">
-        <summary>
-         1. Active model and active fields
-        </summary>
-        <div class="code-window">
-         <pre><code>const char* active_constitutive_model_name() {
-    return "classical_velocity_pressure_bdf2_ad_supg_pspg_optional";
-}
-
-std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
+       <details class="code-details" open><summary>1. active_constitutive_field_names</summary><div class="code-window"><pre><code>std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
     if (!mesh.dof_field_order.empty()) {
         return mesh.dof_field_order;
     }
-    return active_field_names(mesh);
-}</code></pre>
-        </div>
-       </details>
-       <details class="code-details">
-        <summary>
-         2. Scalar weak-form function and local layout
-        </summary>
-        <div class="code-window">
-         <pre><code>template &lt;class Scalar&gt;
-static Scalar weak_scalar_classical_fluid(
+    return active_dof_field_names(mesh);
+}</code></pre></div></details>
+<details class="code-details"><summary>2. weak_scalar_classical_fluid</summary><div class="code-window"><pre><code>static Scalar weak_scalar_classical_fluid(
     const FieldMesh&amp; mesh,
     int elem_id,
     const std::vector&lt;Scalar&gt;&amp; x_elem,
@@ -408,167 +405,205 @@ static Scalar weak_scalar_classical_fluid(
     const ProblemParameters&amp; params,
     const ElementState&amp; state
 ) {
-    const double dt = state.dt;
-    const ClassicalLocalLayout L = make_classical_layout(mesh, elem_id);
-    const auto&amp; V = L.field("velocity");
-    const auto&amp; P = L.field("pressure");
+    using std::sqrt;
 
-    const BDFCoefficientsDtMultiplied bdf =
-        bdf_coefficients_dt_multiplied(dt, state.dt_previous, state.step);
+    const double dt = state.dt;
+    if (dt &lt;= 0.0) {
+        throw std::runtime_error(&quot;Constitutive state dt must be positive.&quot;);
+    }
+
+    const ClassicalLocalLayout L = make_classical_layout(mesh, elem_id);
+    const auto&amp; V = L.field(&quot;velocity&quot;);
+    const auto&amp; P = L.field(&quot;pressure&quot;);
+
+    if (static_cast&lt;int&gt;(x_elem.size()) != L.n_local()) {
+        throw std::runtime_error(&quot;Bad current element vector size in classical fluid constitutive model.&quot;);
+    }
+    if (state.past_dofs.size() &lt; 1 || static_cast&lt;int&gt;(state.past_dofs[0].size()) != L.n_local()) {
+        throw std::runtime_error(&quot;Bad previous element vector size in classical fluid constitutive model.&quot;);
+    }
+    if (state.past_dofs.size() &lt; 2 || static_cast&lt;int&gt;(state.past_dofs[1].size()) != L.n_local()) {
+        throw std::runtime_error(&quot;Bad older element vector size in classical fluid constitutive model.&quot;);
+    }
+    if (test_elem.size() != x_elem.size()) {
+        throw std::runtime_error(&quot;Bad test element vector size in classical fluid weak form.&quot;);
+    }
+
+    const hpx::TimeDofStencil bdf = hpx::BDF(2, dt, state.dt_previous, state.step);
 
     Scalar G(0.0);
-    const ElementGeometry geom = make_velocity_geometry_element(mesh, elem_id);
+    const ElementGeometry geom = make_velocity_element_geometry(mesh, elem_id);
 
     const double rho = params.material.rho;
-    const double mu  = params.material.mu;</code></pre>
-        </div>
-       </details>
-       <details class="code-details">
-        <summary>
-         3. Gauss-point interpolation
-        </summary>
-        <div class="code-window">
-         <pre><code>for (const auto&amp; gp : gauss_rule(V.element_type, params.solver.gauss_order)) {
-    const ShapeData sv = compute_shape(V.element_type, gp.xi, gp.eta, gp.zeta);
-    const ShapeData sp = compute_shape(P.element_type, gp.xi, gp.eta, gp.zeta);
-    const JacobianData J = compute_jacobian_data(geom, sv);
+    const double mu  = params.material.mu;
 
-    const auto dNv = compute_dN_dx(sv, J);
-    const auto dNp = compute_dN_dx(sp, J);
-    const double dV = J.detJ * gp.weight;
+    const double nu = mu / rho;
+    const double sigma_BDF = params.solver.stabilization_time_order;
+    const double C_k = params.solver.stabilization_Ck;
 
-    const auto v = hpx::field_value_as&lt;Scalar&gt;(L, "velocity", x_elem, sv.N);
-    const auto v_n = hpx::field_value_as&lt;Scalar&gt;(L, "velocity", state.x_n_elem, sv.N);
-    const auto v_nm1 = hpx::field_value_as&lt;Scalar&gt;(L, "velocity", state.x_nm1_elem, sv.N);
-    const auto grad_v = hpx::field_grad_as&lt;Scalar&gt;(L, "velocity", x_elem, dNv);
+    // Direct weak form:
+    //   G_m = int [rho*a_dt · delta_v
+    //            + dt*rho*((v.grad)v) · delta_v
+    //            + dt*mu*(grad(v)+grad(v)^T) : grad(delta_v)
+    //            - dt*p*div(delta_v)] dOmega
+    //   G_c = int div(v) * delta_p dOmega
+    // Stabilization is also written directly with grad(delta_v), div(delta_v),
+    // and grad(delta_p).
+    for (const auto&amp; gp : gauss_rule(V.element_type, params.solver.gauss_order)) {
+        const ShapeData sv = compute_shape(V.element_type, gp.xi, gp.eta, gp.zeta);
+        const ShapeData sp = compute_shape(P.element_type, gp.xi, gp.eta, gp.zeta);
+        const JacobianData J = compute_jacobian_data(geom, sv);
+        if (J.detJ &lt;= 0.0) {
+            throw std::runtime_error(&quot;Negative detJ in classical fluid element. Check connectivity ordering.&quot;);
+        }
 
-    const auto delta_v = hpx::field_value_as&lt;Scalar&gt;(L, "velocity", test_elem, sv.N);
-    const auto grad_delta_v = hpx::field_grad_as&lt;Scalar&gt;(L, "velocity", test_elem, dNv);
-    const Scalar delta_p = hpx::scalar_field_value_as&lt;Scalar&gt;(L, "pressure", test_elem, sp.N);</code></pre>
-        </div>
-       </details>
-       <details class="code-details">
-        <summary>
-         4. Momentum and continuity contributions to G
-        </summary>
-        <div class="code-window">
-         <pre><code>std::vector&lt;Scalar&gt; dt_times_accel(L.dim, Scalar(0.0));
-std::vector&lt;Scalar&gt; conv(L.dim, Scalar(0.0));
-for (int i = 0; i &lt; L.dim; ++i) {
-    dt_times_accel[i] =
-        Scalar(bdf.b0) * v[i]
-      + Scalar(bdf.b1) * v_n[i]
-      + Scalar(bdf.b2) * v_nm1[i];
+        const auto dNv = compute_dN_dx(sv, J);
+        const auto d2Nv = compute_d2N_dx2(geom, sv, J, gp.xi, gp.eta, gp.zeta);
+        const auto dNp = compute_dN_dx(sp, J);
+        const double dV = J.detJ * gp.weight;
 
-    for (int j = 0; j &lt; L.dim; ++j) {
-        conv[i] += v[j] * grad_v[i][j];
+        const auto v = hpx::field_value_as&lt;Scalar&gt;(L, &quot;velocity&quot;, x_elem, sv.N);
+        const auto v_n = hpx::field_value_as&lt;Scalar&gt;(L, &quot;velocity&quot;, state.past_dofs[0], sv.N);
+        const auto v_nm1 = hpx::field_value_as&lt;Scalar&gt;(L, &quot;velocity&quot;, state.past_dofs[1], sv.N);
+        const auto grad_v = hpx::field_grad_as&lt;Scalar&gt;(L, &quot;velocity&quot;, x_elem, dNv);
+
+        const auto delta_v = hpx::field_value_as&lt;Scalar&gt;(L, &quot;velocity&quot;, test_elem, sv.N);
+        const auto grad_delta_v = hpx::field_grad_as&lt;Scalar&gt;(L, &quot;velocity&quot;, test_elem, dNv);
+        const Scalar delta_p = hpx::scalar_field_value_as&lt;Scalar&gt;(L, &quot;pressure&quot;, test_elem, sp.N);
+        const auto grad_delta_p_all = hpx::field_grad_as&lt;Scalar&gt;(L, &quot;pressure&quot;, test_elem, dNp);
+        const auto&amp; grad_delta_p = grad_delta_p_all[0];
+
+        std::vector&lt;Scalar&gt; dt_times_accel(L.dim, Scalar(0.0));
+        std::vector&lt;Scalar&gt; conv(L.dim, Scalar(0.0));
+        for (int i = 0; i &lt; L.dim; ++i) {
+            dt_times_accel[i] =
+                Scalar(bdf.current()) * v[i]
+              + Scalar(bdf.past(0)) * v_n[i]
+              + Scalar(bdf.past(1)) * v_nm1[i];
+
+            for (int j = 0; j &lt; L.dim; ++j) {
+                conv[i] += v[j] * grad_v[i][j];
+            }
+        }
+
+        const Scalar p = hpx::scalar_field_value_as&lt;Scalar&gt;(L, &quot;pressure&quot;, x_elem, sp.N);
+        const auto grad_p_all = hpx::field_grad_as&lt;Scalar&gt;(L, &quot;pressure&quot;, x_elem, dNp);
+        const auto&amp; grad_p = grad_p_all[0];
+
+        Scalar div_v(0.0);
+        Scalar div_delta_v(0.0);
+        for (int i = 0; i &lt; L.dim; ++i) {
+            div_v += grad_v[i][i];
+            div_delta_v += grad_delta_v[i][i];
+        }
+
+        for (int i = 0; i &lt; L.dim; ++i) {
+            G += Scalar(rho) * dt_times_accel[i] * delta_v[i] * Scalar(dV);
+            G += Scalar(dt) * Scalar(rho) * conv[i] * delta_v[i] * Scalar(dV);
+        }
+        for (int i = 0; i &lt; L.dim; ++i) {
+            for (int j = 0; j &lt; L.dim; ++j) {
+                G += Scalar(dt) * Scalar(mu)
+                   * (grad_v[i][j] + grad_v[j][i])
+                   * grad_delta_v[i][j]
+                   * Scalar(dV);
+            }
+        }
+        G -= Scalar(dt) * p * div_delta_v * Scalar(dV);
+        G += div_v * delta_p * Scalar(dV);
+
+        // Optional residual-based stabilization.
+        // Tau_M and Tau_C are computed at the current Gauss point from time scale,
+        // viscous scale, element size, and velocity magnitude.
+        if (params.solver.stabilization) {
+            Scalar v_norm2(0.0);
+            for (int i = 0; i &lt; L.dim; ++i) v_norm2 += v[i] * v[i];
+
+            const double h_T = std::max(stabilization_element_length(V.element_type, L.dim, J), 1.0e-12);
+            const double inv_h2 = 1.0 / (h_T * h_T);
+            const double inv_h4 = inv_h2 * inv_h2;
+            const double time_part = (sigma_BDF * sigma_BDF) / (dt * dt);
+            const double visc_part = C_k * nu * nu * inv_h4;
+            const Scalar denom = Scalar(time_part + visc_part) + v_norm2 * Scalar(inv_h2);
+            const Scalar Tau_M = Scalar(1.0) / sqrt(denom);
+            const Scalar Tau_C = Scalar(h_T * h_T) / Tau_M;
+            const Scalar penalty = Scalar(0.5 * nu);
+
+            std::vector&lt;std::vector&lt;std::vector&lt;Scalar&gt;&gt;&gt; hess_v(
+                L.dim,
+                std::vector&lt;std::vector&lt;Scalar&gt;&gt;(L.dim, std::vector&lt;Scalar&gt;(L.dim, Scalar(0.0)))
+            );
+            for (int a = 0; a &lt; V.n_nodes; ++a) {
+                for (int i = 0; i &lt; L.dim; ++i) {
+                    const int id = L.dof(&quot;velocity&quot;, a, i);
+                    const Scalar va = x_elem[id];
+                    for (int j = 0; j &lt; L.dim; ++j) {
+                        for (int k = 0; k &lt; L.dim; ++k) {
+                            hess_v[i][j][k] += va * Scalar(d2Nv[a][j][k]);
+                        }
+                    }
+                }
+            }
+
+            std::vector&lt;Scalar&gt; div_sigma(L.dim, Scalar(0.0));
+            for (int i = 0; i &lt; L.dim; ++i) {
+                for (int j = 0; j &lt; L.dim; ++j) {
+                    div_sigma[i] += Scalar(nu) * (hess_v[i][j][j] + hess_v[j][i][j]);
+                }
+            }
+
+            std::vector&lt;Scalar&gt; strong_form_stress(L.dim, Scalar(0.0));
+            std::vector&lt;Scalar&gt; strong_res(L.dim, Scalar(0.0));
+            for (int i = 0; i &lt; L.dim; ++i) {
+                strong_form_stress[i] = grad_p[i] - div_sigma[i];
+                strong_res[i] = dt_times_accel[i]
+                              + Scalar(dt) * conv[i]
+                              + Scalar(dt) * strong_form_stress[i];
+            }
+
+            std::vector&lt;Scalar&gt; grad_delta_v_times_v(L.dim, Scalar(0.0));
+            for (int i = 0; i &lt; L.dim; ++i) {
+                for (int j = 0; j &lt; L.dim; ++j) {
+                    grad_delta_v_times_v[i] += grad_delta_v[i][j] * v[j];
+                }
+            }
+            for (int i = 0; i &lt; L.dim; ++i) {
+                G += Tau_M * strong_res[i] * grad_delta_v_times_v[i] * Scalar(dV);
+                G += Tau_M * strong_res[i] * grad_delta_p[i] * Scalar(dV);
+            }
+            G += penalty * Tau_C * div_v * div_delta_v * Scalar(dV);
+        }
     }
-}
 
-const Scalar p = hpx::scalar_field_value_as&lt;Scalar&gt;(L, "pressure", x_elem, sp.N);
-
-Scalar div_v(0.0);
-Scalar div_delta_v(0.0);
-for (int i = 0; i &lt; L.dim; ++i) {
-    div_v += grad_v[i][i];
-    div_delta_v += grad_delta_v[i][i];
-}
-
-for (int i = 0; i &lt; L.dim; ++i) {
-    G += Scalar(rho) * dt_times_accel[i] * delta_v[i] * Scalar(dV);
-    G += Scalar(dt) * Scalar(rho) * conv[i] * delta_v[i] * Scalar(dV);
-}
-for (int i = 0; i &lt; L.dim; ++i) {
-    for (int j = 0; j &lt; L.dim; ++j) {
-        G += Scalar(dt) * Scalar(mu)
-           * (grad_v[i][j] + grad_v[j][i])
-           * grad_delta_v[i][j]
-           * Scalar(dV);
-    }
-}
-G -= Scalar(dt) * p * div_delta_v * Scalar(dV);
-G += div_v * delta_p * Scalar(dV);</code></pre>
-        </div>
-       </details>
-       <details class="code-details">
-        <summary>
-         5. Optional SUPG/PSPG-style stabilization
-        </summary>
-        <div class="code-window">
-         <pre><code>if (params.solver.stabilization) {
-    Scalar v_norm2(0.0);
-    for (int i = 0; i &lt; L.dim; ++i) v_norm2 += v[i] * v[i];
-
-    const double h_T = std::max(std::sqrt(std::abs(2.0 * dV)), 1.0e-12);
-    const double inv_h2 = 1.0 / (h_T * h_T);
-    const double inv_h4 = inv_h2 * inv_h2;
-    const double time_part = (sigma_BDF * sigma_BDF) / (dt * dt);
-    const double visc_part = C_k * nu * nu * inv_h4;
-    const Scalar denom = Scalar(time_part + visc_part) + v_norm2 * Scalar(inv_h2);
-    const Scalar Tau_M = Scalar(1.0) / sqrt(denom);
-    const Scalar Tau_C = Scalar(h_T * h_T) / Tau_M;
-
-    for (int i = 0; i &lt; L.dim; ++i) {
-        G += Tau_M * strong_res[i] * grad_delta_v_times_v[i] * Scalar(dV);
-        G += Tau_M * strong_res[i] * grad_delta_p[i] * Scalar(dV);
-    }
-    G += penalty * Tau_C * div_v * div_delta_v * Scalar(dV);
-}</code></pre>
-        </div>
-       </details>
-       <details class="code-details">
-        <summary>
-         6. AD residual and tangent extraction
-        </summary>
-        <div class="code-window">
-         <pre><code>ElementSystem compute_constitutive_element_system(
+    return G;
+}</code></pre></div></details>
+<details class="code-details"><summary>3. compute_constitutive_element_system</summary><div class="code-window"><pre><code>ElementSystem compute_constitutive_element_system(
     const FieldMesh&amp; mesh,
     int elem_id,
     const Vector&amp; x_elem,
     const ProblemParameters&amp; params,
     const ElementState&amp; state
 ) {
-    const int n = static_cast&lt;int&gt;(x_elem.size());
-
-    std::vector&lt;WeakOuterFad&gt; x_ad(n);
-    std::vector&lt;WeakOuterFad&gt; test_ad(n);
-    for (int j = 0; j &lt; n; ++j) {
-        const WeakInnerFad x_value(x_elem[j]);
-        x_ad[j] = WeakOuterFad(n, j, x_value);
-    }
-    for (int i = 0; i &lt; n; ++i) {
-        test_ad[i] = WeakOuterFad(WeakInnerFad(n, i, 0.0));
-    }
-
-    const WeakOuterFad G = weak_scalar_classical_fluid(mesh, elem_id, x_ad, test_ad, params, state);
-
-    ElementSystem sys;
-    sys.residual.assign(n, 0.0);
-    sys.tangent.assign(n * n, 0.0);
-
-    const WeakInnerFad G_value = G.val();
-    for (int i = 0; i &lt; n; ++i) {
-        sys.residual[i] = weak_inner_dx(G_value, i);
-        const int row = i * n;
-        for (int j = 0; j &lt; n; ++j) {
-            const WeakInnerFad dG_dxj = (j &lt; G.size()) ? G.dx(j) : WeakInnerFad(0.0);
-            sys.tangent[row + j] = weak_inner_dx(dG_dxj, i);
+    return hpx::scalar_weak_form_element_system(  
+        x_elem,
+        [&amp;](const auto&amp; x_ad, const auto&amp; test_ad) {
+            return weak_scalar_classical_fluid(mesh, elem_id, x_ad, test_ad, params, state);
         }
-    }
-    return sys;
-}</code></pre>
-        </div>
-       </details>
+    );
+}</code></pre></div></details>
+       
+       
+       
+       
+       
       </div>
       <div class="example-run-panel">
        <p class="eyebrow">Build and smoke-test</p>
-       <h2>Back up the active files and run the 3D example.</h2>
-       <pre><code>cp FEM/models/weak_form.cpp FEM/models/weak_form.cpp.bak
-cp -R FEM/input FEM/input.bak
-cp Web/examples/navier-stokes-3d/weak_form.cpp FEM/models/weak_form.cpp
-cp Web/examples/navier-stokes-3d/input/*.txt FEM/input/
-make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
-       <p>Validation target: two accepted time steps, decreasing nonlinear residuals, and generated output files.</p>
+       <h2>Build the supplied model and run its input files directly.</h2>
+       <pre><code>make -C FEM MODEL_SRC=../Web/examples/incompressible-flow/weak_form_NSE.cpp
+cd FEM
+OMP_NUM_THREADS=2 ./bin/fem ../Web/examples/incompressible-flow/input/ProblemMesh.txt ../Web/examples/incompressible-flow/input/Material.txt ../Web/examples/incompressible-flow/input/BC.txt ../Web/examples/incompressible-flow/input/Solver.txt ../Web/examples/incompressible-flow/input/Postprocessing.txt ../Web/examples/incompressible-flow/input/DOFS_info.txt</code></pre>
+       <p>The supplied snapshot runs to t = 5 with an initial time step of 0.01.</p>
       </div>
       <div class="section-heading compact-heading">
        <p class="eyebrow">
@@ -580,13 +615,13 @@ make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
        <p>
         These files are included in the website package under
         <code>
-         examples/navier-stokes-3d/input/
+         examples/incompressible-flow/input/
         </code>
         .
        </p>
       </div>
       <div class="download-grid">
-       <a class="download-card" download="" href="../examples/navier-stokes-3d/input/ProblemMesh.txt">
+       <a class="download-card" download="" href="../examples/incompressible-flow/input/ProblemMesh.txt">
         <span class="tag">
          mesh
         </span>
@@ -597,7 +632,7 @@ make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
          Mixed velocity-pressure channel/cylinder mesh.
         </p>
        </a>
-       <a class="download-card" download="" href="../examples/navier-stokes-3d/input/DOFS_info.txt">
+       <a class="download-card" download="" href="../examples/incompressible-flow/input/DOFS_info.txt">
         <span class="tag">
          dofs
         </span>
@@ -612,7 +647,7 @@ make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
          .
         </p>
        </a>
-       <a class="download-card" download="" href="../examples/navier-stokes-3d/input/BC.txt">
+       <a class="download-card" download="" href="../examples/incompressible-flow/input/BC.txt">
         <span class="tag">
          bc
         </span>
@@ -623,7 +658,7 @@ make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
          Applies inlet velocity, no-slip walls/cylinder, and outlet pressure.
         </p>
        </a>
-       <a class="download-card" download="" href="../examples/navier-stokes-3d/input/Material.txt">
+       <a class="download-card" download="" href="../examples/incompressible-flow/input/Material.txt">
         <span class="tag">
          material
         </span>
@@ -646,7 +681,7 @@ make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
          .
         </p>
        </a>
-       <a class="download-card" download="" href="../examples/navier-stokes-3d/input/Solver.txt">
+       <a class="download-card" download="" href="../examples/incompressible-flow/input/Solver.txt">
         <span class="tag">
          solver
         </span>
@@ -657,7 +692,7 @@ make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
          Controls Gauss order, backend, Newton tolerances, adaptive dt, and stabilization.
         </p>
        </a>
-       <a class="download-card" download="" href="../examples/navier-stokes-3d/input/Postprocessing.txt">
+       <a class="download-card" download="" href="../examples/incompressible-flow/input/Postprocessing.txt">
         <span class="tag">
          output
         </span>
@@ -668,27 +703,23 @@ make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
          Controls VTK output and drag/lift force output.
         </p>
        </a>
-       <a class="download-card" download="" href="../examples/navier-stokes-3d/weak_form.cpp">
+       <a class="download-card" download="" href="../examples/incompressible-flow/weak_form_NSE.cpp">
         <span class="tag">
          model
         </span>
         <h3>
-         weak_form.cpp
+         weak_form_NSE.cpp
         </h3>
         <p>
-         Verified classical Navier-Stokes weak form synchronized from the runnable 3D model.
+         Verified classical Navier-Stokes weak form synchronized from the runnable 2D model.
         </p>
        </a>
       </div>
-      <button class="example-zip-button" disabled type="button">Download complete example (.zip) — coming after final validation</button>
+      
      </div>
     </div>
    </section>
-   <section class="doc-section section-wrap cook-page example-result-pending">
-    <p class="eyebrow">Result</p>
-    <h2>Result pending validation</h2>
-    <p>The final 3D velocity or pressure image will be added here after the two-step fluid smoke test.</p>
-   </section>
+   
   </main>
   <script defer="True" src="../assets/js/main.js">
   </script>

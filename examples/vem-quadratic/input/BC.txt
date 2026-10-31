@@ -52,5 +52,6 @@
 # Left side is fixed to remove rigid motion.
 # Right side has prescribed x-extension only; y is free.
 DIRICHLET displacement LEFT x 0.0
-DIRICHLET displacement LEFT y 0.0
-NEUMANN displacement RIGHT y 4.0*t
+DIRICHLET displacement BOTTOM y 0.0
+DIRICHLET displacement TOP x 0.0
+NEUMANN displacement LINE[(0,10),(10,10)] uy -800.0*t

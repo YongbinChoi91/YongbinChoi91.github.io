@@ -72,6 +72,7 @@
             simulation workflow, while keeping the actual implementation excerpts close to the input files.
     </p>
    </section>
+<section class="doc-section section-wrap cook-page updated-example-overview"><figure class="updated-example-result"><a href="../examples/hyperelastic-3d/Hyper_Elastic.png" target="_blank" rel="noopener"><img src="../examples/hyperelastic-3d/Hyper_Elastic.png" alt="3D hyperelastic deformation" decoding="async"/></a><figcaption><h2>3D hyperelastic deformation</h2><p>Left boundary fixed; right boundary prescribed displacement u_y = 10t. E = 200, nu = 0.3; final load parameter t = 1.</p></figcaption></figure></section>
 
    <section class="doc-section section-wrap cook-page hyperelastic-document-section">
     <div class="plasticity-document-panel hyperelastic-document-panel">
@@ -153,7 +154,7 @@
                     W(\mathbf{F}) =
                     \frac{\mu}{2}\left(\operatorname{tr}(\mathbf{C}) - d\right)
                     - \mu \ln J
-                    + \frac{\lambda}{2}(\ln J)^2
+                    + \frac{\lambda}{4}(J^2 - 1 - 2\ln J)
                   \]
         </div>
         <p>
@@ -275,13 +276,20 @@
          <tr><td>\(\mathbf{u}\)</td><td>Displacement</td><td><code>displacement</code></td><td><code>make_hyperelastic_layout</code></td></tr>
          <tr><td>\(\mathbf{F}\)</td><td>Deformation gradient</td><td><code>F</code></td><td><code>weak_scalar_hyperelastic_solid</code></td></tr>
          <tr><td>\(\nabla_0\delta\mathbf{u}\)</td><td>Virtual-displacement gradient</td><td><code>deltaF</code></td><td><code>weak_scalar_hyperelastic_solid</code></td></tr>
-         <tr><td>\(\mathbf{P}\)</td><td>First Piola stress</td><td><code>P</code></td><td><code>weak_scalar_hyperelastic_solid</code></td></tr>
+         <tr><td>\(\mathbf{P}\)</td><td>First Piola stress</td><td><code>P3</code></td><td><code>weak_scalar_hyperelastic_solid</code></td></tr>
          <tr><td>\(G_e\)</td><td>Scalar element weak form</td><td><code>G</code></td><td><code>weak_scalar_hyperelastic_solid</code></td></tr>
         </tbody>
        </table>
       </div>
      </div>
-     <div class="plasticity-tab-panel" data-hyperelastic-panel="simulation" role="tabpanel">
+     <div class="plasticity-tab-panel" data-hyperelastic-panel="simulation" role="tabpanel"><div class="updated-example-inputs"><h3>Input conditions</h3><details class="example-input-details"><summary>BC.txt</summary><pre><code>DIRICHLET displacement LEFT ux 0.0
+DIRICHLET displacement LEFT uy 0.0
+DIRICHLET displacement LEFT uz 0.0
+DIRICHLET displacement RIGHT uy 10*t</code></pre></details><details class="example-input-details"><summary>Material.txt</summary><pre><code>youngs_modulus 200
+poisson_ratio 0.3</code></pre></details><details class="example-input-details"><summary>DOFS_info.txt</summary><pre><code>field_key displacement</code></pre></details><details class="example-input-details"><summary>Solver.txt</summary><pre><code>solver_backend umfpack
+dt 0.25
+total_time 1.0
+adaptive_dt on</code></pre></details></div>
       <div class="section-heading">
        <p class="eyebrow">
         Simulation
@@ -359,7 +367,7 @@
          Neo-Hookean stress
         </h3>
         <p>
-         The helper evaluates the first Piola stress from the embedded plane-strain 3D deformation gradient.
+         The helper differentiates the Neo-Hookean energy with respect to the 3D deformation gradient.
         </p>
        </article>
        <article>
@@ -395,167 +403,121 @@
        </h3>
        <p>
         These snippets mirror the actual C++ structure: field declaration, deformation-gradient helper,
-                  Neo-Hookean Piola helper, local weak-form loop, and generic CSR scatter.
+                  energy-gradient evaluation, local weak-form loop, and AD extraction.
        </p>
       </div>
       <div class="actual-code-stack">
-       <details class="code-details" open="">
-        <summary>
-         1. Active field and element interface
-        </summary>
-        <div class="code-window">
-         <pre><code>std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp;) {
-    return {"displacement"};
-}
+       <details class="code-details" open><summary>1. active_constitutive_field_names</summary><div class="code-window"><pre><code>std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
+    (void)mesh;
+    // This constitutive kernel is a pure solid displacement formulation.
+    // Even if DOFS_info.txt still lists velocity/pressure for compatibility,
+    // only displacement is assembled by this weak form.
+    return {&quot;displacement&quot;};
+}</code></pre></div></details>
+<details class="code-details"><summary>2. weak_scalar_hyperelastic_solid</summary><div class="code-window"><pre><code>static Scalar weak_scalar_hyperelastic_solid(
+    const FieldMesh&amp; mesh,
+    int elem_id,
+    const std::vector&lt;Scalar&gt;&amp; x_elem,
+    const std::vector&lt;Scalar&gt;&amp; test_elem,
+    const ProblemParameters&amp; params,
+    const ElementState&amp; state
+) {
+    (void)state;
 
-ElementSystem compute_constitutive_element_system(
+    const HyperElasticLocalLayout L = make_hyperelastic_layout(mesh, elem_id);
+    const auto&amp; U = L.field(&quot;displacement&quot;);
+
+    if (static_cast&lt;int&gt;(x_elem.size()) != L.n_local()) {
+        throw std::runtime_error(&quot;Bad current element vector size in hyper-elastic solid weak form.&quot;);
+    }
+    if (test_elem.size() != x_elem.size()) {
+        throw std::runtime_error(&quot;Bad test element vector size in hyper-elastic solid weak form.&quot;);
+    }
+
+    Scalar G(0.0);
+
+    // Geometry and interpolation are taken from the displacement field.
+    const ElementGeometry geom = make_displacement_element_geometry(mesh, elem_id);
+
+    const double E  = params.material.youngs_modulus;
+    const double nu = params.material.poisson_ratio;
+
+    for (const auto&amp; gp : gauss_rule(U.element_type, params.solver.gauss_order)) {
+        const ShapeData su = compute_shape(U.element_type, gp.xi, gp.eta, gp.zeta);
+        const JacobianData Jgeo = compute_jacobian_data(geom, su);
+        if (Jgeo.detJ &lt;= 0.0) {
+            throw std::runtime_error(&quot;Negative reference detJ in hyper-elastic solid element.&quot;);
+        }
+
+        const auto dNu = compute_dN_dx(su, Jgeo);
+        const double dV = Jgeo.detJ * gp.weight;
+
+        // Kinematics at this Gauss point.  F is built from the displacement field; in
+        // 2D it is embedded into 3D plane strain before material evaluation.
+        const auto F = hpx::deformation_gradient_as&lt;Scalar&gt;(L, x_elem, dNu);
+        const auto deltaF = hpx::field_grad_as&lt;Scalar&gt;(L, &quot;displacement&quot;, test_elem, dNu);
+        // G = int P : deltaF dV.  In 2D plane strain, only the 2x2 in-plane
+        // block contributes, so seed four constitutive AD variables instead of
+        // a full embedded 3x3 tensor.
+        if (L.dim == 2) {
+            const auto F2 = to_fixed_tensor2&lt;Scalar, 2, 2&gt;(F, &quot;F2&quot;);
+            const auto P2 = hpx::grad(
+                [&amp;](const auto&amp; F_ad) {
+                    return hpx::neo_hookean_energy_young(F_ad, E, nu);
+                },
+                F2
+            );
+            for (int i = 0; i &lt; 2; ++i) {
+                for (int A = 0; A &lt; 2; ++A) {
+                    G += P2[i][A] * deltaF[i][A] * Scalar(dV);
+                }
+            }
+        } else {
+            const auto F3_vec = hpx::embed_plane_strain_3d(F, L.dim);
+            const auto F3 = to_fixed_tensor2&lt;Scalar, 3, 3&gt;(F3_vec, &quot;F3&quot;);
+            const auto P3 = hpx::grad(
+                [&amp;](const auto&amp; F_ad) {
+                    return hpx::neo_hookean_energy_young(F_ad, E, nu);
+                },
+                F3
+            );
+            for (int i = 0; i &lt; L.dim; ++i) {
+                for (int A = 0; A &lt; L.dim; ++A) {
+                    G += P3[i][A] * deltaF[i][A] * Scalar(dV);
+                }
+            }
+        }
+    }
+
+    return G;
+}</code></pre></div></details>
+<details class="code-details"><summary>3. compute_constitutive_element_system</summary><div class="code-window"><pre><code>ElementSystem compute_constitutive_element_system(
     const FieldMesh&amp; mesh,
     int elem_id,
     const Vector&amp; x_elem,
     const ProblemParameters&amp; params,
     const ElementState&amp; state
-);</code></pre>
-        </div>
-       </details>
-       <details class="code-details">
-        <summary>
-         2. Deformation gradient helper
-        </summary>
-        <div class="code-window">
-         <pre><code>template &lt;class Scalar, class Vec&gt;
-inline std::vector&lt;std::vector&lt;Scalar&gt;&gt; deformation_gradient(
-    const LocalFieldView&amp; L,
-    const Vec&amp; x_elem,
-    const std::vector&lt;std::array&lt;double,3&gt;&gt;&amp; dNdx,
-    const std::string&amp; displacement_field = "displacement"
 ) {
-    return hpx::deformation_gradient_as&lt;Scalar&gt;(
-        L, x_elem, dNdx, displacement_field
+    return hpx::scalar_weak_form_element_system(
+        x_elem,
+        [&amp;](const auto&amp; x_ad, const auto&amp; test_ad) {
+            return weak_scalar_hyperelastic_solid(mesh, elem_id, x_ad, test_ad, params, state);
+        }
     );
-}</code></pre>
-        </div>
-       </details>
-       <details class="code-details">
-        <summary>
-         3. Plane-strain embedding before stress evaluation
-        </summary>
-        <div class="code-window">
-         <pre><code>template &lt;class Scalar&gt;
-inline std::vector&lt;std::vector&lt;Scalar&gt;&gt; embed_3d(
-    const std::vector&lt;std::vector&lt;Scalar&gt;&gt;&amp; A,
-    int dim
-) {
-    if (dim == 3) return A;
-
-    auto A3 = hpx::eye&lt;Scalar&gt;(3);
-    for (int i = 0; i &lt; 2; ++i) {
-        for (int j = 0; j &lt; 2; ++j) {
-            A3[i][j] = A[i][j];
-        }
-    }
-    return A3;
-}</code></pre>
-        </div>
-       </details>
-       <details class="code-details">
-        <summary>
-         4. Neo-Hookean first Piola helper
-        </summary>
-        <div class="code-window">
-         <pre><code>template &lt;class Scalar&gt;
-inline std::vector&lt;std::vector&lt;Scalar&gt;&gt; neo_hookean_first_piola_lame(
-    const std::vector&lt;std::vector&lt;Scalar&gt;&gt;&amp; F3,
-    double lambda,
-    double mu
-) {
-    const Scalar J = hpx::det(F3);
-    const auto FinvT = hpx::inv_transpose(F3);
-    const Scalar coeff = Scalar(0.5 * lambda) * (J * J - Scalar(1.0));
-
-    std::vector&lt;std::vector&lt;Scalar&gt;&gt; P(3, std::vector&lt;Scalar&gt;(3, Scalar(0.0)));
-    for (int i = 0; i &lt; 3; ++i) {
-        for (int A = 0; A &lt; 3; ++A) {
-            P[i][A] = Scalar(mu) * (F3[i][A] - FinvT[i][A])
-                    + coeff * FinvT[i][A];
-        }
-    }
-    return P;
-}</code></pre>
-        </div>
-       </details>
-       <details class="code-details">
-        <summary>
-         5. Material constants from input parameters
-        </summary>
-        <div class="code-window">
-         <pre><code>const double E  = params.material.youngs_modulus;
-const double nu = params.material.poisson_ratio;
-
-const double mu = E / (2.0 * (1.0 + nu));
-const double lambda = E * nu / ((1.0 + nu) * (1.0 - 2.0 * nu));
-
-const auto F  = hpx::deformation_gradient&lt;ADScalar&gt;(L, x_elem_ad, dNdx);
-const auto F3 = hpx::embed_plane_strain_3d(F, mesh.dim);
-const auto P  = hpx::neo_hookean_first_piola_lame(F3, lambda, mu);</code></pre>
-        </div>
-       </details>
-       <details class="code-details">
-        <summary>
-         6. Local weak-form Gauss point contribution
-        </summary>
-        <div class="code-window">
-         <pre><code>for (const auto&amp; gp : gauss_rule(geom.type, params.solver.gauss_order)) {
-    const ShapeData shape = compute_shape(geom.type, gp.xi, gp.eta, gp.zeta);
-    const JacobianData J = compute_jacobian_data(geom, shape);
-    const auto dNdx = compute_dN_dx(shape, J);
-
-    const auto F  = hpx::deformation_gradient&lt;ADScalar&gt;(L, x_elem_ad, dNdx);
-    const auto F3 = hpx::embed_plane_strain_3d(F, mesh.dim);
-    const auto P  = hpx::neo_hookean_first_piola_lame(F3, lambda, mu);
-
-    for (int a = 0; a &lt; L.n_nodes("displacement"); ++a) {
-        for (int i = 0; i &lt; mesh.dim; ++i) {
-            const int ia = L.dof("displacement", a, i);
-            for (int A = 0; A &lt; mesh.dim; ++A) {
-                G += P[i][A] * dNdx[a][A] * delta_u[ia] * J.detJ * gp.weight;
-            }
-        }
-    }
-}</code></pre>
-        </div>
-       </details>
-       <details class="code-details">
-        <summary>
-         7. Generic element-to-CSR assembly
-        </summary>
-        <div class="code-window">
-         <pre><code>void assemble_element_system_csr(
-    const ElementSystem&amp; es,
-    const std::vector&lt;int&gt;&amp; dofs,
-    const std::vector&lt;int&gt;&amp; idx,
-    Vector&amp; R,
-    CSRMatrix&amp; K
-) {
-    const int n = static_cast&lt;int&gt;(dofs.size());
-    for (int a = 0; a &lt; n; ++a) {
-        R[dofs[a]] += es.residual[a];
-        const int row = a * n;
-        for (int b = 0; b &lt; n; ++b) {
-            K.values[idx[row + b]] += es.tangent[row + b];
-        }
-    }
-}</code></pre>
-        </div>
-       </details>
+}</code></pre></div></details>
+       
+       
+       
+       
+       
+       
       </div>
       <div class="example-run-panel">
        <p class="eyebrow">Build and run</p>
-       <h2>Back up the active files, copy this example, then run FEM.</h2>
-       <pre><code>cp FEM/models/weak_form.cpp FEM/models/weak_form.cpp.bak
-cp -R FEM/input FEM/input.bak
-cp Web/examples/hyperelastic-3d/weak_form.cpp FEM/models/weak_form.cpp
-cp Web/examples/hyperelastic-3d/input/*.txt FEM/input/
-make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
+       <h2>Build the supplied model and run its input files directly.</h2>
+       <pre><code>make -C FEM MODEL_SRC=../Web/examples/hyperelastic-3d/weak_form_hyper_elastic_ad.cpp
+cd FEM
+OMP_NUM_THREADS=2 ./bin/fem ../Web/examples/hyperelastic-3d/input/ProblemMesh.txt ../Web/examples/hyperelastic-3d/input/Material.txt ../Web/examples/hyperelastic-3d/input/BC.txt ../Web/examples/hyperelastic-3d/input/Solver.txt ../Web/examples/hyperelastic-3d/input/Postprocessing.txt ../Web/examples/hyperelastic-3d/input/DOFS_info.txt</code></pre>
       </div>
       <div class="section-heading compact-heading">
        <p class="eyebrow">
@@ -607,7 +569,7 @@ make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
          BC.txt
         </h3>
         <p>
-         Fixes the left boundary and applies the time-dependent right-side vertical traction.
+         Fixes the left boundary and applies the time-dependent right-side prescribed vertical displacement.
         </p>
        </a>
        <a class="download-card" download="" href="../examples/hyperelastic-3d/input/Material.txt">
@@ -651,27 +613,23 @@ make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
          Controls output directory, output name, VTK cadence, force toggle, and minJ CSV path.
         </p>
        </a>
-       <a class="download-card" download="" href="../examples/hyperelastic-3d/weak_form.cpp">
+       <a class="download-card" download="" href="../examples/hyperelastic-3d/weak_form_hyper_elastic_ad.cpp">
         <span class="tag">
          model
         </span>
         <h3>
-         weak_form.cpp
+         weak_form_hyper_elastic_ad.cpp
         </h3>
         <p>
          Annotated hyperelastic weak-form implementation used by the example.
         </p>
        </a>
       </div>
-      <button class="example-zip-button" disabled type="button">Download complete example (.zip) — coming after final validation</button>
+      
      </div>
     </div>
    </section>
-   <section class="doc-section section-wrap cook-page example-result-pending">
-    <p class="eyebrow">Result</p>
-    <h2>Result pending validation</h2>
-    <p>The final 3D deformation image and a short interpretation will be added here after the example files complete the full solid verification run.</p>
-   </section>
+   
   </main>
   <script defer="True" src="../assets/js/main.js">
   </script>

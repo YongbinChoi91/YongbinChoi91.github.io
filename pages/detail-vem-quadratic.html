@@ -71,6 +71,7 @@
      A runnable 2D displacement example using quadratic projection, internal quadrature, and DOFI stabilization.
     </p>
    </section>
+<section class="doc-section section-wrap cook-page updated-example-overview"><figure class="updated-example-result"><a href="../examples/vem-quadratic/VEM_Quad.png" target="_blank" rel="noopener"><img src="../examples/vem-quadratic/VEM_Quad.png" alt="Quadratic polygonal VEM" decoding="async"/></a><figcaption><h2>Quadratic polygonal VEM</h2><p>Second-order VEM (VEM_ORDER 2). LEFT u_x = 0, BOTTOM u_y = 0, TOP u_x = 0; vertical traction −800t on LINE[(0,10),(10,10)]. E = 240.5, nu = 0.3; stabilization parameter = 1.</p></figcaption></figure></section>
    <section class="doc-section section-wrap cook-page">
     <div class="section-heading">
      <p class="eyebrow">Strong form</p>
@@ -111,18 +112,105 @@
       </tbody>
      </table>
     </div>
-    <div class="example-run-panel">
+    <div class="updated-example-inputs"><h3>Input conditions</h3><details class="example-input-details"><summary>BC.txt</summary><pre><code>DIRICHLET displacement LEFT x 0.0
+DIRICHLET displacement BOTTOM y 0.0
+DIRICHLET displacement TOP x 0.0
+NEUMANN displacement LINE[(0,10),(10,10)] uy -800.0*t</code></pre></details><details class="example-input-details"><summary>Material.txt</summary><pre><code>youngs_modulus 240.5
+poisson_ratio 0.3
+stabilization_parameter 1.0</code></pre></details><details class="example-input-details"><summary>DOFS_info.txt</summary><pre><code>field_key displacement
+domain Solid
+VEM_ORDER 2</code></pre></details><details class="example-input-details"><summary>Solver.txt</summary><pre><code>solver_backend umfpack
+dt 0.25
+total_time 1.0
+adaptive_dt on</code></pre></details></div><div class="actual-code-stack"><details class="code-details" open><summary>1. active_constitutive_field_names</summary><div class="code-window"><pre><code>std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
+    (void)mesh;
+    return {&quot;displacement&quot;};
+}</code></pre></div></details>
+<details class="code-details"><summary>2. dofi_stabilization</summary><div class="code-window"><pre><code>static Scalar dofi_stabilization(
+    const vem::QuadraticElementCache&amp; cache,
+    const std::vector&lt;Scalar&gt;&amp; x_elem,
+    const std::vector&lt;Scalar&gt;&amp; test_elem,
+    const vem::Coeff6x2T&lt;Scalar&gt;&amp; u_pi,
+    const vem::Coeff6x2T&lt;Scalar&gt;&amp; du_pi,
+    const ProblemParameters&amp; params
+) {
+    const auto&amp; U = cache.layout.field(&quot;displacement&quot;);
+    const auto grad_center = vem::quadratic_projection_gradient(u_pi, {{0.0,0.0}});
+    const Scalar Gamma = dofi_gamma_from_neo_hookean_c_tangent(grad_center, params);
+
+    Scalar S(0.0);
+    for (int s = 0; s &lt; cache.geom.n_slots; ++s) {
+        const auto up  = vem::quadratic_projection_value_basis(u_pi,  cache.slot_basis[s]);
+        const auto dup = vem::quadratic_projection_value_basis(du_pi, cache.slot_basis[s]);
+        Scalar dot(0.0);
+        for (int c = 0; c &lt; 2; ++c) {
+            const Scalar delta_u  = x_elem[hpx::local_dof(U, s, c)] - up[c];
+            const Scalar delta_du = test_elem[hpx::local_dof(U, s, c)] - dup[c];
+            dot += delta_u * delta_du;
+        }
+        S += Scalar(0.5) * Gamma * dot;
+    }
+    return S;
+}</code></pre></div></details>
+<details class="code-details"><summary>3. weak_scalar_vem</summary><div class="code-window"><pre><code>static Scalar weak_scalar_vem(
+    const FieldMesh&amp; mesh,
+    int elem_id,
+    const std::vector&lt;Scalar&gt;&amp; x_elem,
+    const std::vector&lt;Scalar&gt;&amp; test_elem,
+    const ProblemParameters&amp; params,
+    const ElementState&amp; state
+) {
+    (void)state;
+
+    const int q_order = std::max(3, params.solver.gauss_order);
+    const vem::QuadraticElementCache&amp; cache = vem::get_cached_quadratic_element(mesh, elem_id, q_order);
+    if (mesh.dim != 2 || cache.layout.dim != 2) {
+        throw std::runtime_error(&quot;Quadratic VEM currently supports 2D displacement VEM only.&quot;);
+    }
+    if (static_cast&lt;int&gt;(x_elem.size()) != cache.layout.n_local()) {
+        throw std::runtime_error(&quot;Bad current element vector size in quadratic VEM.&quot;);
+    }
+    if (test_elem.size() != x_elem.size()) {
+        throw std::runtime_error(&quot;Bad test element vector size in quadratic VEM.&quot;);
+    }
+
+    const auto u_pi  = vem::quadratic_projection_coefficients(cache, x_elem);
+    const auto du_pi = vem::quadratic_projection_coefficients(cache, test_elem);
+
+    Scalar G(0.0);
+    for (const auto&amp; qp : cache.internal_qps) {
+        const auto grad_u  = vem::quadratic_projection_gradient_basis(u_pi, qp.grad_basis);
+        const auto grad_du = vem::quadratic_projection_gradient_basis(du_pi, qp.grad_basis);
+        G += Scalar(qp.dV) * neo_hookean_plane_strain_density(grad_u, grad_du, params);
+    }
+
+    G += dofi_stabilization(cache, x_elem, test_elem, u_pi, du_pi, params);
+    return G;
+}</code></pre></div></details>
+<details class="code-details"><summary>4. compute_constitutive_element_system</summary><div class="code-window"><pre><code>ElementSystem compute_constitutive_element_system(
+    const FieldMesh&amp; mesh,
+    int elem_id,
+    const Vector&amp; x_elem,
+    const ProblemParameters&amp; params,
+    const ElementState&amp; state
+) {
+    return hpx::scalar_weak_form_element_system(
+    // return hpx::scalar_weak_form_element_system_dfad(
+        x_elem,
+        [&amp;](const auto&amp; x_ad, const auto&amp; test_ad) {
+            return weak_scalar_vem(mesh, elem_id, x_ad, test_ad, params, state);
+        }
+    );
+}</code></pre></div></details></div><div class="example-run-panel">
      <p class="eyebrow">Build and run</p>
-     <h2>Copy the verified model and input snapshot into the FEM slots.</h2>
-     <pre><code>cp FEM/models/weak_form.cpp FEM/models/weak_form.cpp.bak
-cp -R FEM/input FEM/input.bak
-cp Web/examples/vem-quadratic/weak_form.cpp FEM/models/weak_form.cpp
-cp Web/examples/vem-quadratic/input/*.txt FEM/input/
-make -C FEM MODEL_SRC=models/weak_form.cpp USE_VEM=1 run</code></pre>
+     <h2>Build the supplied model and run its input files directly.</h2>
+     <pre><code>make -C FEM MODEL_SRC=../Web/examples/vem-quadratic/weak_form_vem_quadratic.cpp USE_VEM=1
+cd FEM
+OMP_NUM_THREADS=2 ./bin/fem ../Web/examples/vem-quadratic/input/ProblemMesh.txt ../Web/examples/vem-quadratic/input/Material.txt ../Web/examples/vem-quadratic/input/BC.txt ../Web/examples/vem-quadratic/input/Solver.txt ../Web/examples/vem-quadratic/input/Postprocessing.txt ../Web/examples/vem-quadratic/input/DOFS_info.txt</code></pre>
     </div>
     <div class="section-heading compact-heading">
      <p class="eyebrow">Download input files</p>
-     <h2>Files synchronized from the runnable quadratic VEM case.</h2>
+     <h2>Input snapshot for this quadratic VEM example.</h2>
     </div>
     <div class="download-grid">
      <a class="download-card" download href="../examples/vem-quadratic/input/ProblemMesh.txt"><span class="tag">mesh</span><h3>ProblemMesh.txt</h3></a>
@@ -131,14 +219,11 @@ make -C FEM MODEL_SRC=models/weak_form.cpp USE_VEM=1 run</code></pre>
      <a class="download-card" download href="../examples/vem-quadratic/input/Material.txt"><span class="tag">material</span><h3>Material.txt</h3></a>
      <a class="download-card" download href="../examples/vem-quadratic/input/Solver.txt"><span class="tag">solver</span><h3>Solver.txt</h3></a>
      <a class="download-card" download href="../examples/vem-quadratic/input/Postprocessing.txt"><span class="tag">output</span><h3>Postprocessing.txt</h3></a>
-     <a class="download-card" download href="../examples/vem-quadratic/weak_form.cpp"><span class="tag">model</span><h3>weak_form.cpp</h3></a>
+     <a class="download-card" download href="../examples/vem-quadratic/weak_form_vem_quadratic.cpp"><span class="tag">model</span><h3>weak_form_vem_quadratic.cpp</h3></a>
     </div>
-    <button class="example-zip-button" disabled type="button">Download complete example (.zip) — coming after final validation</button>
+    
    </section>
-   <section class="doc-section section-wrap cook-page example-result-pending">
-    <p class="eyebrow">Result</p><h2>Result pending validation</h2>
-    <p>The final quadratic VEM displacement image will be added here after the full solid verification run.</p>
-   </section>
+   
   </main>
   <script defer="True" src="../assets/js/main.js">
   </script>

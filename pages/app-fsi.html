@@ -62,6 +62,7 @@
     <h1>Fluid-Structure Interaction</h1>
     <p class="lead">One coupled ALE formulation for an incompressible fluid and a Neo-Hookean solid. Follow the theory, then the actual mixed finite-element implementation and its 2D input files.</p>
    </section>
+<section class="doc-section section-wrap cook-page updated-example-overview"><figure class="updated-example-result"><video controls playsinline preload="metadata" aria-label="Coupled fluid–structure motion"><source src="../examples/fsi/FSI-Q.mp4" type="video/mp4"/>Your browser cannot play this video. <a href="../examples/fsi/FSI-Q.mp4">Download MP4</a>.</video><figcaption><h2>Coupled fluid–structure motion</h2><p>2D ALE FSI with velocity, displacement and pressure. Fluid rho = 1000, kinematic viscosity = 0.001; solid rho = 5000, E = 5e6, nu = 0.3. HE mesh motion; ramped parabolic inlet with u_bar = 1.5.</p></figcaption></figure></section>
    <section class="doc-section section-wrap cook-page plasticity-document-section fsi-document-section">
     <div class="plasticity-document-panel">
      <div class="plasticity-tabs" role="tablist" aria-label="FSI documentation">
@@ -140,18 +141,42 @@
        <tr><td>\(\mathbf R_e,\mathbf K_e\)</td><td><code>scalar_weak_form_element_system</code></td><td><a href="../code/hpx.html?file=local_element_system_ad.h">AD extraction</a></td></tr>
       </tbody></table></div>
      </div>
-     <div id="fsi-code-panel" class="plasticity-tab-panel" role="tabpanel" aria-labelledby="fsi-code-tab" data-fsi-panel="code">
-      <div class="section-heading"><p class="eyebrow">Code</p><h2>One FEM model, two domains, one solve.</h2><p>The implementation excerpts and mesh below come from <code>FEM/models/FSI_Models/weak_form_fsi.cpp</code> and its 2D input. HE and BH select the mesh term within this same model.</p></div>
+     <div id="fsi-code-panel" class="plasticity-tab-panel" role="tabpanel" aria-labelledby="fsi-code-tab" data-fsi-panel="code"><div class="updated-example-inputs"><h3>Input conditions</h3><details class="example-input-details"><summary>BC.txt</summary><pre><code>DIRICHLET INLET vx u_bar*parabolic_profile*sin(pi*min(t,2.0)/(2.0*2.0))
+DIRICHLET INLET vy 0.0
+DIRICHLET INLET ux 0.0
+DIRICHLET INLET uy 0.0
+DIRICHLET WALLS vx 0.0
+DIRICHLET WALLS vy 0.0
+DIRICHLET WALLS uy 0.0
+DIRICHLET CIRCLE vx 0.0
+DIRICHLET CIRCLE vy 0.0
+DIRICHLET CIRCLE ux 0.0
+DIRICHLET CIRCLE uy 0.0</code></pre></details><details class="example-input-details"><summary>Material.txt</summary><pre><code>rho 1e3
+mu 1e-3
+u_bar 1.5
+stabilization_parameter 1.0
+structure_rho 5e3
+youngs_modulus 5.0e6
+poisson_ratio 0.3
+mesh_motion_type HE
+mesh_motion_coefficient 1.0e-8
+mesh_motion_poisson_ratio -0.1</code></pre></details><details class="example-input-details"><summary>DOFS_info.txt</summary><pre><code>field_key velocity displacement pressure
+domain Fluid Solid</code></pre></details><details class="example-input-details"><summary>Solver.txt</summary><pre><code>solver_backend umfpack
+dt 0.01
+total_time 12.0
+theta 0.5
+adaptive_dt on</code></pre></details></div>
+      <div class="section-heading"><p class="eyebrow">Code</p><h2>One FEM model, two domains, one solve.</h2><p>The implementation excerpts and mesh below come from <code>examples/fsi/weak_form_fsi.cpp</code> and its downloadable 2D input. HE and BH select the mesh term within this same model.</p></div>
       <figure class="fsi-mesh-figure"><img src="../assets/images/fsi-2d-mesh.svg" width="1120" height="650" alt="Actual 2D fluid and solid finite-element mesh, with an enlarged view of the cylinder and flexible flag." loading="lazy"/><figcaption><strong>Reference mesh &middot; 2D Q9 / Q9 / Q4</strong><br/>Blue: fluid. Orange: solid. The lower view enlarges the interface region. Geometry and connectivity are extracted from the downloadable <code>ProblemMesh.txt</code>.</figcaption></figure>
       <div class="cook-workflow">
        <article><span>1</span><h3>Read the fields and domains</h3><p><code>Info_FSI.txt</code> declares <code>velocity displacement pressure</code>. <code>fsi_2d.txt</code> supplies <code>fluid</code> and <code>solid</code> domains and shared interface nodes.</p></article>
        <article><span>2</span><h3>Evaluate the domain scalar</h3><p><code>weak_scalar_domain</code> dispatches to the fluid or solid kernel. The fluid kernel also adds the selected mesh equation.</p></article>
        <article><span>3</span><h3>Differentiate and assemble</h3><p><code>scalar_weak_form_element_system</code> extracts the residual and tangent. Global assembly and Newton iterations solve all active fields together.</p></article>
       </div>
-      <div class="actual-code-intro"><h3>Implementation excerpts</h3><p>Each excerpt is taken directly from the current source. <a href="../examples/fsi-he/weak_form.cpp" download>Download the complete model</a>.</p></div>
+      <div class="actual-code-intro"><h3>Implementation excerpts</h3><p>Each excerpt is taken directly from the current source. <a href="../examples/fsi/weak_form_fsi.cpp" download>Download the complete model</a>.</p></div>
       <div class="actual-code-stack">
 <!-- GENERATED:FSI_SNIPPETS:START -->
-<details class="code-details" open><summary>1. Local fields and shifted time weights</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/FEM/models/FSI_Models/weak_form_fsi.cpp#L152" target="_blank" rel="noopener">FEM/models/FSI_Models/weak_form_fsi.cpp:152</a></p><div class="code-window"><pre><code>    const DomainLocalLayout L = make_domain_layout(mesh, elem_id, state.domain_type);
+<details class="code-details" open><summary>1. Local fields and shifted time weights</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/Web/examples/fsi/weak_form_fsi.cpp#L152" target="_blank" rel="noopener">Web/examples/fsi/weak_form_fsi.cpp:152</a></p><div class="code-window"><pre><code>    const DomainLocalLayout L = make_domain_layout(mesh, elem_id, state.domain_type);
     const auto&amp; V = L.field(&quot;velocity&quot;);
     const auto&amp; U = L.field(&quot;displacement&quot;);
     const auto&amp; Pf = L.field(&quot;pressure&quot;);
@@ -168,7 +193,7 @@
     const double theta_current = time_scheme.value.current();
     const double theta_past = time_scheme.value.past(0);
     const double mesh_coeff = params.material.mesh_motion_coefficient;</code></pre></div></details>
-<details class="code-details"><summary>2. Fluid momentum and incompressibility</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/FEM/models/FSI_Models/weak_form_fsi.cpp#L270" target="_blank" rel="noopener">FEM/models/FSI_Models/weak_form_fsi.cpp:270</a></p><div class="code-window"><pre><code>        // Momentum weak scalar.
+<details class="code-details"><summary>2. Fluid momentum and incompressibility</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/Web/examples/fsi/weak_form_fsi.cpp#L270" target="_blank" rel="noopener">Web/examples/fsi/weak_form_fsi.cpp:270</a></p><div class="code-window"><pre><code>        // Momentum weak scalar.
         for (int i = 0; i &lt; L.dim; ++i) {
             const Scalar mass_conv_mesh = Scalar(rho) * Scalar(0.5) * (J + Jn) * (v[i] - vn[i])
                                         + Scalar(dt) * conv[i]
@@ -185,7 +210,7 @@
         for (int i = 0; i &lt; L.dim; ++i)
             for (int j = 0; j &lt; L.dim; ++j) div_ale += J_time * Finv_time[j][i] * grad_v[i][j];
         G += div_ale * delta_p * Scalar(dV);</code></pre></div></details>
-<details class="code-details"><summary>3. Solid momentum, kinematics, and pressure equation</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/FEM/models/FSI_Models/weak_form_fsi.cpp#L389" target="_blank" rel="noopener">FEM/models/FSI_Models/weak_form_fsi.cpp:389</a></p><div class="code-window"><pre><code>        // Momentum balance against delta_v.
+<details class="code-details"><summary>3. Solid momentum, kinematics, and pressure equation</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/Web/examples/fsi/weak_form_fsi.cpp#L389" target="_blank" rel="noopener">Web/examples/fsi/weak_form_fsi.cpp:389</a></p><div class="code-window"><pre><code>        // Momentum balance against delta_v.
         for (int i = 0; i &lt; L.dim; ++i) {
             G += Scalar(rho_s) * (v[i] - vn[i]) * delta_v[i] * Scalar(dV);
             for (int j = 0; j &lt; L.dim; ++j) {
@@ -202,7 +227,7 @@
         // Pressure mass equation, matching the solid-domain Python reference: p * delta_p.
         G += p * delta_p * Scalar(dV);
     }</code></pre></div></details>
-<details class="code-details"><summary>4. Domain dispatcher</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/FEM/models/FSI_Models/weak_form_fsi.cpp#L417" target="_blank" rel="noopener">FEM/models/FSI_Models/weak_form_fsi.cpp:417</a></p><div class="code-window"><pre><code>static Scalar weak_scalar_domain(
+<details class="code-details"><summary>4. Domain dispatcher</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/Web/examples/fsi/weak_form_fsi.cpp#L417" target="_blank" rel="noopener">Web/examples/fsi/weak_form_fsi.cpp:417</a></p><div class="code-window"><pre><code>static Scalar weak_scalar_domain(
     const FieldMesh&amp; mesh,
     int elem_id,
     const std::vector&lt;Scalar&gt;&amp; x_elem,
@@ -226,7 +251,7 @@
             throw std::runtime_error(&quot;Unsupported domain type in weak form.&quot;);
     }
 }</code></pre></div></details>
-<details class="code-details"><summary>5. AD residual and tangent</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/FEM/models/FSI_Models/weak_form_fsi.cpp#L449" target="_blank" rel="noopener">FEM/models/FSI_Models/weak_form_fsi.cpp:449</a></p><div class="code-window"><pre><code>ElementSystem compute_constitutive_element_system(
+<details class="code-details"><summary>5. AD residual and tangent</summary><p class="fsi-source-reference"><a href="https://github.com/YongbinChoi91/HiPaCs/blob/main/Web/examples/fsi/weak_form_fsi.cpp#L449" target="_blank" rel="noopener">Web/examples/fsi/weak_form_fsi.cpp:449</a></p><div class="code-window"><pre><code>ElementSystem compute_constitutive_element_system(
     const FieldMesh&amp; mesh,
     int elem_id,
     const Vector&amp; x_elem,
@@ -276,26 +301,27 @@
 }</code></pre></div></details>
 <!-- GENERATED:FSI_SNIPPETS:END -->
       </div>
-      <div class="section-heading compact-heading"><p class="eyebrow">Run the 2D example</p><h2>Use the FEM FSI runner.</h2><p>After the environment setup in <a href="../install.html">Installation</a>, run from the repository root. The runner copies the selected case into <code>FEM/input/</code>, builds the model, and starts the solve.</p></div>
-      <div class="code-window"><pre><code>cd FEM
-bash run.sh fsi</code></pre></div>
-      <p>The default is HE mesh motion. To use the BH mesh equation with the same 2D model, run <code>bash run.sh fsi_bh</code> from <code>FEM/</code>.</p>
+      <div class="section-heading compact-heading"><p class="eyebrow">Run the 2D example</p><h2>Build and run the supplied FSI snapshot.</h2><p>After the environment setup in <a href="../install.html">Installation</a>, run from the repository root. These commands build the supplied model and pass its input paths directly to the executable.</p></div>
+      <div class="code-window"><pre><code>make -C FEM MODEL_SRC=../Web/examples/fsi/weak_form_fsi.cpp
+cd FEM
+OMP_NUM_THREADS=2 ./bin/fem ../Web/examples/fsi/input/ProblemMesh.txt ../Web/examples/fsi/input/Material.txt ../Web/examples/fsi/input/BC.txt ../Web/examples/fsi/input/Solver.txt ../Web/examples/fsi/input/Postprocessing.txt ../Web/examples/fsi/input/DOFS_info.txt</code></pre></div>
+      <p>One FSI folder contains the model and inputs. Select <code>mesh_motion_type HE</code> or <code>mesh_motion_type BH</code> in <code>Material.txt</code>. Run these commands from the repository root after the environment setup in Installation.</p>
       <div class="equation-code-table-wrap"><table class="equation-code-table"><thead><tr><th>Input</th><th>Current 2D configuration</th></tr></thead><tbody>
        <tr><td><code>DOFS_info.txt</code></td><td><code>field_key velocity displacement pressure</code>; fluid and solid domains</td></tr>
        <tr><td><code>Material.txt</code></td><td>\(\rho_f=1000\), \(\eta_f=1\), \(\rho_s=5000\), \(E=5\times10^6\), \(\nu=0.3\); default HE mesh motion</td></tr>
        <tr><td><code>Solver.txt</code></td><td>UMFPACK backend; initial \(\Delta t=0.01\), final time 12, adaptive stepping; <code>theta 0.5</code></td></tr>
        <tr><td><code>Postprocessing.txt</code></td><td>VTK, HDF5, force, and minimum-Jacobian output controls</td></tr>
       </tbody></table></div>
-      <div class="section-heading compact-heading"><p class="eyebrow">Download &middot; 2D</p><h2>Model and input files</h2><p>HE and BH use the same model, mesh, and boundary conditions. Only the mesh-motion material file is switched.</p></div>
+      <div class="section-heading compact-heading"><p class="eyebrow">Download &middot; 2D</p><h2>Model and input files</h2><p>One FSI input set; select HE or BH in Material.txt.</p></div>
       <div class="download-grid">
-       <a class="download-card" download href="../examples/fsi-he/weak_form.cpp"><span class="tag">Model</span><h3>weak_form.cpp</h3><p>Coupled FEM FSI weak form.</p></a>
-       <a class="download-card" download href="../examples/fsi-he/input/ProblemMesh.txt"><span class="tag">2D mesh</span><h3>ProblemMesh.txt</h3><p>Fluid and solid connectivity.</p></a>
-       <a class="download-card" download href="../examples/fsi-he/input/DOFS_info.txt"><span class="tag">Fields</span><h3>DOFS_info.txt</h3><p>Velocity, displacement, pressure.</p></a>
-       <a class="download-card" download href="../examples/fsi-he/input/BC.txt"><span class="tag">Boundary</span><h3>BC.txt</h3><p>Inlet, walls, circle, outlet.</p></a>
-       <a class="download-card" download href="../examples/fsi-he/input/Material.txt"><span class="tag">Mesh &middot; HE</span><h3>Material.txt</h3><p>Physical parameters and HE selector.</p></a>
-       <a class="download-card" download="Material_BH.txt" href="../examples/fsi-bh/input/Material.txt"><span class="tag">Mesh &middot; BH</span><h3>Material_BH.txt</h3><p>Alternative mesh-motion selector.</p></a>
-       <a class="download-card" download href="../examples/fsi-he/input/Solver.txt"><span class="tag">Solver</span><h3>Solver.txt</h3><p>Time integration and nonlinear solve.</p></a>
-       <a class="download-card" download href="../examples/fsi-he/input/Postprocessing.txt"><span class="tag">Output</span><h3>Postprocessing.txt</h3><p>Output locations and diagnostics.</p></a>
+       <a class="download-card" download href="../examples/fsi/weak_form_fsi.cpp"><span class="tag">Model</span><h3>weak_form_fsi.cpp</h3><p>Coupled FEM FSI weak form.</p></a>
+       <a class="download-card" download href="../examples/fsi/input/ProblemMesh.txt"><span class="tag">2D mesh</span><h3>ProblemMesh.txt</h3><p>Fluid and solid connectivity.</p></a>
+       <a class="download-card" download href="../examples/fsi/input/DOFS_info.txt"><span class="tag">Fields</span><h3>DOFS_info.txt</h3><p>Velocity, displacement, pressure.</p></a>
+       <a class="download-card" download href="../examples/fsi/input/BC.txt"><span class="tag">Boundary</span><h3>BC.txt</h3><p>Inlet, walls, circle, outlet.</p></a>
+       <a class="download-card" download href="../examples/fsi/input/Material.txt"><span class="tag">Material</span><h3>Material.txt</h3><p>Physical parameters and the HE/BH mesh-motion selector.</p></a>
+       
+       <a class="download-card" download href="../examples/fsi/input/Solver.txt"><span class="tag">Solver</span><h3>Solver.txt</h3><p>Time integration and nonlinear solve.</p></a>
+       <a class="download-card" download href="../examples/fsi/input/Postprocessing.txt"><span class="tag">Output</span><h3>Postprocessing.txt</h3><p>Output locations and diagnostics.</p></a>
       </div>
      </div>
     </div>

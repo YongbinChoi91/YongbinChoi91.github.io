@@ -1,4 +1,4 @@
-youngs_modulus 200
+youngs_modulus 2000
 poisson_ratio 0.3
 
 newmark_beta 0.25   

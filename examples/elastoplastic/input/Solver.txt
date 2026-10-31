@@ -15,7 +15,7 @@ GAUSS_ORDER auto
 # solver_backend: umfpack, petsc, pardiso
 # linear_solver : direct, preonly, gmres, fgmres, bicgstab, cg
 # preconditioner: lu, ilu, jacobi, hypre, gamg, fieldsplit, none
-solver_backend petsc
+solver_backend umfpack
 linear_solver gmres
 preconditioner ilu
 linear_tol 1e-10
@@ -33,7 +33,7 @@ total_time 4.0
 adaptive_dt on
 dt_min 1.0e-8
 dt_max 1.0
-dt_growth 1.5
+dt_growth 1.0
 dt_shrink 0.5
 
 # ------------------------------------------------------------
@@ -88,7 +88,7 @@ pressure_pin_value 0.0
 #
 # history_diagnostics on:
 #   prints local history/plasticity diagnostic text when the weak form supplies it.
-newton_log on
+newton_log off
 field_diagnostics off
 bc_diagnostics off
 bc_conflict_tol 1e-6
@@ -98,7 +98,7 @@ history_diagnostics on
 #   0: normal/full console path compatible with newton_log
 #   2: progress-bar mode
 #  -1: legacy detailed residual mode retained for debugging
-residual_monitor 0
+residual_monitor 1
 residual_print_all off
 residual_print_limit 30
 

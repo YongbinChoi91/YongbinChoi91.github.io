@@ -85,24 +85,8 @@ CASES: dict[str, dict[str, str]] = {
         "FEM/models/VEM/input/Solver.txt": COMMON["Solver.txt"],
         "FEM/models/VEM/input/Postprocessing.txt": COMMON["Postprocessing.txt"],
     },
-    "fsi-he": {
-        "FEM/models/FSI_Models/weak_form_fsi.cpp": "weak_form.cpp",
-        "FEM/models/FSI_Models/Mesh/fsi_2d.txt": COMMON["ProblemMesh.txt"],
-        "FEM/models/FSI_Models/input/BC.txt": COMMON["BC.txt"],
-        "FEM/models/FSI_Models/input/Info_FSI.txt": COMMON["DOFS_info.txt"],
-        "FEM/models/FSI_Models/input/Material.txt": COMMON["Material.txt"],
-        "FEM/models/FSI_Models/input/Solver.txt": COMMON["Solver.txt"],
-        "FEM/models/FSI_Models/input/Postprocessing.txt": COMMON["Postprocessing.txt"],
-    },
-    "fsi-bh": {
-        "FEM/models/FSI_Models/weak_form_fsi.cpp": "weak_form.cpp",
-        "FEM/models/FSI_Models/Mesh/fsi_2d.txt": COMMON["ProblemMesh.txt"],
-        "FEM/models/FSI_Models/input/BC.txt": COMMON["BC.txt"],
-        "FEM/models/FSI_Models/input/Info_FSI.txt": COMMON["DOFS_info.txt"],
-        "FEM/models/FSI_Models/input/Material_BH.txt": COMMON["Material.txt"],
-        "FEM/models/FSI_Models/input/Solver.txt": COMMON["Solver.txt"],
-        "FEM/models/FSI_Models/input/Postprocessing.txt": COMMON["Postprocessing.txt"],
-    },
+    # The curated FSI snapshot lives only in Web/examples/fsi/.
+    # generate_fsi_page.py reads it without recreating HE/BH copies.
     "single-rve-fem": {
         "FEM/models/Elastic_Models/weak_form_hyper_elastic_ad.cpp": "weak_form.cpp",
         "RVEtest/input/Mesh/Micro_Mesh_FEM.txt": COMMON["ProblemMesh.txt"],

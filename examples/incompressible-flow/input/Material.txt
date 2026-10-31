@@ -1,0 +1,6 @@
+# Fluid
+rho 1
+mu 1e-3
+stabilization_parameter 1.0
+
+u_bar 2.0

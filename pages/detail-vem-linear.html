@@ -73,6 +73,7 @@
             an arbitrary polygon when the interior shape functions are virtual.
     </p>
    </section>
+<section class="doc-section section-wrap cook-page updated-example-overview"><figure class="updated-example-result"><a href="../examples/vem-linear/VEM_Linear.png" target="_blank" rel="noopener"><img src="../examples/vem-linear/VEM_Linear.png" alt="First-order polygonal VEM" decoding="async"/></a><figcaption><h2>First-order polygonal VEM</h2><p>First-order VEM (VEM_ORDER 1). Left boundary fixed; RIGHT vertical traction = 10t and OUTLET vertical traction = 0.01t. E = 240.5, nu = 0.3; stabilization parameter = 1.</p></figcaption></figure></section>
    <section class="doc-section section-wrap cook-page hyperelastic-preview-section vem-linear-preview-section">
     <div class="plasticity-figure-panel hyperelastic-figure-panel vem-linear-figure-panel">
      <div class="plasticity-figure-media vem-figure-media">
@@ -381,7 +382,7 @@
 VEM_ORDER 1
 
 // For the quadratic page, switch to:
-// VEM_ORDER 2</code></pre>
+// VEM_ORDER 1</code></pre>
         <p>
          The uploaded example currently uses the same displacement-only structure. For this linear VEM page,
                     the order selector should be
@@ -407,112 +408,89 @@ rho 1.0</code></pre>
         </p>
        </article>
       </div>
-      <div class="actual-code-stack">
-       <details class="code-details" open="">
-        <summary>
-         1. The active model is displacement-only linear polygonal VEM.
-        </summary>
-        <pre class="example-code"><code>const char* active_constitutive_model_name() {
-    return "weak_form_vem_linear_polygon";
-}
-
-std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
+      <div class="updated-example-inputs"><h3>Input conditions</h3><details class="example-input-details"><summary>BC.txt</summary><pre><code>DIRICHLET displacement LEFT x 0.0
+DIRICHLET displacement LEFT y 0.0
+NEUMANN displacement RIGHT y 10.0*t
+NEUMANN displacement OUTLET y 0.01*t</code></pre></details><details class="example-input-details"><summary>Material.txt</summary><pre><code>youngs_modulus 240.5
+poisson_ratio 0.3
+stabilization_parameter 1.0</code></pre></details><details class="example-input-details"><summary>DOFS_info.txt</summary><pre><code>field_key displacement
+domain Solid
+VEM_ORDER 1</code></pre></details><details class="example-input-details"><summary>Solver.txt</summary><pre><code>solver_backend umfpack
+dt 0.25
+total_time 1.0
+adaptive_dt on</code></pre></details></div><div class="actual-code-stack">
+       <details class="code-details" open><summary>1. active_constitutive_field_names</summary><div class="code-window"><pre><code>std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
     (void)mesh;
-    return {"displacement"};
-}</code></pre>
-       </details>
-       <details class="code-details" open="">
-        <summary>
-         2. Each polygon element is converted into a reusable linear VEM cache.
-        </summary>
-        <pre class="example-code"><code>const int q_order = (params.solver.gauss_order &gt; 0)
-    ? params.solver.gauss_order
-    : 1;
+    return {&quot;displacement&quot;};
+}</code></pre></div></details>
+<details class="code-details"><summary>2. weak_scalar_vem</summary><div class="code-window"><pre><code>static Scalar weak_scalar_vem(
+    const FieldMesh&amp; mesh,
+    int elem_id,
+    const std::vector&lt;Scalar&gt;&amp; x_elem,
+    const std::vector&lt;Scalar&gt;&amp; test_elem,
+    const ProblemParameters&amp; params,
+    const ElementState&amp; state
+) {
+    (void)state;
 
-const vem::LinearElementCache&amp; cache =
-    vem::cached_linear_element(mesh, elem_id, q_order);</code></pre>
-        <p>
-         The cache contains polygon area, centroid, real vertex slots, scaled edge normals, and the centroid fan
-                    triangles used by the internal integration path.
-        </p>
-       </details>
-       <details class="code-details" open="">
-        <summary>
-         3. The projected VEM gradient is built from edge averages and scaled normals.
-        </summary>
-        <pre class="example-code"><code>for (int ar = 0; ar &lt; cache.n_real; ++ar) {
-    const int br = (ar + 1) % cache.n_real;
-    const int a_slot = cache.real_slots[ar];
-    const int b_slot = cache.real_slots[br];
+    const int q_order = (params.solver.gauss_order &gt; 0) ? params.solver.gauss_order : 1;
+    const vem::LinearElementCache&amp; cache = vem::get_cached_linear_element(mesh, elem_id, q_order);
+    if (mesh.dim != 2 || cache.layout.dim != 2) {
+        throw std::runtime_error(&quot;Linear VEM currently supports 2D displacement VEM only.&quot;);
+    }
+    if (static_cast&lt;int&gt;(x_elem.size()) != cache.layout.n_local()) {
+        throw std::runtime_error(&quot;Bad current element vector size in linear VEM.&quot;);
+    }
+    if (test_elem.size() != x_elem.size()) {
+        throw std::runtime_error(&quot;Bad test element vector size in linear VEM.&quot;);
+    }
 
-    const Scalar u_mid = Scalar(0.5) * (ua + ub);
-    grad[i][A] += u_mid * Scalar(cache.edge_normal_scaled[ar][A] / cache.area);
-}</code></pre>
-        <p>
-         This is the code version of \( |E|^{-1}\sum_e |e|\bar{u}_e\otimes n_e \). It is the central
-                    bridge between virtual shape functions and an actual computable element matrix.
-        </p>
-       </details>
-       <details class="code-details">
-        <summary>
-         4. The centroid fan provides triangle gradients for the internal contribution.
-        </summary>
-        <pre class="example-code"><code>Scalar triangle_part(0.0);
-double fan_measure_sum = 0.0;
+    const double alpha = 0.1;
+    const auto grad_u_pi  = vem::linear_projected_gradient(cache, x_elem);
+    const auto grad_du_pi = vem::linear_projected_gradient(cache, test_elem);
+    const Scalar projected_density = neo_hookean_plane_strain_density(grad_u_pi, grad_du_pi, params);
 
-for (const auto&amp; tri : cache.triangles) {
-    fan_measure_sum += tri.measure;
-    const auto grad_u_T  = vem::linear_triangle_gradient(cache, tri, x_elem);
-    const auto grad_du_T = vem::linear_triangle_gradient(cache, tri, test_elem);
+    Scalar triangle_part(0.0);
+    double fan_measure_sum = 0.0;
+    for (const auto&amp; tri : cache.triangles) {
+        fan_measure_sum += tri.measure;
+        const auto grad_u_T  = vem::linear_triangle_gradient(cache, tri, x_elem);
+        const auto grad_du_T = vem::linear_triangle_gradient(cache, tri, test_elem);
+        triangle_part += Scalar(tri.measure) * neo_hookean_plane_strain_density(grad_u_T, grad_du_T, params);
+    }
 
-    triangle_part += Scalar(tri.measure)
-        * neo_hookean_plane_strain_density(grad_u_T, grad_du_T, params);
-}</code></pre>
-       </details>
-       <details class="code-details">
-        <summary>
-         5. The final scalar G blends projected VEM consistency with the triangle part.
-        </summary>
-        <pre class="example-code"><code>const double alpha = 0.1;
-const auto grad_u_pi  = vem::linear_projected_gradient(cache, x_elem);
-const auto grad_du_pi = vem::linear_projected_gradient(cache, test_elem);
-
-const Scalar projected_density =
-    neo_hookean_plane_strain_density(grad_u_pi, grad_du_pi, params);
-
-return Scalar(alpha) * triangle_part
-     + Scalar(1.0 - alpha) * Scalar(fan_measure_sum) * projected_density;</code></pre>
-       </details>
-       <details class="code-details">
-        <summary>
-         6. AD extracts residual and tangent from the same scalar statement.
-        </summary>
-        <pre class="example-code"><code>const WeakOuterFad G = weak_scalar_vem(
-    mesh, elem_id, x_ad, test_ad, params, state
-);
-
-for (int i = 0; i &lt; n; ++i) {
-    sys.residual[i] = weak_inner_dx(G.val(), i);
-}
-
-for (int j = 0; j &lt; n; ++j) {
-    const WeakInnerFad dG_dxj = G.dx(j);
-    for (int i = 0; i &lt; n; ++i)
-        sys.tangent[i * n + j] = weak_inner_dx(dG_dxj, i);
-}</code></pre>
-       </details>
+    return Scalar(alpha) * triangle_part
+         + Scalar(1.0 - alpha) * Scalar(fan_measure_sum) * projected_density;
+}</code></pre></div></details>
+<details class="code-details"><summary>3. compute_constitutive_element_system</summary><div class="code-window"><pre><code>ElementSystem compute_constitutive_element_system(
+    const FieldMesh&amp; mesh,
+    int elem_id,
+    const Vector&amp; x_elem,
+    const ProblemParameters&amp; params,
+    const ElementState&amp; state
+) {
+    return hpx::scalar_weak_form_element_system(
+        x_elem,
+        [&amp;](const auto&amp; x_ad, const auto&amp; test_ad) {
+            return weak_scalar_vem(mesh, elem_id, x_ad, test_ad, params, state);
+        }
+    );
+}</code></pre></div></details>
+       
+       
+       
+       
+       
       </div>
       <div class="download-section compact-download-section">
        <div class="math-explain-grid theory-grid"><article class="math-card wide"><span class="tag">Strong form</span><div class="formula-block">\[-\operatorname{Div}\mathbf P(\mathbf F)=\mathbf0\quad\text{in }\Omega_0.\]</div></article><article class="math-card wide"><span class="tag">Boundary conditions</span><div class="formula-block">\[\mathbf u=\bar{\mathbf u}\text{ on }\Gamma_D,\qquad \mathbf P\mathbf N=\bar{\mathbf t}\text{ on }\Gamma_N.\]</div><p>The polygon boundary groups are defined in <code>input/BC.txt</code>.</p></article><article class="math-card wide"><span class="tag">Weak form</span><div class="formula-block">\[G_E=\alpha G_E^{fan}+(1-\alpha)|E|\,G_E^{projection}.\]</div></article></div>
        <div class="section-heading compact-heading"><p class="eyebrow">Equation-to-code mapping</p><h2>Projected quantities in the linear polygonal weak form.</h2></div>
        <div class="equation-code-table-wrap"><table class="equation-code-table"><thead><tr><th>Mathematical quantity</th><th>Meaning</th><th>Code identifier</th><th>Source function</th></tr></thead><tbody><tr><td>\(\Pi^\nabla\mathbf u\)</td><td>Projected displacement</td><td><code>grad_u_pi</code></td><td><code>weak_scalar_vem</code></td></tr><tr><td>\(\nabla\Pi\mathbf u\)</td><td>Projected gradient</td><td><code>grad_du_pi</code></td><td><code>weak_scalar_vem</code></td></tr><tr><td>\(\mathbf P\)</td><td>Projected constitutive contribution</td><td><code>neo_hookean_plane_strain_density</code></td><td><code>weak_scalar_vem</code></td></tr><tr><td>\(S_E\)</td><td>Fan-triangle contribution</td><td><code>triangle_part</code></td><td><code>weak_scalar_vem</code></td></tr><tr><td>\(G_E\)</td><td>Element weak form</td><td><code>return expression</code></td><td><code>weak_scalar_vem</code></td></tr></tbody></table></div>
        <div class="example-run-panel">
-        <p class="eyebrow">Build and run</p><h2>Copy the verified linear VEM example into the FEM slots.</h2>
-        <pre><code>cp FEM/models/weak_form.cpp FEM/models/weak_form.cpp.bak
-cp -R FEM/input FEM/input.bak
-cp Web/examples/vem-linear/weak_form.cpp FEM/models/weak_form.cpp
-cp Web/examples/vem-linear/input/*.txt FEM/input/
-make -C FEM MODEL_SRC=models/weak_form.cpp USE_VEM=1 run</code></pre>
+        <p class="eyebrow">Build and run</p><h2>Build the supplied model and run its input files directly.</h2>
+        <pre><code>make -C FEM MODEL_SRC=../Web/examples/vem-linear/weak_form_vem.cpp USE_VEM=1
+cd FEM
+OMP_NUM_THREADS=2 ./bin/fem ../Web/examples/vem-linear/input/ProblemMesh.txt ../Web/examples/vem-linear/input/Material.txt ../Web/examples/vem-linear/input/BC.txt ../Web/examples/vem-linear/input/Solver.txt ../Web/examples/vem-linear/input/Postprocessing.txt ../Web/examples/vem-linear/input/DOFS_info.txt</code></pre>
        </div>
        <div class="section-heading compact-heading">
         <p class="eyebrow">
@@ -604,26 +582,24 @@ make -C FEM MODEL_SRC=models/weak_form.cpp USE_VEM=1 run</code></pre>
           VTK, SVG, final DOF, and plotting settings.
          </p>
         </a>
-        <a class="download-card" download="" href="../examples/vem-linear/weak_form.cpp">
+        <a class="download-card" download="" href="../examples/vem-linear/weak_form_vem.cpp">
          <span class="tag">
           model
          </span>
          <h3>
-          weak_form.cpp
+          weak_form_vem.cpp
          </h3>
          <p>
           Verified first-order polygonal VEM weak form synchronized from the runnable model.
          </p>
         </a>
        </div>
-       <button class="example-zip-button" disabled type="button">Download complete example (.zip) — coming after final validation</button>
+       
       </div>
      </div>
     </div>
    </section>
-   <section class="doc-section section-wrap cook-page example-result-pending">
-    <p class="eyebrow">Result</p><h2>Result pending validation</h2><p>The final polygonal displacement image will be added after the full solid verification run.</p>
-   </section>
+   
   </main>
   <script defer="True" src="../assets/js/main.js">
   </script>

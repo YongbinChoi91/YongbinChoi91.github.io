@@ -72,6 +72,7 @@
             The global problem remains displacement-based, while plastic variables are solved locally at each Gauss point.
     </p>
    </section>
+<section class="doc-section section-wrap cook-page updated-example-overview"><figure class="updated-example-result"><a href="../examples/elastoplastic/hysteresis.svg" target="_blank" rel="noopener"><img src="../examples/elastoplastic/hysteresis.svg" alt="Cyclic elastoplastic response" decoding="async"/></a><figcaption><h2>Cyclic elastoplastic response</h2><p>Prescribed TOP displacement versus BOTTOM reaction. TOP follows 0 → 0.15 → 0 → −0.15 → 0 over t = 0…4. E = 100, nu = 0.3, initial yield stress = 0.45; five Gauss-point history variables.</p></figcaption></figure></section>
    <section class="doc-section section-wrap wide-page-wrap framework-detail-wide">
     <article class="framework-hero-card">
      <span class="tag">
@@ -364,7 +365,20 @@
                 \]
       </article>
      </div>
-     <div class="plasticity-tab-panel" data-plasticity-panel="simulation" role="tabpanel">
+     <div class="plasticity-tab-panel" data-plasticity-panel="simulation" role="tabpanel"><div class="updated-example-inputs"><h3>Input conditions</h3><details class="example-input-details"><summary>BC.txt</summary><pre><code>DIRICHLET LEFT ux 0.0
+DIRICHLET BOTTOM uy 0.0
+DIRICHLET TOP uy piecewise_cycle(4.0; 0,0; 1.0,0.15; 2.0,0; 3.0,-0.15; 4.0,0)</code></pre></details><details class="example-input-details"><summary>Material.txt</summary><pre><code>YOUNGS_MODULUS 100.0
+POISSON_RATIO 0.3
+YIELD_STRESS 0.45
+HARDENING_KF 0.12924
+HARDENING_YINF 0.715
+HARDENING_DELTA 16.93
+LOCAL_RESIDUAL_TOL 1.0e-10
+LOCAL_MAX_ITER 25</code></pre></details><details class="example-input-details"><summary>DOFS_info.txt</summary><pre><code>field_key displacement
+history plasticity 5</code></pre></details><details class="example-input-details"><summary>Solver.txt</summary><pre><code>solver_backend umfpack
+dt 0.01
+total_time 4.0
+adaptive_dt on</code></pre></details></div>
       <div class="section-heading">
        <p class="eyebrow">
         Input declaration
@@ -421,226 +435,178 @@ LOCAL_MAX_ITER 25</code></pre>
        </p>
       </article>
       <div class="actual-code-stack">
-       <details class="code-details" open="">
-        <summary>
-         1. The linked model declares displacement as the only global field.
-        </summary>
-        <pre class="example-code"><code>const char* active_constitutive_model_name() {
-    return "elasto_plastic_solid_displacement_history";
-}
-
-std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
+       <details class="code-details" open><summary>1. active_constitutive_field_names</summary><div class="code-window"><pre><code>std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
     (void)mesh;
-    return {"displacement"};
-}
-
-struct EPMaterial {
-    double E = 1.0;
-    double nu = 0.3;
-    double sigma_y = 0.45;
-    double Kf = 0.12924;
-    double Yinf = 0.715;
-    double delta = 16.93;
-    double local_tol = 1.0e-10;
-    int local_max_iter = 25;
-};</code></pre>
-       </details>
-       <details class="code-details">
-        <summary>
-         2. The five history variables are converted into the plastic metric.
-        </summary>
-        <pre class="example-code"><code>static Mat3 Cgpi_from_h(const Vector&amp; h){
-    if(static_cast&lt;int&gt;(h.size())&lt;5)
-        throw std::runtime_error("Plasticity history requires at least 5 variables in 2D.");
-    Mat3 C=hpx::eye3&lt;double&gt;();
-    C[0][0]+=h[0]; C[1][1]+=h[1]; C[2][2]+=h[2];
-    C[0][1]+=h[3]; C[1][0]+=h[3];
-    return C;
-}
-static double gamma_from_h(const Vector&amp; h){ return h[4]; }</code></pre>
-       </details>
-       <details class="code-details">
-        <summary>
-         3. Local residual Q(F,h)=0 used by the material-point Newton solve.
-        </summary>
-        <pre class="example-code"><code>static Vector local_Qg_residual(const Mat3&amp; F,const Vector&amp; h_n,
-                                const Vector&amp; h,const EPMaterial&amp; mat){
-    const Mat3 Cgpi=Cgpi_from_h(h);
-    const Mat3 Cgpin=Cgpi_from_h(h_n);
-    const Mat3 be=hpx::mul3&lt;double&gt;(
-        hpx::mul3&lt;double&gt;(F,Cgpi), hpx::transpose3&lt;double&gt;(F));
+    return {&quot;displacement&quot;};
+}</code></pre></div></details>
+<details class="code-details"><summary>2. local_Qg_residual</summary><div class="code-window"><pre><code>static Vector local_Qg_residual(const Mat3&amp; F,const Vector&amp; h_n,const Vector&amp; h,const EPMaterial&amp; mat,int dim){
+    const Mat3 Cgpi=Cgpi_from_h(h, dim);
+    const Mat3 Cgpin=Cgpi_from_h(h_n, dim);
+    const Mat3 be=hpx::mul3&lt;double&gt;(hpx::mul3&lt;double&gt;(F,Cgpi),hpx::transpose3&lt;double&gt;(F));
     const Mat3 tau=tau_from_be(be,mat);
-    const double Phi=yield_q(tau)-sigma_y(gamma_from_h(h),mat);
+    const double Phi=yield_q(tau)-sigma_y(gamma_from_h(h, dim),mat);
     const Mat3 A=yield_A(tau);
-    const double dgam=gamma_from_h(h)-gamma_from_h(h_n);
+    const double dgam=gamma_from_h(h, dim)-gamma_from_h(h_n, dim);
     const Mat3 M=hpx::scale3&lt;double&gt;(A,-2.0*dgam);
-    const Mat3 Z=hpx::sub3&lt;double&gt;(
-        hpx::mul3&lt;double&gt;(F,Cgpi),
-        hpx::mul3&lt;double&gt;(hpx::mul3&lt;double&gt;(expm3(M),F),Cgpin));
-    return {Z[0][0],Z[1][1],Z[2][2],Z[0][1],Phi};
-}</code></pre>
-       </details>
-       <details class="code-details">
-        <summary>
-         4. Local return mapping: double-valued Newton solve at one Gauss point.
-        </summary>
-        <pre class="example-code"><code>static PlasticUpdateResult update_plastic_gp(const Mat3&amp; F,const Vector&amp; h_n,
-                                             double state_n,const EPMaterial&amp; mat){
+    const Mat3 Z=hpx::sub3&lt;double&gt;(hpx::mul3&lt;double&gt;(F,Cgpi), hpx::mul3&lt;double&gt;(hpx::mul3&lt;double&gt;(expm3(M),F),Cgpin));
+    Vector Q = ep_Z_residual_components(Z, dim);
+    Q.push_back(Phi);
+    if (static_cast&lt;int&gt;(Q.size()) != ep_required_history_size(dim)) {
+        throw std::runtime_error(&quot;Internal error: elasto-plastic local residual size does not match history size.&quot;);
+    }
+    return Q;
+}</code></pre></div></details>
+<details class="code-details"><summary>3. update_plastic_gp</summary><div class="code-window"><pre><code>static PlasticUpdateResult update_plastic_gp(const Mat3&amp; F,const Vector&amp; h_n,double state_n,const EPMaterial&amp; mat,int dim){
     (void)state_n;
     PlasticUpdateResult out; out.h=h_n;
-    const double Ftrial=yield_function(F,h_n,mat);
+    const double Ftrial=yield_function(F,h_n,mat,dim);
     const double tol=std::max(mat.local_tol,1e-12);
-    if(Ftrial&lt;=tol){
-        out.plastic=false; out.final_local_residual=0.0;
-        out.local_newton_iterations=0; out.state_trial=0.0;
-        return out;
-    }
+    if(Ftrial&lt;=tol){ out.plastic=false; out.final_local_residual=0.0; out.local_newton_iterations=0; out.state_trial=0.0; return out; }
     out.plastic=true;
     Vector h=h_n;
     for(int it=0; it&lt;std::max(1,mat.local_max_iter); ++it){
-        Vector Q=local_Qg_residual(F,h_n,h,mat);
-        Matrix J=local_Jh_sacado(F,h_n,h,mat);
-        Vector rhs(Q.size());
-        for(int i=0;i&lt;static_cast&lt;int&gt;(Q.size());++i) rhs[i]=-Q[i];
-        Vector dh=solve_dense(J,rhs);
-
+        Vector Q=local_Qg_residual(F,h_n,h,mat,dim);
+        Matrix J=local_Jh_hpx(F,h_n,h,mat,dim);
+        Vector rhs(Q.size()); for(int i=0;i&lt;static_cast&lt;int&gt;(Q.size());++i) rhs[i]=-Q[i];
+        Vector dh=hpx::solve_local_dense_lu(J,rhs,&quot;local elasto-plastic Jacobian&quot;);
         double alpha=1.0;
         const double q0=norm_vec(Q);
         for(int ls=0; ls&lt;8; ++ls){
-            Vector ht=h;
-            for(int i=0;i&lt;5;++i) ht[i]+=alpha*dh[i];
-            if(hpx::det3&lt;double&gt;(Cgpi_from_h(ht))&gt;0.0){
-                Vector Qt=local_Qg_residual(F,h_n,ht,mat);
+            Vector ht=h; for(int i=0;i&lt;ep_required_history_size(dim);++i) ht[i]+=alpha*dh[i];
+            if(hpx::det3&lt;double&gt;(Cgpi_from_h(ht, dim))&gt;0.0){
+                Vector Qt=local_Qg_residual(F,h_n,ht,mat,dim);
                 if(norm_vec(Qt)&lt;=q0 || alpha&lt;1e-3){ h=ht; break; }
             }
             alpha*=0.5;
         }
-        Vector Qnew=local_Qg_residual(F,h_n,h,mat);
+        Vector Qnew=local_Qg_residual(F,h_n,h,mat,dim);
         const double qn=norm_vec(Qnew);
         if(qn&lt;tol || norm_vec(dh)&lt;tol){
-            out.h=h; out.final_local_residual=qn;
-            out.local_newton_iterations=it+1;
-            out.state_trial=1000.0+qn;
-            return out;
+            out.h=h; out.final_local_residual=qn; out.local_newton_iterations=it+1; out.state_trial=1000.0+qn; return out;
         }
     }
-    throw std::runtime_error("Local elasto-plastic Newton did not converge.");
-}</code></pre>
-       </details>
-       <details class="code-details">
-        <summary>
-         5. Consistent tangent: implicit differentiation of Q(F,h)=0.
-        </summary>
-        <pre class="example-code"><code>static Matrix implicit_dh_dF_sacado(const Mat3&amp; Fd,const Vector&amp; h_n,
-                                    const Vector&amp; h,bool plastic,const EPMaterial&amp; mat) {
-    const int nf = 4;
-    const int nh = 5;
-    Matrix dh_dF(nh, Vector(nf, 0.0));
-    if (!plastic) return dh_dF;
-
-    const int nvar = nf + nh;
-    Mat3T&lt;EPAD&gt; F = hpx::zero3&lt;EPAD&gt;();
-    F[0][0] = EPAD(nvar, 0, Fd[0][0]);
-    F[0][1] = EPAD(nvar, 1, Fd[0][1]);
-    F[1][0] = EPAD(nvar, 2, Fd[1][0]);
-    F[1][1] = EPAD(nvar, 3, Fd[1][1]);
-
-    std::vector&lt;EPAD&gt; had(nh);
-    for (int i = 0; i &lt; nh; ++i) had[i] = EPAD(nvar, nf + i, h[i]);
-
-    const auto Q = local_Qg_sacado_full(F, had, h_n, mat);
-    Matrix Q_F(nh, Vector(nf, 0.0));
-    Matrix Q_h(nh, Vector(nh, 0.0));
-    for (int i = 0; i &lt; nh; ++i) {
-        for (int j = 0; j &lt; nf; ++j) Q_F[i][j] = Q[i].dx(j);
-        for (int j = 0; j &lt; nh; ++j) Q_h[i][j] = Q[i].dx(nf + j);
+    throw std::runtime_error(&quot;Local elasto-plastic Newton did not converge.&quot;);
+}</code></pre></div></details>
+<details class="code-details"><summary>4. weak_scalar_elastoplastic_solid</summary><div class="code-window"><pre><code>static Scalar weak_scalar_elastoplastic_solid(
+    const FieldMesh&amp; mesh,
+    int elem_id,
+    const std::vector&lt;Scalar&gt;&amp; x_elem,
+    const std::vector&lt;Scalar&gt;&amp; test_elem,
+    const ProblemParameters&amp; params,
+    const ElementState&amp; state
+) {
+    if (mesh.dim != 2 &amp;&amp; mesh.dim != 3) throw std::runtime_error(&quot;Elasto-plastic weak form supports only 2D plane strain and full 3D.&quot;);
+    const int dim = mesh.dim;
+    if (!state.material_history) {
+        throw std::runtime_error(&quot;Elasto-plastic weak form requires Gauss-point history. Add &#x27;history plasticity 5&#x27; for 2D or &#x27;history plasticity 7&#x27; for 3D to DOFS_info.txt.&quot;);
     }
-    for (int jf = 0; jf &lt; nf; ++jf) {
-        Vector rhs(nh, 0.0);
-        for (int i = 0; i &lt; nh; ++i) rhs[i] = -Q_F[i][jf];
-        Vector col = solve_dense(Q_h, rhs);
-        for (int ih = 0; ih &lt; nh; ++ih) dh_dF[ih][jf] = col[ih];
+    const int required_history = ep_required_history_size(dim);
+    if (state.material_history-&gt;gp.empty()) {
+        throw std::runtime_error(&quot;Elasto-plastic material history is not initialized for this element.&quot;);
     }
-    return dh_dF;
-}</code></pre>
-       </details>
-       <details class="code-details">
-        <summary>
-         6. The weak form updates trial history, injects dh/dF, and accumulates G.
-        </summary>
-        <pre class="example-code"><code>Scalar G(0.0);
-for (int g = 0; g &lt; static_cast&lt;int&gt;(gps.size()); ++g) {
-    const auto&amp; gp = gps[g];
-    const ShapeData shape = compute_shape(U.element_type, gp.xi, gp.eta, gp.zeta);
-    const JacobianData J0 = compute_jacobian_data(geom, shape);
-    const auto dN = compute_dN_dx(shape, J0);
-    const double dV = J0.detJ * gp.weight;
 
-    const Mat3 F_double =
-        hpx::deformation_gradient_2d_plane_strain_array&lt;double&gt;(dN, u_double);
-    auto&amp; gh = state.material_history-&gt;gp[g];
-    PlasticUpdateResult upd = update_plastic_gp(F_double, gh.h_n, gh.state_n, mat);
-    gh.h_trial = upd.h;
-    gh.state_trial = upd.state_trial;
+    const EPMaterial mat = make_ep_material(params);
+    const LocalFieldView L = make_local_field_view(mesh, elem_id, {&quot;displacement&quot;});
+    const auto&amp; U = L.field(&quot;displacement&quot;);
+    if (static_cast&lt;int&gt;(x_elem.size()) != L.n_local()) throw std::runtime_error(&quot;Bad local vector size in elasto-plastic weak form.&quot;);
+    if (test_elem.size() != x_elem.size()) throw std::runtime_error(&quot;Bad test vector size in elasto-plastic weak form.&quot;);
 
-    const Mat3T&lt;Scalar&gt; F_ad =
-        hpx::deformation_gradient_2d_plane_strain_array&lt;Scalar&gt;(dN, u_ad);
-    const Mat3T&lt;Scalar&gt; Cgpi_ad =
-        make_algorithmic_h_ad(F_ad, F_double, gh.h_n, upd.h, upd.plastic, mat);
+    const ElementGeometry geom = make_displacement_element_geometry(mesh, elem_id);
+    const auto gps = gauss_rule(U.element_type, params.solver.gauss_order);
+    if (state.material_history-&gt;gp.size() != gps.size()) {
+        state.material_history-&gt;gp.resize(gps.size());
+    }
 
-    const auto be = hpx::mul3&lt;Scalar&gt;(
-        hpx::mul3&lt;Scalar&gt;(F_ad, Cgpi_ad), hpx::transpose3&lt;Scalar&gt;(F_ad));
-    const auto tau = tau_from_beT&lt;Scalar&gt;(be, mat);
-    const auto P_ad = hpx::mul3&lt;Scalar&gt;(
-        tau, hpx::transpose3&lt;Scalar&gt;(hpx::inv3&lt;Scalar&gt;(F_ad)));
+    const auto u_ad = displacement_local_vector_from_layout&lt;Scalar&gt;(L, U, x_elem, dim);
+    const auto du_test = displacement_local_vector_from_layout&lt;Scalar&gt;(L, U, test_elem, dim);
 
-    for (int i = 0; i &lt; 2; ++i)
-        for (int A = 0; A &lt; 2; ++A)
-            G += P_ad[i][A] * grad_test[i][A] * Scalar(dV);
-}
-return G;</code></pre>
-       </details>
-       <details class="code-details">
-        <summary>
-         7. Trial history is committed only after global convergence.
-        </summary>
-        <pre class="example-code"><code>inline void commit_material_history_store(MaterialHistoryStore&amp; history) {
-    for (auto&amp; dh : history.domains)
-        for (auto&amp; eh : dh.elements)
-            for (auto&amp; gh : eh.gp) {
-                if (!gh.h_trial.empty()) gh.h_n = gh.h_trial;
-                gh.state_n = gh.state_trial;
+    // Double-valued copy only for the local return-mapping solve.
+    std::vector&lt;double&gt; u_double(dim * U.n_nodes, 0.0);
+    for (int i = 0; i &lt; static_cast&lt;int&gt;(u_double.size()); ++i) u_double[i] = val(u_ad[i]);
+
+    Scalar G(0.0);
+    for (int g = 0; g &lt; static_cast&lt;int&gt;(gps.size()); ++g) {
+        const auto&amp; gp = gps[g];
+        const ShapeData shape = compute_shape(U.element_type, gp.xi, gp.eta, gp.zeta);
+        const JacobianData J0 = compute_jacobian_data(geom, shape);
+        if (J0.detJ &lt;= 0.0) throw std::runtime_error(&quot;Negative detJ in elasto-plastic element.&quot;);
+        const auto dN = compute_dN_dx(shape, J0);
+        const double dV = J0.detJ * gp.weight;
+
+        const Mat3 F_double = hpx::deformation_gradient_array&lt;double&gt;(dim, dN, u_double);
+        auto&amp; gh = state.material_history-&gt;gp[g];
+        if (static_cast&lt;int&gt;(gh.h_n.size()) &lt; required_history) {
+            gh.h_n.assign(required_history, 0.0);
+            gh.h_trial.assign(required_history, 0.0);
+            gh.state_n = 0.0;
+            gh.state_trial = 0.0;
+        }
+
+        PlasticUpdateResult upd;
+        try {
+            upd = update_plastic_gp(F_double, gh.h_n, gh.state_n, mat, dim);
+        } catch (...) {
+            if (state.history_diagnostics) ++state.history_diagnostics-&gt;local_failure_count;
+            throw;
+        }
+        gh.h_trial = upd.h;
+        gh.state_trial = upd.state_trial;
+        if (state.history_diagnostics) {
+            state.history_diagnostics-&gt;observe(&quot;plasticity&quot;, upd.final_local_residual, upd.local_newton_iterations,
+                                               upd.plastic, state.domain_id, elem_id, g);
+        }
+
+        const Mat3T&lt;Scalar&gt; F_ad = hpx::deformation_gradient_array&lt;Scalar&gt;(dim, dN, u_ad);
+        const Mat3T&lt;Scalar&gt; Cgpi_ad = make_algorithmic_h_ad(F_ad, F_double, gh.h_n, upd.h, upd.plastic, mat, dim);
+        const auto be = hpx::mul3&lt;Scalar&gt;(hpx::mul3&lt;Scalar&gt;(F_ad, Cgpi_ad), hpx::transpose3&lt;Scalar&gt;(F_ad));
+        const auto tau = tau_from_beT&lt;Scalar&gt;(be, mat);
+        const auto P_ad = hpx::mul3&lt;Scalar&gt;(tau, hpx::transpose3&lt;Scalar&gt;(hpx::inv3&lt;Scalar&gt;(F_ad)));
+
+        Mat3T&lt;Scalar&gt; grad_test = hpx::zero3&lt;Scalar&gt;();
+        for (int a = 0; a &lt; U.n_nodes; ++a) {
+            for (int i = 0; i &lt; dim; ++i) {
+                const Scalar ti = du_test[dim * a + i];
+                for (int A = 0; A &lt; dim; ++A) {
+                    grad_test[i][A] += ti * Scalar(dN[a][A]);
+                }
             }
-}
+        }
 
-inline void clear_trial_material_history_store(MaterialHistoryStore&amp; history) {
-    for (auto&amp; dh : history.domains)
-        for (auto&amp; eh : dh.elements)
-            for (auto&amp; gh : eh.gp) {
-                gh.h_trial = gh.h_n;
-                gh.state_trial = gh.state_n;
+        for (int i = 0; i &lt; dim; ++i) {
+            for (int A = 0; A &lt; dim; ++A) {
+                G += P_ad[i][A] * grad_test[i][A] * Scalar(dV);
             }
-}</code></pre>
-       </details>
-       <details class="code-details">
-        <summary>
-         8. After the weak form returns the element system, assembly is generic.
-        </summary>
-        <pre class="example-code"><code>void assemble_element_system_csr(const ElementSystem&amp; es,const std::vector&lt;int&gt;&amp; dofs,
-                                 const std::vector&lt;int&gt;&amp; idx,Vector&amp; R,CSRMatrix&amp; K){
-    const int n=static_cast&lt;int&gt;(dofs.size());
-    if(static_cast&lt;int&gt;(es.residual.size())!=n ||
-       static_cast&lt;int&gt;(es.tangent.size())!=n*n ||
-       static_cast&lt;int&gt;(idx.size())!=n*n)
-        throw std::runtime_error("Bad element system size.");
-
-    for(int a=0;a&lt;n;++a){
-        R[dofs[a]] += es.residual[a];
-        const int row = a*n;
-        for(int b=0;b&lt;n;++b) K.values[idx[row+b]] += es.tangent[row+b];
+        }
     }
-}</code></pre>
-       </details>
+    return G;
+}</code></pre></div></details>
+<details class="code-details"><summary>5. compute_constitutive_element_system</summary><div class="code-window"><pre><code>ElementSystem compute_constitutive_element_system(
+    const FieldMesh&amp; mesh,
+    int elem_id,
+    const Vector&amp; x_elem,
+    const ProblemParameters&amp; params,
+    const ElementState&amp; state
+) {
+    const LocalFieldView L = make_local_field_view(mesh, elem_id, {&quot;displacement&quot;});
+    const int n = L.n_local();
+    if (static_cast&lt;int&gt;(x_elem.size()) != n) {
+        throw std::runtime_error(&quot;Bad local vector size in elasto-plastic weak-scalar element system.&quot;);
+    }
+
+    return hpx::scalar_weak_form_element_system(
+        x_elem,
+        [&amp;](const auto&amp; x_ad, const auto&amp; test_ad) {
+            return weak_scalar_elastoplastic_solid(mesh, elem_id, x_ad, test_ad, params, state);
+        }
+    );
+}</code></pre></div></details>
+       
+       
+       
+       
+       
+       
+       
       </div>
       <div class="example-grid two-col">
        <article class="detail-card">
@@ -696,12 +662,10 @@ inline void clear_trial_material_history_store(MaterialHistoryStore&amp; history
       <tr><td>\(G_e\)</td><td>Element weak form</td><td><code>G</code></td><td><code>weak_scalar_elastoplastic_solid</code></td></tr>
      </tbody>
     </table></div>
-    <div class="example-run-panel"><p class="eyebrow">Build and run</p><h2>Copy the verified elastoplastic example into the FEM slots.</h2>
-     <pre><code>cp FEM/models/weak_form.cpp FEM/models/weak_form.cpp.bak
-cp -R FEM/input FEM/input.bak
-cp Web/examples/elastoplastic/weak_form.cpp FEM/models/weak_form.cpp
-cp Web/examples/elastoplastic/input/*.txt FEM/input/
-make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
+    <div class="example-run-panel"><p class="eyebrow">Build and run</p><h2>Build the supplied model and run its input files directly.</h2>
+     <pre><code>make -C FEM MODEL_SRC=../Web/examples/elastoplastic/weak_form_elasto_plastic.cpp
+cd FEM
+OMP_NUM_THREADS=2 ./bin/fem ../Web/examples/elastoplastic/input/ProblemMesh.txt ../Web/examples/elastoplastic/input/Material.txt ../Web/examples/elastoplastic/input/BC.txt ../Web/examples/elastoplastic/input/Solver.txt ../Web/examples/elastoplastic/input/Postprocessing.txt ../Web/examples/elastoplastic/input/DOFS_info.txt</code></pre>
     </div>
     <div class="section-heading compact-heading"><p class="eyebrow">Download input files</p><h2>Files synchronized from the runnable 2D L-shape case.</h2></div>
     <div class="download-grid">
@@ -711,11 +675,11 @@ make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
      <a class="download-card" download href="../examples/elastoplastic/input/Material.txt"><span class="tag">material</span><h3>Material.txt</h3></a>
      <a class="download-card" download href="../examples/elastoplastic/input/Solver.txt"><span class="tag">solver</span><h3>Solver.txt</h3></a>
      <a class="download-card" download href="../examples/elastoplastic/input/Postprocessing.txt"><span class="tag">output</span><h3>Postprocessing.txt</h3></a>
-     <a class="download-card" download href="../examples/elastoplastic/weak_form.cpp"><span class="tag">model</span><h3>weak_form.cpp</h3></a>
+     <a class="download-card" download href="../examples/elastoplastic/weak_form_elasto_plastic.cpp"><span class="tag">model</span><h3>weak_form_elasto_plastic.cpp</h3></a>
     </div>
-    <button class="example-zip-button" disabled type="button">Download complete example (.zip) — coming after final validation</button>
+    
    </section>
-   <section class="doc-section section-wrap cook-page example-result-pending"><p class="eyebrow">Result</p><h2>Result pending validation</h2><p>The final plastic strain or deformation figure will be added after the full solid verification run.</p></section>
+   
   </main>
   <script defer="True" src="../assets/js/main.js">
   </script>

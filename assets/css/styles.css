@@ -4242,3 +4242,38 @@ pre.source-code-light { max-height: 760px; margin: 0; padding: 1.35rem 0; overfl
   pre.source-code-light { font-size: 14px; }
   .source-location-list > div { grid-template-columns: 1fr; gap: .2rem; }
 }
+
+/* Updated application snapshots: results before theory and implementation. */
+.updated-example-result {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: #fff;
+}
+.updated-example-result img,
+.updated-example-result video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.updated-example-result figcaption {
+  padding: clamp(18px, 3vw, 30px);
+}
+.updated-example-result figcaption h2,
+.updated-example-result figcaption h3 {
+  margin-top: 0;
+}
+.updated-example-result figcaption p {
+  margin-bottom: 0;
+}
+.secondary-result { margin-top: 24px; }
+.updated-example-inputs { margin-bottom: 28px; }
+.example-input-details {
+  margin: 10px 0;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.example-input-details summary { cursor: pointer; font-weight: 600; }
+.example-input-details pre { overflow-x: auto; }

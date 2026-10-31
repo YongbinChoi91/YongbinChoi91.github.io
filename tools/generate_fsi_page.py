@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Refresh the FSI page's source excerpts, 2D mesh, and example snapshots."""
+"""Refresh the FSI page from its published model and input snapshot."""
 
 import argparse
 import html
@@ -7,12 +7,11 @@ import re
 from collections import Counter
 from pathlib import Path
 
-from sync_examples import CASES
 
 ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "Web"
-MODEL = Path("FEM/models/FSI_Models/weak_form_fsi.cpp")
-MESH = ROOT / "FEM/models/FSI_Models/Mesh/fsi_2d.txt"
+MODEL = Path("Web/examples/fsi/weak_form_fsi.cpp")
+MESH = ROOT / "Web/examples/fsi/input/ProblemMesh.txt"
 
 
 def excerpt(path, start, end):
@@ -122,9 +121,6 @@ def generated_outputs():
     if count != 1:
         raise ValueError("Expected exactly one FSI source-excerpt section")
     outputs = {page: rendered.encode(), WEB / "assets/images/fsi-2d-mesh.svg": mesh_svg().encode()}
-    for case in ("fsi-he", "fsi-bh"):
-        for source, target in CASES[case].items():
-            outputs[WEB / "examples" / case / target] = (ROOT / source).read_bytes()
     return outputs
 
 
@@ -138,12 +134,12 @@ def main():
         if stale:
             print("Stale FSI artifacts:\n" + "\n".join(str(path.relative_to(ROOT)) for path in stale))
             return 1
-        print("FSI excerpts, 2D mesh, and both example snapshots match the current source.")
+        print("FSI excerpts and 2D mesh match the published example snapshot.")
         return 0
     for path, content in outputs.items():
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(content)
-    print(f"Updated {len(outputs)} FSI artifacts from the current 2D FEM source.")
+    print(f"Updated {len(outputs)} FSI artifacts from the published 2D example.")
     return 0
 
 

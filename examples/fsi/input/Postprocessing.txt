@@ -40,7 +40,7 @@ postprocess_deferred off
 # ------------------------------------------------------------
 # force_output on stores drag/lift in HDF5 /history/force.  CSV force output
 # is written only when debug_csv_output is on.
-force_output on
+force_output off
 force_boundaries CIRCLE INTERACTION
 force_boundary_check_tol 1e-8
 force_attack_angle_deg 0.0

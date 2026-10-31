@@ -25,12 +25,30 @@ This package converts the previous single-file `index.html` website into a multi
 - `tools/generate_multiscale_example_pages.py`: regenerates four example pages and their run scripts
 - `tools/generate_rve_verification.py`: renders measured Single RVE error plots and component tables
 
+## Updated standalone application examples
+
+The eight standalone application pages use the curated snapshots in `examples/`
+(hyperelastic-3d, elastoplastic, viscoelastic, newmark, vem-linear, vem-quadratic,
+fsi, incompressible-flow). Preserve their supplied inputs and descriptive model
+filenames when refreshing documentation. The Linear VEM snapshot uses
+`VEM_ORDER 1`. Each page runs its snapshot by passing input paths directly to
+`FEM/bin/fem`, without replacing the active FEM input files.
+
+Newmark, FSI, and incompressible flow have browser-ready H.264 MP4 versions alongside the original
+AVI recordings. Newmark also shows its displacement-versus-time SVG.
+`generate_fsi_page.py` reads the published FSI snapshot and refreshes only its
+code excerpts and reference-mesh illustration.
+
+The legacy standalone mappings in `sync_examples.py` predate these snapshots;
+do not run an unrestricted sync over the curated standalone examples. Use the
+explicit multiscale/Single RVE case selections below for those branches.
+
 ## Synchronize runnable examples
 
 ```sh
 python3 Web/tools/generate_multiscale_inputs.py
-python3 Web/tools/sync_examples.py sync
-python3 Web/tools/sync_examples.py check
+python3 Web/tools/sync_examples.py sync --case multiscale-fem-hyperelastic --case multiscale-vem
+python3 Web/tools/sync_examples.py check --case multiscale-fem-hyperelastic --case multiscale-vem
 python3 Web/tools/generate_homogenization_page.py
 python3 Web/tools/generate_multiscale_example_pages.py
 python3 Web/tools/generate_fsi_page.py
@@ -38,12 +56,12 @@ python3 Web/tools/generate_fsi_page.py --check
 python3 Web/tools/verify_mathjax.py
 ```
 
-The website copies are not edited directly. Update the canonical model/input file,
+For the synchronized multiscale/Single RVE cases, update the canonical model/input file,
 run `sync`, and commit both the source and synchronized example snapshot.
 
 The unified FSI page is `pages/app-fsi.html`, with Theory and Code tabs and a 2D
 FEM example. `generate_fsi_page.py` refreshes its marked C++ excerpts, actual Q9
-mesh SVG, and HE/BH input snapshots directly from `FEM/models/FSI_Models/`.
+mesh SVG, and the mesh illustration directly from `examples/fsi/`.
 Run it after changing the FSI source or inputs; `--check` verifies freshness
 without writing. Mesh-motion equations are short options within the same page.
 The old BH and HE page URLs redirect to the unified page.

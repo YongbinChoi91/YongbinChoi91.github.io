@@ -1,4 +1,4 @@
 # Boundary conditions only
-DIRICHLET LEFT 0 0.0
-DIRICHLET LEFT 1 0.0
-NEUMANN RIGHT 1 sin(pi*t)/(1.0+exp(80.0*(t-2.0))) 
+DIRICHLET LEFT ux 0.0
+DIRICHLET LEFT uy 0.0
+NEUMANN RIGHT uy 20*sin(pi*t)/(1.0+exp(80.0*(t-2.0))) 

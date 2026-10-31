@@ -73,6 +73,7 @@
             reconstructed and stored locally at Gauss points through the Newmark update.
     </p>
    </section>
+<section class="doc-section section-wrap cook-page updated-example-overview"><figure class="updated-example-result"><video controls playsinline preload="metadata" aria-label="Transient solid motion"><source src="../examples/newmark/Newmark_video.mp4" type="video/mp4"/>Your browser cannot play this video. <a href="../examples/newmark/Newmark_video.mp4">Download MP4</a>.</video><figcaption><h2>Transient solid motion</h2><p>Left boundary fixed; right traction = 20 sin(pi t) / (1 + exp(80(t − 2))). E = 2000, nu = 0.3; Newmark beta = 0.25 and gamma = 0.5; initial dt = 0.4, final time = 12.</p></figcaption></figure><figure class="updated-example-result secondary-result"><img src="../examples/newmark/hysteresis.svg" alt="Vertical displacement at point (48, 60) versus time" loading="lazy"/><figcaption><h3>Displacement history</h3><p>Time versus vertical displacement at point (48, 60). This is a time-history plot, rather than a force–displacement loop.</p></figcaption></figure></section>
    <section class="doc-section section-wrap plasticity-document-section newmark-document-section">
     <div class="plasticity-document-panel newmark-document-panel">
      <div aria-label="Newmark documentation tabs" class="plasticity-tabs" role="tablist">
@@ -244,7 +245,16 @@
        </article>
       </div>
      </div>
-     <div class="plasticity-tab-panel" data-newmark-panel="simulation" role="tabpanel">
+     <div class="plasticity-tab-panel" data-newmark-panel="simulation" role="tabpanel"><div class="updated-example-inputs"><h3>Input conditions</h3><details class="example-input-details"><summary>BC.txt</summary><pre><code>DIRICHLET LEFT ux 0.0
+DIRICHLET LEFT uy 0.0
+NEUMANN RIGHT uy 20*sin(pi*t)/(1.0+exp(80.0*(t-2.0))) </code></pre></details><details class="example-input-details"><summary>Material.txt</summary><pre><code>youngs_modulus 2000
+poisson_ratio 0.3
+newmark_beta 0.25   
+newmark_gamma 0.5</code></pre></details><details class="example-input-details"><summary>DOFS_info.txt</summary><pre><code>field_key displacement
+history newmark 4</code></pre></details><details class="example-input-details"><summary>Solver.txt</summary><pre><code>solver_backend umfpack
+dt 0.4
+total_time 12.0
+adaptive_dt on</code></pre></details></div>
       <div class="section-heading actual-code-intro">
        <p class="eyebrow">
         Simulation
@@ -328,89 +338,224 @@ history_diagnostics on</code></pre>
        </article>
       </div>
       <div class="code-accordion">
-       <details class="code-details" open="">
-        <summary>
-         1. The active model assembles only displacement DOFs.
-        </summary>
-        <pre class="example-code"><code>std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
+       <details class="code-details" open><summary>1. active_constitutive_field_names</summary><div class="code-window"><pre><code>std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
     (void)mesh;
-    return {"displacement"};
-}</code></pre>
-        <p>
-         This is the key difference from a mixed displacement-velocity formulation. Newmark velocity and
-                    acceleration do not enlarge the global linear system.
-        </p>
-       </details>
-       <details class="code-details">
-        <summary>
-         2. The weak form requires Gauss-point Newmark history.
-        </summary>
-        <pre class="example-code"><code>if (!state.material_history) {
-    throw std::runtime_error(
-        "Add 'history newmark 2*dim' to DOFS_info.txt"
+    return {&quot;displacement&quot;};
+}</code></pre></div></details>
+<details class="code-details"><summary>2. make_newmark_parameters</summary><div class="code-window"><pre><code>static NewmarkParameters make_newmark_parameters(const ProblemParameters&amp; params) {
+    NewmarkParameters nm;
+    nm.newmark_beta = params.material.newmark_beta;
+    nm.newmark_gamma = params.material.newmark_gamma;
+    return nm;
+}</code></pre></div></details>
+<details class="code-details"><summary>3. weak_scalar_hyperelastic_newmark_solid</summary><div class="code-window"><pre><code>static Scalar weak_scalar_hyperelastic_newmark_solid(
+    const FieldMesh&amp; mesh,
+    int elem_id,
+    const std::vector&lt;Scalar&gt;&amp; x_elem,     // current Newton iterate u_{n+1}
+    const std::vector&lt;Scalar&gt;&amp; test_elem,  // independent virtual displacement delta_u
+    const ProblemParameters&amp; params,
+    const ElementState&amp; state
+) {
+    const NewmarkLocalLayout L = make_newmark_layout(mesh, elem_id);
+    const auto&amp; U = L.field(&quot;displacement&quot;);
+
+    if (static_cast&lt;int&gt;(x_elem.size()) != L.n_local()) {
+        throw std::runtime_error(&quot;Bad current element vector size in Newmark hyper-elastic weak form.&quot;);
+    }
+    if (state.past_dofs.size() &lt; 1 || static_cast&lt;int&gt;(state.past_dofs[0].size()) != L.n_local()) {
+        throw std::runtime_error(&quot;Bad previous element vector size in Newmark hyper-elastic weak form.&quot;);
+    }
+    if (test_elem.size() != x_elem.size()) {
+        throw std::runtime_error(&quot;Bad test element vector size in Newmark hyper-elastic weak form.&quot;);
+    }
+
+    require_newmark_history(state, L.dim);
+
+    const double dt = state.dt;
+    if (dt &lt;= 0.0) {
+        throw std::runtime_error(&quot;Newmark hyper-elastic weak form requires positive dt.&quot;);
+    }
+
+    const double rho = params.material.structure_rho; // solid density
+    const double E   = params.material.youngs_modulus;
+    const double nu  = params.material.poisson_ratio;
+
+    const NewmarkParameters nm = make_newmark_parameters(params);
+    if (nm.newmark_beta &lt;= 0.0) {
+        throw std::runtime_error(&quot;Newmark beta must be positive.&quot;);
+    }
+
+    Scalar G(0.0);
+
+    // Geometry is displacement-based because this is a displacement-only solid.
+    const ElementGeometry geom = make_displacement_element_geometry(mesh, elem_id);
+
+    const auto gps = gauss_rule(U.element_type, params.solver.gauss_order);
+    if (state.material_history-&gt;gp.size() != gps.size()) {
+        // This should already be initialized by initialize_material_history_store.
+        // Resize here only as a defensive fallback.
+        state.material_history-&gt;gp.resize(gps.size());
+    }
+
+    for (int q = 0; q &lt; static_cast&lt;int&gt;(gps.size()); ++q) {
+        const auto&amp; gp = gps[q];
+
+        MaterialPointHistory&amp; hist = state.material_history-&gt;gp[q];
+
+        // ---------------------------------------------------------------------
+        // History layout at this Gauss point:
+        //   h_n[0..dim-1]       : v_n^gp
+        //   h_n[dim..2dim-1]    : a_n^gp
+        //   h_trial receives v_{n+1}^gp and a_{n+1}^gp during Newton evaluation.
+        // ---------------------------------------------------------------------
+        const int required_history = 2 * L.dim;
+        if (static_cast&lt;int&gt;(hist.h_n.size()) != required_history) {
+            throw std::runtime_error(
+                &quot;Bad Newmark history size. Use &#x27;history newmark 2*dim&#x27; in DOFS_info.txt &quot;
+                &quot;(2D -&gt; 4, 3D -&gt; 6).&quot;
+            );
+        }
+        if (static_cast&lt;int&gt;(hist.h_trial.size()) != required_history) {
+            hist.h_trial.assign(required_history, 0.0);
+        }
+
+        const ShapeData su = compute_shape(U.element_type, gp.xi, gp.eta, gp.zeta);
+        const JacobianData Jgeo = compute_jacobian_data(geom, su);
+        if (Jgeo.detJ &lt;= 0.0) {
+            throw std::runtime_error(&quot;Negative reference detJ in Newmark hyper-elastic solid element.&quot;);
+        }
+
+        const auto dNu = compute_dN_dx(su, Jgeo);
+        const double dV = Jgeo.detJ * gp.weight;
+
+        // ---------------------------------------------------------------------
+        // Current and previous accepted displacement at the Gauss point.
+        //
+        // u_gp   = sum_a N_a u_{a,n+1}
+        // u_n_gp = sum_a N_a u_{a,n}
+        //
+        // state.past_dofs[0] is filled by the assembler from the previous accepted
+        // global solution x_n in the same local field order as x_elem.
+        // ---------------------------------------------------------------------
+        const auto u_gp =
+            hpx::field_value_as&lt;Scalar&gt;(L, &quot;displacement&quot;, x_elem, su.N);
+
+        const auto u_n_gp =
+            hpx::field_value_as&lt;Scalar&gt;(L, &quot;displacement&quot;, state.past_dofs[0], su.N);
+
+        // Virtual displacement and virtual deformation gradient.
+        const auto delta_u_gp =
+            hpx::field_value_as&lt;Scalar&gt;(L, &quot;displacement&quot;, test_elem, su.N);
+
+        const auto deltaF =
+            hpx::field_grad_as&lt;Scalar&gt;(L, &quot;displacement&quot;, test_elem, dNu);
+
+        // ---------------------------------------------------------------------
+        // Elastic part:
+        //   F = I + Grad(u)
+        //   P = Neo-Hookean first Piola stress
+        //   G_elastic += int P : deltaF dV
+        //
+        // In 2D, F is embedded into 3D as plane strain before evaluating P.
+        // ---------------------------------------------------------------------
+        const auto F = hpx::deformation_gradient_as&lt;Scalar&gt;(L, x_elem, dNu);
+        const auto F3 = hpx::embed_plane_strain_3d(F, L.dim);
+        const auto P3 = hpx::neo_hookean_first_piola_young(F3, E, nu);
+
+        for (int i = 0; i &lt; L.dim; ++i) {
+            for (int A = 0; A &lt; L.dim; ++A) {
+                G += P3[i][A] * deltaF[i][A] * Scalar(dV);
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // Newmark inertia part:
+        //
+        // h_n stores the previous Gauss-point velocity/acceleration:
+        //   v_n^gp = h_n[0..dim-1]
+        //   a_n^gp = h_n[dim..2dim-1]
+        //
+        // Current acceleration is reconstructed locally from current u:
+        //   a_{n+1}^gp =
+        //       (u_{n+1}^gp - u_n^gp - dt v_n^gp)/(beta dt^2)
+        //       - (1/(2 beta) - 1) a_n^gp
+        //
+        // Then we add:
+        //   G_inertia += int rho a_{n+1}^gp . delta_u^gp dV
+        //
+        // Because a_{n+1} is written with Scalar, AD automatically contributes
+        // the consistent mass-like tangent term:
+        //   d(rho a_{n+1})/du = rho/(beta dt^2) * N_a N_b.
+        // ---------------------------------------------------------------------
+        std::vector&lt;Scalar&gt; a_np1_gp(L.dim, Scalar(0.0));
+        std::vector&lt;Scalar&gt; v_np1_gp(L.dim, Scalar(0.0));
+
+        const double inv_beta_dt2 = 1.0 / (nm.newmark_beta * dt * dt);
+        const double accel_old_factor = (1.0 / (2.0 * nm.newmark_beta)) - 1.0;
+
+        for (int i = 0; i &lt; L.dim; ++i) {
+            const double v_n_gp = hist.h_n[i];
+            const double a_n_gp = hist.h_n[L.dim + i];
+
+            a_np1_gp[i] =
+                Scalar(inv_beta_dt2) *
+                (u_gp[i] - u_n_gp[i] - Scalar(dt * v_n_gp))
+                - Scalar(accel_old_factor * a_n_gp);
+
+            v_np1_gp[i] =
+                Scalar(v_n_gp)
+                + Scalar(dt) *
+                  (Scalar(1.0 - nm.newmark_gamma) * Scalar(a_n_gp)
+                   + Scalar(nm.newmark_gamma) * a_np1_gp[i]);
+
+            G += Scalar(rho) * a_np1_gp[i] * delta_u_gp[i] * Scalar(dV);
+        }
+
+        // ---------------------------------------------------------------------
+        // Trial history update.
+        //
+        // This is called inside Newton iterations, so it must be treated as
+        // &quot;candidate state&quot;.  The solver&#x27;s commit_material_history_store()
+        // performs the actual update h_trial -&gt; h_n only after the time step
+        // is accepted.  If the time step is rejected, h_n remains unchanged.
+        // ---------------------------------------------------------------------
+        for (int i = 0; i &lt; L.dim; ++i) {
+            hist.h_trial[i]         = scalar_value(v_np1_gp[i]);
+            hist.h_trial[L.dim + i] = scalar_value(a_np1_gp[i]);
+        }
+        hist.state_trial = 0.0;
+    }
+
+    return G;
+}</code></pre></div></details>
+<details class="code-details"><summary>4. compute_constitutive_element_system</summary><div class="code-window"><pre><code>ElementSystem compute_constitutive_element_system(
+    const FieldMesh&amp; mesh,
+    int elem_id,
+    const Vector&amp; x_elem,
+    const ProblemParameters&amp; params,
+    const ElementState&amp; state
+) {
+    return hpx::scalar_weak_form_element_system(
+        x_elem,
+        [&amp;](const auto&amp; x_ad, const auto&amp; test_ad) {
+            return weak_scalar_hyperelastic_newmark_solid(mesh, elem_id, x_ad, test_ad, params, state);
+        }
     );
-}</code></pre>
-        <p>
-         The local history object is attached to the element/Gauss-point state by the generic history store.
-                    Its size is checked as
-         <code>
-          2*dim
-         </code>
-         .
-        </p>
-       </details>
-       <details class="code-details">
-        <summary>
-         3. Previous accepted displacement is read from the assembler state.
-        </summary>
-        <pre class="example-code"><code>u_gp   = interpolate(u_{n+1}, N)
-u_n_gp = interpolate(u_n, N)</code></pre>
-        <p>
-         The current displacement is the Newton variable, while the previous accepted displacement is supplied
-                    through
-         <code>
-          state.x_n_elem
-         </code>
-         . This makes the update local but still consistent with the global step.
-        </p>
-       </details>
-       <details class="code-details">
-        <summary>
-         4. Candidate history is written during weak-form evaluation.
-        </summary>
-        <pre class="example-code"><code>hist.h_trial[i]       = v_{n+1,i}^{gp};
-hist.h_trial[dim + i] = a_{n+1,i}^{gp};</code></pre>
-        <p>
-         This candidate state is useful for output and diagnostics, but it becomes the new accepted history only
-                    after the solver accepts the time step.
-        </p>
-       </details>
-       <details class="code-details">
-        <summary>
-         5. The inertial term is part of the same scalar AD weak form.
-        </summary>
-        <pre class="example-code"><code>G += rho * a_newmark_gp[i] * delta_u_gp[i] * dV;</code></pre>
-        <p>
-         Since
-         <code>
-          a_newmark_gp
-         </code>
-         depends on the current displacement iterate, the AD tangent automatically
-                    contains the dynamic mass contribution for the Newmark step.
-        </p>
-       </details>
+}</code></pre></div></details>
+       
+       
+       
+       
       </div>
       <div class="download-section compact-download-section">
        <div class="math-explain-grid theory-grid"><article class="math-card wide"><span class="tag">Strong form</span><div class="formula-block">\[\rho\,\ddot{\mathbf u}-\operatorname{Div}\mathbf P(\mathbf F)=\mathbf0\quad\text{in }\Omega_0.\]</div></article><article class="math-card wide"><span class="tag">Boundary conditions</span><div class="formula-block">\[\mathbf u=\bar{\mathbf u}\text{ on }\Gamma_D,\qquad \mathbf P\mathbf N=\bar{\mathbf t}(t)\text{ on }\Gamma_N.\]</div><p>The actual support and transient traction are defined in <code>input/BC.txt</code>.</p></article><article class="math-card wide"><span class="tag">Weak form</span><div class="formula-block">\[G_e=\int_{\Omega_0^e}\rho\mathbf a_{n+1}\cdot\delta\mathbf u+\mathbf P:\nabla_0\delta\mathbf u\,dV.\]</div></article></div>
        <div class="section-heading compact-heading"><p class="eyebrow">Equation-to-code mapping</p><h2>Newmark quantities in the dynamic weak form.</h2></div>
        <div class="equation-code-table-wrap"><table class="equation-code-table"><thead><tr><th>Mathematical quantity</th><th>Meaning</th><th>Code identifier</th><th>Source function</th></tr></thead><tbody><tr><td>\(\mathbf u_{n+1}\)</td><td>Current displacement</td><td><code>u_gp</code></td><td><code>weak_scalar_hyperelastic_newmark_solid</code></td></tr><tr><td>\(\mathbf v_{n+1}\)</td><td>Updated velocity</td><td><code>v_np1_gp</code></td><td><code>weak_scalar_hyperelastic_newmark_solid</code></td></tr><tr><td>\(\mathbf a_{n+1}\)</td><td>Updated acceleration</td><td><code>a_np1_gp</code></td><td><code>weak_scalar_hyperelastic_newmark_solid</code></td></tr><tr><td>\(\beta,\gamma\)</td><td>Newmark parameters</td><td><code>nm.newmark_beta</code>, <code>nm.newmark_gamma</code></td><td><code>weak_scalar_hyperelastic_newmark_solid</code></td></tr><tr><td>\(G_e\)</td><td>Dynamic weak form</td><td><code>G</code></td><td><code>weak_scalar_hyperelastic_newmark_solid</code></td></tr></tbody></table></div>
        <div class="example-run-panel">
-        <p class="eyebrow">Build and run</p><h2>Copy the verified dynamic example into the FEM slots.</h2>
-        <pre><code>cp FEM/models/weak_form.cpp FEM/models/weak_form.cpp.bak
-cp -R FEM/input FEM/input.bak
-cp Web/examples/newmark/weak_form.cpp FEM/models/weak_form.cpp
-cp Web/examples/newmark/input/*.txt FEM/input/
-make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
+        <p class="eyebrow">Build and run</p><h2>Build the supplied model and run its input files directly.</h2>
+        <pre><code>make -C FEM MODEL_SRC=../Web/examples/newmark/weak_form_Newmark.cpp
+cd FEM
+OMP_NUM_THREADS=2 ./bin/fem ../Web/examples/newmark/input/ProblemMesh.txt ../Web/examples/newmark/input/Material.txt ../Web/examples/newmark/input/BC.txt ../Web/examples/newmark/input/Solver.txt ../Web/examples/newmark/input/Postprocessing.txt ../Web/examples/newmark/input/DOFS_info.txt</code></pre>
        </div>
        <div class="section-heading compact-heading">
         <p class="eyebrow">
@@ -510,26 +655,24 @@ make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
           Configures VTK, CSV, final DOF, timing, and hysteresis-style output paths.
          </p>
         </a>
-        <a class="download-card" download="" href="../examples/newmark/weak_form.cpp">
+        <a class="download-card" download="" href="../examples/newmark/weak_form_Newmark.cpp">
          <span class="tag">
           model
          </span>
          <h3>
-          weak_form.cpp
+          weak_form_Newmark.cpp
          </h3>
          <p>
           Verified Newmark weak form synchronized from the runnable dynamic model.
          </p>
         </a>
        </div>
-       <button class="example-zip-button" disabled type="button">Download complete example (.zip) — coming after final validation</button>
+       
       </div>
      </div>
     </div>
    </section>
-   <section class="doc-section section-wrap cook-page example-result-pending">
-    <p class="eyebrow">Result</p><h2>Result pending validation</h2><p>The final displacement or time-history figure will be added after the full solid verification run.</p>
-   </section>
+   
   </main>
   <script defer="True" src="../assets/js/main.js">
   </script>

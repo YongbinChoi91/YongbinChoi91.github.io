@@ -1,0 +1,50 @@
+# ============================================================
+# Postprocessing / output-path settings
+# ============================================================
+
+# ------------------------------------------------------------
+# Output folder structure
+# ------------------------------------------------------------
+# HDF5 is the default result database.  The solver writes:
+#   <output_root>/<sanitized_weakform_model_name>/<sanitized_weakform_model_name>.h5
+# Main datasets:
+#   /time/values, /time/steps, /solution/dofs, /solution/final_raw_dofs
+#   /history/force      when force_output is on: time, Drag, Lift
+#   /history/hysteresis when hysteresis_output is on: time, x_value, y_value
+#   /diagnostics/minJ   when minJ_output is on
+#   /diagnostics/timing when timing_diagnostics is on
+#
+# debug_csv_output off is the default.  Turn it on only for old/debug CSV/TXT
+# exports.  Hysteresis SVG can still create debug_csv/hysteresis.csv internally.
+output_root ./output
+hdf5_output on
+debug_csv_output off
+model_output_subdir on
+
+# ------------------------------------------------------------
+# Main output switches
+# ------------------------------------------------------------
+# vtk_output controls accepted-step VTK writing.
+# vtk_interval is mapped to solver output_every.
+# svg_output controls generated SVG figures.
+# final_dofs_output writes final_raw_dofs in HDF5; legacy TXT only when
+# debug_csv_output is on.
+vtk_output on
+vtk_interval 1
+svg_output on
+svg_interval 1
+final_dofs_output on
+
+
+# ------------------------------------------------------------
+# Force / drag-lift output
+# ------------------------------------------------------------
+# force_output on stores drag/lift in HDF5 /history/force.
+# CSV force output is written only when debug_csv_output is on.
+# force_output off means no force dataset is written.
+force_output on
+force_boundary CIRCLE
+force_boundary_check_tol 1e-8
+force_attack_angle_deg 0.0
+force_csv auto
+force_svg auto

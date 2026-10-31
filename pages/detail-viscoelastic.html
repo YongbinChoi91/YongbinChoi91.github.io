@@ -73,6 +73,7 @@
             live only at Gauss points and are updated by a local Newton problem.
     </p>
    </section>
+<section class="doc-section section-wrap cook-page updated-example-overview"><figure class="updated-example-result"><a href="../examples/viscoelastic/hysteresis.svg" target="_blank" rel="noopener"><img src="../examples/viscoelastic/hysteresis.svg" alt="Cyclic viscoelastic response" decoding="async"/></a><figcaption><h2>Cyclic viscoelastic response</h2><p>Prescribed TOP displacement versus BOTTOM reaction. TOP follows 0 → 0.15 → 0 → −0.15 → 0 over t = 0…4. E = 200, nu = 0.3, viscosity eta = 50; four Gauss-point history variables.</p></figcaption></figure></section>
    <section class="doc-section section-wrap plasticity-document-section viscoelastic-document-section">
     <div class="plasticity-document-panel viscoelastic-document-panel">
      <div aria-label="Viscoelasticity documentation tabs" class="plasticity-tabs" role="tablist">
@@ -281,7 +282,17 @@
        </article>
       </div>
      </div>
-     <div class="plasticity-tab-panel" data-viscoelastic-panel="simulation" role="tabpanel">
+     <div class="plasticity-tab-panel" data-viscoelastic-panel="simulation" role="tabpanel"><div class="updated-example-inputs"><h3>Input conditions</h3><details class="example-input-details"><summary>BC.txt</summary><pre><code>DIRICHLET LEFT ux 0.0
+DIRICHLET BOTTOM uy 0.0
+DIRICHLET TOP uy piecewise_cycle(4.0; 0,0; 1.0,0.15; 2.0,0; 3.0,-0.15; 4.0,0)</code></pre></details><details class="example-input-details"><summary>Material.txt</summary><pre><code>YOUNGS_MODULUS 200.0
+POISSON_RATIO 0.3
+VISCO_ELASTIC_ETA 50
+LOCAL_RESIDUAL_TOL 1.0e-10
+LOCAL_MAX_ITER 25</code></pre></details><details class="example-input-details"><summary>DOFS_info.txt</summary><pre><code>field_key displacement
+history viscoelastic 4</code></pre></details><details class="example-input-details"><summary>Solver.txt</summary><pre><code>solver_backend umfpack
+dt 0.01
+total_time 4.0
+adaptive_dt on</code></pre></details></div>
       <div class="section-heading actual-code-intro">
        <p class="eyebrow">
         Simulation
@@ -410,132 +421,193 @@ hysteresis_y_axis reaction BOTTOM uy 1.0</code></pre>
        </article>
       </div>
       <div class="actual-code-stack">
-       <details class="code-details" open="">
-        <summary>
-         1. The active model is displacement-only.
-        </summary>
-        <pre class="example-code"><code>const char* active_constitutive_model_name() {
-    return "viscoelastic_solid_displacement_history";
-}
-
-std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
+       <details class="code-details" open><summary>1. active_constitutive_field_names</summary><div class="code-window"><pre><code>std::vector&lt;std::string&gt; active_constitutive_field_names(const FieldMesh&amp; mesh) {
     (void)mesh;
-    return {"displacement"};
-}</code></pre>
-       </details>
-       <details class="code-details">
-        <summary>
-         2. Material parameters are read into the local viscoelastic model.
-        </summary>
-        <pre class="example-code"><code>m.E = params.material.youngs_modulus;
-m.nu = params.material.poisson_ratio;
-m.eta = params.material.visco_elastic_eta;
-m.local_tol = params.material.local_tol;
-m.local_max_iter = params.material.local_max_iter;</code></pre>
-       </details>
-       <details class="code-details">
-        <summary>
-         3. At each Gauss point, the previous accepted history is used as the local state.
-        </summary>
-        <pre class="example-code"><code>if (gh.h_n.size() &lt; required_history) {
-    gh.h_n.assign(required_history, 0.0);
-    gh.h_trial.assign(required_history, 0.0);
-}
+    return {&quot;displacement&quot;};
+}</code></pre></div></details>
+<details class="code-details"><summary>2. local_Q_viscoelastic</summary><div class="code-window"><pre><code>static Vector local_Q_viscoelastic(
+    const Mat3T&lt;double&gt;&amp; F,
+    const Vector&amp; h_n,
+    const Vector&amp; h,
+    int dim,
+    double dt,
+    const VEMaterial&amp; mat
+) {
+    return local_Q_viscoelastic_T&lt;double&gt;(F, h_n, h, dim, dt, mat);
+}</code></pre></div></details>
+<details class="code-details"><summary>3. update_viscoelastic_gp</summary><div class="code-window"><pre><code>static VEUpdateResult update_viscoelastic_gp(
+    const Mat3T&lt;double&gt;&amp; F,
+    const Vector&amp; h_n,
+    int dim,
+    double dt,
+    const VEMaterial&amp; mat
+) {
+    const int nh = (dim == 2) ? 4 : 6;
+    if (static_cast&lt;int&gt;(h_n.size()) &lt; nh) throw std::runtime_error(&quot;Bad viscoelastic history size in local update.&quot;);
 
-const Mat3T&lt;double&gt; F_double =
-    hpx::deformation_gradient_array&lt;double&gt;(dim, dN, u_double);</code></pre>
-       </details>
-       <details class="code-details">
-        <summary>
-         4. The local residual Q is the actual algorithm, not just a black-box update.
-        </summary>
-        <pre class="example-code"><code>const auto Cv = Cv_from_hT&lt;T&gt;(h, dim);
-const auto Cv_n = Cv_from_hT&lt;T&gt;(h_n, dim);
-const auto C = hpx::right_cauchy_green3&lt;T&gt;(F);
-const auto dCdt = (Cv - Cv_n) / dt;
+    VEUpdateResult out;
+    Vector h(h_n.begin(), h_n.begin() + nh);
+    const double tol = std::max(mat.local_tol, 1.0e-14);
 
-const auto be  = F * inverse(Cv) * transpose(F);
-const auto tau = tau_from_beT&lt;T&gt;(be, mat);
-const auto dv  = sym(0.5 * inverse(transpose(F)) * dCdt * inverse(C) * transpose(F));
+    for (int it = 0; it &lt; std::max(1, mat.local_max_iter); ++it) {
+        const Vector Q = local_Q_viscoelastic(F, h_n, h, dim, dt, mat);
+        const Matrix J = local_Q_h_hpx(F, h_n, h, dim, dt, mat);
+        Vector rhs(Q.size(), 0.0);
+        for (int i = 0; i &lt; static_cast&lt;int&gt;(Q.size()); ++i) rhs[i] = -Q[i];
+        const Vector dh = hpx::solve_local_dense_lu(J, rhs, &quot;local viscoelastic Jacobian&quot;);
 
-const auto Z = -dev(tau - eta * dv);
-Q_2D = {Z11, Z22, det(Cv) - 1, Z12};</code></pre>
-        <p>
-         This is the part that makes the viscoelastic section comparable to plasticity: the local unknown is
-                    \(\mathbf{h}\), and the Gauss-point Newton solve drives \(\mathbf{Q}\) to zero before the global
-                    residual is assembled.
-        </p>
-       </details>
-       <details class="code-details">
-        <summary>
-         5. Local Newton solves Q_h &Delta;h = -Q with a positivity line search.
-        </summary>
-        <pre class="example-code"><code>for (int it = 0; it &lt; mat.local_max_iter; ++it) {
-    const Vector Q = local_Q_viscoelastic(F, h_n, h, dim, dt, mat);
-    const Matrix Q_h = local_Q_h_sacado(F, h_n, h, dim, dt, mat);
-    const Vector dh = solve_dense(Q_h, -Q);
+        double alpha = 1.0;
+        const double q0 = norm_vec(Q);
+        for (int ls = 0; ls &lt; 10; ++ls) {
+            Vector ht = h;
+            for (int i = 0; i &lt; nh; ++i) ht[i] += alpha * dh[i];
+            const auto Cv_t = Cv_from_hT&lt;double&gt;(std::vector&lt;double&gt;(ht.begin(), ht.end()), dim);
+            if (hpx::det3&lt;double&gt;(Cv_t) &gt; 0.0) {
+                const Vector Qt = local_Q_viscoelastic(F, h_n, ht, dim, dt, mat);
+                if (norm_vec(Qt) &lt;= q0 || alpha &lt; 1.0e-3) { h = ht; break; }
+            }
+            alpha *= 0.5;
+        }
 
-    // line search: accept only positive det(Cv) and non-increasing |Q|
-    h = h + alpha * dh;
+        const Vector Qnew = local_Q_viscoelastic(F, h_n, h, dim, dt, mat);
+        const double qn = norm_vec(Qnew);
+        if (qn &lt; tol || norm_vec(dh) &lt; tol) {
+            out.h = h;
+            out.final_local_residual = qn;
+            out.local_newton_iterations = it + 1;
+            out.state_trial = qn;
+            return out;
+        }
+    }
+    throw std::runtime_error(&quot;Local viscoelastic Newton did not converge.&quot;);
+}</code></pre></div></details>
+<details class="code-details"><summary>4. weak_scalar_viscoelastic_solid</summary><div class="code-window"><pre><code>static Scalar weak_scalar_viscoelastic_solid(
+    const FieldMesh&amp; mesh,
+    int elem_id,
+    const std::vector&lt;Scalar&gt;&amp; x_elem,
+    const std::vector&lt;Scalar&gt;&amp; test_elem,
+    const ProblemParameters&amp; params,
+    const ElementState&amp; state
+) {
+    if (mesh.dim != 2 &amp;&amp; mesh.dim != 3) throw std::runtime_error(&quot;Viscoelastic weak form supports only 2D or 3D.&quot;);
+    if (!state.material_history) {
+        throw std::runtime_error(&quot;Viscoelastic weak form requires Gauss-point history. Add &#x27;history viscoelastic 4&#x27; for 2D or &#x27;history viscoelastic 6&#x27; for 3D to DOFS_info.txt.&quot;);
+    }
+    if (state.dt &lt;= 0.0) throw std::runtime_error(&quot;Viscoelastic weak form requires positive state.dt.&quot;);
 
-    if (norm(Qnew) &lt; local_tol || norm(dh) &lt; local_tol)
-        return h;
-}</code></pre>
-       </details>
-       <details class="code-details">
-        <summary>
-         6. The implicit tangent exposes h(F) to the global AD tangent.
-        </summary>
-        <pre class="example-code"><code>Q(F, h(F)) = 0
-Q_F + Q_h * dh_dF = 0
+    const int dim = mesh.dim;
+    const int required_history = (dim == 2) ? 4 : 6;
+    const VEMaterial mat = make_ve_material(params);
 
-dh_dF = - inverse(Q_h) * Q_F
+    const LocalFieldView L = make_local_field_view(mesh, elem_id, {&quot;displacement&quot;});
+    const auto&amp; U = L.field(&quot;displacement&quot;);
+    if (U.components != dim) throw std::runtime_error(&quot;Viscoelastic displacement field must have dim components.&quot;);
+    if (static_cast&lt;int&gt;(x_elem.size()) != L.n_local()) throw std::runtime_error(&quot;Bad local vector size in viscoelastic weak form.&quot;);
+    if (test_elem.size() != x_elem.size()) throw std::runtime_error(&quot;Bad test vector size in viscoelastic weak form.&quot;);
 
-const std::vector&lt;Scalar&gt; h_ad = make_algorithmic_h_ad(
-    F_ad, F_double, gh.h_n, upd.h, dim, state.dt, mat
-);</code></pre>
-        <p>
-         Without this step, the global tangent would see the updated history as a constant and the Newton
-                    matrix would miss the local relaxation sensitivity.
-        </p>
-       </details>
-       <details class="code-details">
-        <summary>
-         7. P is recovered from the converged local metric and inserted into G.
-        </summary>
-        <pre class="example-code"><code>const auto Cv_ad = Cv_from_hT&lt;Scalar&gt;(h_ad, dim);
-const auto be = F_ad * inverse(Cv_ad) * transpose(F_ad);
-const auto tau = tau_from_beT&lt;Scalar&gt;(be, mat);
-const auto P_ad = tau * inverse(transpose(F_ad));
+    const ElementGeometry geom = make_displacement_element_geometry(mesh, elem_id);
+    const auto gps = gauss_rule(U.element_type, params.solver.gauss_order);
+    if (state.material_history-&gt;gp.size() != gps.size()) state.material_history-&gt;gp.resize(gps.size());
 
-G += P_ad[i][A] * grad_test[i][A] * dV;</code></pre>
-        <p>
-         This is the final bridge from the local viscoelastic algorithm to the global finite-element residual:
-                    \(\mathbf{P}\) is not guessed directly; it is computed after solving \(\mathbf{Q}=0\).
-        </p>
-       </details>
-       <details class="code-details">
-        <summary>
-         8. Local diagnostics can report residual and iteration count.
-        </summary>
-        <pre class="example-code"><code>history_diagnostics on</code></pre>
-        <p>
-         For this model, diagnostics are useful for checking whether the internal metric update is converging
-                    consistently over the whole mesh and whether the viscosity/time-step choice makes the local solve hard.
-        </p>
-       </details>
+    const auto u_ad = displacement_local_vector_from_layout&lt;Scalar&gt;(L, U, x_elem);
+    const auto du_test = displacement_local_vector_from_layout&lt;Scalar&gt;(L, U, test_elem);
+
+    std::vector&lt;double&gt; u_double(dim * U.n_nodes, 0.0);
+    for (int i = 0; i &lt; static_cast&lt;int&gt;(u_double.size()); ++i) u_double[i] = val(u_ad[i]);
+
+    Scalar G(0.0);
+    for (int g = 0; g &lt; static_cast&lt;int&gt;(gps.size()); ++g) {
+        const auto&amp; gp = gps[g];
+        const ShapeData shape = compute_shape(U.element_type, gp.xi, gp.eta, gp.zeta);
+        const JacobianData J0 = compute_jacobian_data(geom, shape);
+        if (J0.detJ &lt;= 0.0) throw std::runtime_error(&quot;Negative detJ in viscoelastic element.&quot;);
+        const auto dN = compute_dN_dx(shape, J0);
+        const double dV = J0.detJ * gp.weight;
+
+        auto&amp; gh = state.material_history-&gt;gp[g];
+        if (static_cast&lt;int&gt;(gh.h_n.size()) &lt; required_history) {
+            gh.h_n.assign(required_history, 0.0);      // h=0 means Cv=I initially.
+            gh.h_trial.assign(required_history, 0.0);
+            gh.state_n = 0.0;
+            gh.state_trial = 0.0;
+        }
+
+        const Mat3T&lt;double&gt; F_double = hpx::deformation_gradient_array&lt;double&gt;(dim, dN, u_double);
+        VEUpdateResult upd;
+        try {
+            upd = update_viscoelastic_gp(F_double, gh.h_n, dim, state.dt, mat);
+        } catch (...) {
+            if (state.history_diagnostics) ++state.history_diagnostics-&gt;local_failure_count;
+            throw;
+        }
+
+        gh.h_trial = upd.h;
+        gh.state_trial = upd.state_trial;
+        if (state.history_diagnostics) {
+            state.history_diagnostics-&gt;observe(&quot;viscoelastic&quot;, upd.final_local_residual, upd.local_newton_iterations,
+                                               true, state.domain_id, elem_id, g);
+        }
+
+        const Mat3T&lt;Scalar&gt; F_ad = hpx::deformation_gradient_array&lt;Scalar&gt;(dim, dN, u_ad);
+        const std::vector&lt;Scalar&gt; h_ad = make_algorithmic_h_ad(F_ad, F_double, gh.h_n, upd.h, dim, state.dt, mat);
+        const auto Cv_ad = Cv_from_hT&lt;Scalar&gt;(h_ad, dim);
+        const auto be = hpx::mul3&lt;Scalar&gt;(hpx::mul3&lt;Scalar&gt;(F_ad, hpx::inv3&lt;Scalar&gt;(Cv_ad)), hpx::transpose3&lt;Scalar&gt;(F_ad));
+        const auto tau = tau_from_beT&lt;Scalar&gt;(be, mat);
+        const auto P_ad = hpx::mul3&lt;Scalar&gt;(tau, hpx::inv_transpose3&lt;Scalar&gt;(F_ad));
+
+        Mat3T&lt;Scalar&gt; grad_test = hpx::zero3&lt;Scalar&gt;();
+        for (int a = 0; a &lt; U.n_nodes; ++a) {
+            for (int i = 0; i &lt; dim; ++i) {
+                const Scalar ti = du_test[dim * a + i];
+                for (int A = 0; A &lt; dim; ++A) grad_test[i][A] += ti * Scalar(dN[a][A]);
+            }
+        }
+
+        for (int i = 0; i &lt; dim; ++i) {
+            for (int A = 0; A &lt; dim; ++A) {
+                G += P_ad[i][A] * grad_test[i][A] * Scalar(dV);
+            }
+        }
+    }
+    return G;
+}</code></pre></div></details>
+<details class="code-details"><summary>5. compute_constitutive_element_system</summary><div class="code-window"><pre><code>ElementSystem compute_constitutive_element_system(
+    const FieldMesh&amp; mesh,
+    int elem_id,
+    const Vector&amp; x_elem,
+    const ProblemParameters&amp; params,
+    const ElementState&amp; state
+) {
+    const LocalFieldView L = make_local_field_view(mesh, elem_id, {&quot;displacement&quot;});
+    const int n = L.n_local();
+    if (static_cast&lt;int&gt;(x_elem.size()) != n) {
+        throw std::runtime_error(&quot;Bad local vector size in viscoelastic weak-scalar element system.&quot;);
+    }
+
+    return hpx::scalar_weak_form_element_system(
+        x_elem,
+        [&amp;](const auto&amp; x_ad, const auto&amp; test_ad) {
+            return weak_scalar_viscoelastic_solid(mesh, elem_id, x_ad, test_ad, params, state);
+        }
+    );
+}</code></pre></div></details>
+       
+       
+       
+       
+       
+       
+       
       </div>
       <div class="download-section compact-download-section">
        <div class="math-explain-grid theory-grid"><article class="math-card wide"><span class="tag">Strong form</span><div class="formula-block">\[-\operatorname{Div}\mathbf P(\mathbf F,\mathbf C_v)=\mathbf0\quad\text{in }\Omega_0.\]</div></article><article class="math-card wide"><span class="tag">Boundary conditions</span><div class="formula-block">\[\mathbf u=\bar{\mathbf u}(t)\text{ on }\Gamma_D,\qquad \mathbf P\mathbf N=\bar{\mathbf t}\text{ on }\Gamma_N.\]</div><p>The cyclic displacement and support groups are defined in <code>input/BC.txt</code>.</p></article></div>
        <div class="section-heading compact-heading"><p class="eyebrow">Equation-to-code mapping</p><h2>Rate-dependent quantities in the constitutive weak form.</h2></div>
-       <div class="equation-code-table-wrap"><table class="equation-code-table"><thead><tr><th>Mathematical quantity</th><th>Meaning</th><th>Code identifier</th><th>Source function</th></tr></thead><tbody><tr><td>\(\mathbf F\)</td><td>Deformation gradient</td><td><code>F</code></td><td><code>weak_scalar_viscoelastic_solid</code></td></tr><tr><td>\(\mathbf C_v\)</td><td>Viscous internal metric</td><td><code>Cv</code></td><td><code>local_Qg_residual</code></td></tr><tr><td>\(\mathbf h_n\)</td><td>Accepted history</td><td><code>h_n</code></td><td><code>local_Qg_residual</code></td></tr><tr><td>\(\mathbf Q\)</td><td>Local evolution residual</td><td><code>Q</code></td><td><code>local_Qg_residual</code></td></tr><tr><td>\(G_e\)</td><td>Global element weak form</td><td><code>G</code></td><td><code>weak_scalar_viscoelastic_solid</code></td></tr></tbody></table></div>
+       <div class="equation-code-table-wrap"><table class="equation-code-table"><thead><tr><th>Mathematical quantity</th><th>Meaning</th><th>Code identifier</th><th>Source function</th></tr></thead><tbody><tr><td>\(\mathbf F\)</td><td>Deformation gradient</td><td><code>F</code></td><td><code>weak_scalar_viscoelastic_solid</code></td></tr><tr><td>\(\mathbf C_v\)</td><td>Viscous internal metric</td><td><code>Cv</code></td><td><code>local_Q_viscoelastic</code></td></tr><tr><td>\(\mathbf h_n\)</td><td>Accepted history</td><td><code>h_n</code></td><td><code>local_Q_viscoelastic</code></td></tr><tr><td>\(\mathbf Q\)</td><td>Local evolution residual</td><td><code>Q</code></td><td><code>local_Q_viscoelastic</code></td></tr><tr><td>\(G_e\)</td><td>Global element weak form</td><td><code>G</code></td><td><code>weak_scalar_viscoelastic_solid</code></td></tr></tbody></table></div>
        <div class="example-run-panel">
-        <p class="eyebrow">Build and run</p><h2>Copy the verified viscoelastic example into the FEM slots.</h2>
-        <pre><code>cp FEM/models/weak_form.cpp FEM/models/weak_form.cpp.bak
-cp -R FEM/input FEM/input.bak
-cp Web/examples/viscoelastic/weak_form.cpp FEM/models/weak_form.cpp
-cp Web/examples/viscoelastic/input/*.txt FEM/input/
-make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
+        <p class="eyebrow">Build and run</p><h2>Build the supplied model and run its input files directly.</h2>
+        <pre><code>make -C FEM MODEL_SRC=../Web/examples/viscoelastic/weak_form_visco_elastic.cpp
+cd FEM
+OMP_NUM_THREADS=2 ./bin/fem ../Web/examples/viscoelastic/input/ProblemMesh.txt ../Web/examples/viscoelastic/input/Material.txt ../Web/examples/viscoelastic/input/BC.txt ../Web/examples/viscoelastic/input/Solver.txt ../Web/examples/viscoelastic/input/Postprocessing.txt ../Web/examples/viscoelastic/input/DOFS_info.txt</code></pre>
        </div>
        <div class="section-heading compact-heading">
         <p class="eyebrow">
@@ -639,26 +711,24 @@ make -C FEM MODEL_SRC=models/weak_form.cpp run</code></pre>
           Enables hysteresis CSV/SVG output from prescribed displacement and reaction force.
          </p>
         </a>
-        <a class="download-card" download="" href="../examples/viscoelastic/weak_form.cpp">
+        <a class="download-card" download="" href="../examples/viscoelastic/weak_form_visco_elastic.cpp">
          <span class="tag">
           model
          </span>
          <h3>
-          weak_form.cpp
+          weak_form_visco_elastic.cpp
          </h3>
          <p>
           Verified finite-strain viscoelastic weak form synchronized from the runnable model.
          </p>
         </a>
        </div>
-       <button class="example-zip-button" disabled type="button">Download complete example (.zip) — coming after final validation</button>
+       
       </div>
      </div>
     </div>
    </section>
-   <section class="doc-section section-wrap cook-page example-result-pending">
-    <p class="eyebrow">Result</p><h2>Result pending validation</h2><p>The final deformation or hysteresis figure will be added after the full solid verification run.</p>
-   </section>
+   
   </main>
   <script defer="True" src="../assets/js/main.js">
   </script>
