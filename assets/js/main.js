@@ -87,22 +87,21 @@ applicationPreviewControls.forEach((control) => {
 });
 setApplicationPreview("solid");
 
-const heroVideo = document.querySelector(".video-hero video");
-if (heroVideo) {
+document.querySelectorAll(".video-hero video, .updated-example-result video").forEach((video) => {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   if (reducedMotion.matches) {
-    heroVideo.pause();
+    video.pause();
   } else {
-    const heroVideoObserver = new IntersectionObserver(([entry]) => {
+    const videoObserver = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) {
-        heroVideo.play().catch(() => {});
+        video.play().catch(() => {});
       } else {
-        heroVideo.pause();
+        video.pause();
       }
     }, { threshold: 0.2 });
-    heroVideoObserver.observe(heroVideo);
+    videoObserver.observe(video);
   }
-}
+});
 
 if (window.location.hash) {
   const target = document.querySelector(window.location.hash);
